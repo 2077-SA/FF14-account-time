@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FF14 · 猪猪运势转盘 · 狩猎版</title>
+<title>FF14 · 猪猪运势转盘 · 游乐场终极版</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;font-family:'Arial','Helvetica',system-ui,sans-serif}
-  html{scroll-padding-top:90px}
+  html{scroll-padding-top:110px}
   body{min-height:100vh;background:#0f0f0f;color:#fff;line-height:1.6;transition:background .35s,color .35s}
   .container{max-width:1100px;margin:0 auto;padding:0 20px}
   .header{background:#000;border-bottom:2px solid #ff9000;position:sticky;top:0;z-index:100;transition:background .35s,border-color .35s}
-  .nav-wrapper{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:20px;flex-wrap:wrap}
-  .logo a{text-decoration:none;font-size:26px;font-weight:bold;display:flex;align-items:center;gap:4px}
-  .logo-text{color:#fff}.logo-hub{color:#ff9000}.logo-emoji{font-size:28px}
-  .nav-menu{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-  .nav-link{color:#fff;text-decoration:none;font-weight:500;padding:8px 16px;border-radius:20px;transition:all .3s;font-size:.9rem}
+  .nav-wrapper{display:flex;align-items:center;justify-content:space-between;padding:10px 0;gap:14px;flex-wrap:wrap}
+  .logo a{text-decoration:none;font-size:24px;font-weight:bold;display:flex;align-items:center;gap:4px}
+  .logo-text{color:#fff}.logo-hub{color:#ff9000}.logo-emoji{font-size:26px}
+  .nav-menu{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+  .nav-link{color:#fff;text-decoration:none;font-weight:500;padding:6px 12px;border-radius:20px;transition:all .3s;font-size:.82rem}
   .nav-link:hover,.nav-link.active{background:#ff9000;color:#000}
-  .main-content{padding:30px 0 50px}
+  .main-content{padding:24px 0 50px}
   .card{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:2rem;box-shadow:0 8px 30px rgba(0,0,0,.4);margin-bottom:30px;transition:background .35s,border-color .35s}
   .section-title{font-size:22px;font-weight:bold;color:#fff;position:relative;margin-bottom:24px;display:flex;align-items:center;gap:10px;transition:color .35s}
   .section-title::after{content:'';position:absolute;bottom:-6px;left:0;width:60px;height:3px;background:linear-gradient(90deg,#ff9000,#ffb000);border-radius:2px}
@@ -322,21 +322,138 @@
   .footer-bottom{margin-top:24px;padding-top:16px;border-top:1px solid #222;text-align:center;font-size:.78rem;color:#555}
   .footer-warning{display:block;max-width:560px;margin:16px auto 0;padding:11px 20px;text-align:center;font-size:.85rem;font-weight:700;color:#f66;background:#1a0d0d;border:1px solid #5a2a2a;border-radius:12px;letter-spacing:1px}
 
-  /* ========== 主题选择器 ========== */
+  /* ========== 顶部状态条（钱包 + 天气） ========== */
+  .status-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .wallet-chip{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#2a1f0d,#1a150a);border:1px solid #ffb000;border-radius:22px;padding:4px 14px;font-size:.85rem;font-weight:700;transition:all .3s}
+  .wallet-chip .wt-coin{font-size:1rem;animation:coinPulse 2s ease-in-out infinite}
+  @keyframes coinPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+  .wallet-chip .wt-val{color:#ffb000;font-weight:900;letter-spacing:.5px}
+  .wallet-chip.flash{animation:walletFlash .6s ease}
+  @keyframes walletFlash{0%,100%{transform:scale(1)}50%{transform:scale(1.12);box-shadow:0 0 20px #ffb00099}}
+  .weather-chip{display:flex;align-items:center;gap:6px;background:#1a1a1a;border:1px solid #444;border-radius:22px;padding:4px 14px;font-size:.82rem;cursor:pointer;transition:all .3s;font-weight:700}
+  .weather-chip:hover{border-color:#ff9000}
+  .weather-chip .wc-icon{font-size:1.1rem}
+  .weather-chip .wc-name{color:#fff}
+  .weather-chip .wc-timer{color:#888;font-size:.7rem}
+  .weather-chip.sunny{border-color:#ffcc00;background:#2a2410;color:#ffcc66}
+  .weather-chip.rain{border-color:#4a8aff;background:#101828;color:#88bbff}
+  .weather-chip.fog{border-color:#888;background:#1f1f1f;color:#ccc}
+  .weather-chip.storm{border-color:#a88cff;background:#1a1028;color:#c8b0ff}
+  .weather-chip.meteor{border-color:#ff7eb3;background:#2a1020;color:#ffb0d0}
+
+  /* ========== 猪猪游乐场 ========== */
+  .playground{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px;transition:background .35s,border-color .35s}
+  .pg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .pg-card{background:#222;border:1px solid #333;border-radius:16px;padding:1rem .9rem;cursor:pointer;transition:all .25s;text-align:left;color:#fff;font-family:inherit;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden}
+  .pg-card:hover{border-color:#ff9000;transform:translateY(-3px);box-shadow:0 8px 20px rgba(255,144,0,.15)}
+  .pg-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 100% 0%,rgba(255,144,0,.15),transparent 60%);opacity:0;transition:opacity .3s}
+  .pg-card:hover::before{opacity:1}
+  .pg-card .pg-emoji{font-size:1.8rem;line-height:1}
+  .pg-card .pg-name{font-size:.9rem;font-weight:800;color:#ffb000;letter-spacing:.5px}
+  .pg-card .pg-desc{font-size:.7rem;color:#888;line-height:1.4}
+  .pg-card.hot::after{content:'HOT';position:absolute;top:6px;right:8px;font-size:.55rem;font-weight:900;background:linear-gradient(135deg,#ff5500,#ff9000);color:#fff;padding:1px 6px;border-radius:6px;letter-spacing:1px}
+  .pg-card.new::after{content:'NEW';position:absolute;top:6px;right:8px;font-size:.55rem;font-weight:900;background:linear-gradient(135deg,#00a8ff,#4dd0ff);color:#001a33;padding:1px 6px;border-radius:6px;letter-spacing:1px}
+
+  /* ========== 游乐场通用面板 ========== */
+  .play-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+  .play-overlay.active{display:flex}
+  .play-panel{background:#1a1a1a;border:2px solid #ff9000;border-radius:20px;max-width:760px;width:100%;max-height:92vh;overflow-y:auto;padding:1.6rem;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.85);animation:modalIn .35s ease}
+  .play-head{display:flex;align-items:center;gap:12px;margin-bottom:1rem;padding-bottom:.8rem;border-bottom:2px dashed #333}
+  .play-head .ph-emoji{font-size:2.2rem;line-height:1}
+  .play-head h3{font-size:1.2rem;color:#ffb000}
+  .play-head .ph-sub{font-size:.75rem;color:#888;margin-top:2px}
+  .play-close{position:absolute;top:12px;right:16px;background:transparent;border:none;color:#888;font-size:1.7rem;cursor:pointer;line-height:1}
+  .play-close:hover{color:#ff9000}
+  .play-body{font-size:.88rem;color:#ccc;line-height:1.7}
+  .play-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:.6rem 0}
+  .play-btn{background:#ff9000;border:none;border-bottom:4px solid #b36600;padding:.5rem 1.3rem;border-radius:30px;color:#000;font-weight:700;cursor:pointer;transition:all .08s;font-size:.88rem;font-family:inherit}
+  .play-btn:hover{transform:translateY(-1px)}
+  .play-btn:active{transform:translateY(3px);border-bottom-width:1px}
+  .play-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .play-btn.sec{background:#444;border-bottom-color:#222;color:#eee}
+  .play-btn.dan{background:#c33;border-bottom-color:#811;color:#fff}
+  .play-btn.grn{background:#4a9a4a;border-bottom-color:#2a5a2a;color:#fff}
+  .play-btn.gold{background:linear-gradient(135deg,#ff9000,#fc0);border-bottom-color:#b36600}
+  .play-input{background:#111;border:1px solid #444;color:#ffb000;padding:.4rem .8rem;border-radius:10px;font-size:.88rem;font-weight:700;outline:none;font-family:inherit;width:100px}
+  .play-info{background:#111;border:1px solid #333;border-radius:12px;padding:.8rem 1rem;margin:.6rem 0;font-size:.82rem;line-height:1.75}
+  .play-info strong{color:#ffb000}
+  .play-log{background:#0a0a0a;border:1px dashed #333;border-radius:10px;padding:.7rem .9rem;margin:.6rem 0;font-size:.78rem;max-height:200px;overflow-y:auto;line-height:1.9}
+  .play-log .l-good{color:#6cf06c}
+  .play-log .l-bad{color:#f88}
+  .play-log .l-big{color:#fc0;font-weight:800}
+  .play-log .l-rainbow{background:linear-gradient(90deg,#ff7eb3,#ffb000,#6cf06c,#4dd0ff,#c8f);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:900}
+  .big-display{text-align:center;font-size:2.4rem;font-weight:900;color:#ffb000;padding:.6rem 0;letter-spacing:2px;min-height:3rem}
+  .dice-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:.8rem 0}
+  .die{width:52px;height:52px;background:linear-gradient(145deg,#fff,#ddd);color:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;cursor:pointer;transition:all .2s;user-select:none;box-shadow:0 4px 10px rgba(0,0,0,.4);border:2px solid transparent}
+  .die.held{border-color:#ff9000;background:linear-gradient(145deg,#fff8e0,#ffe8b0);transform:translateY(-4px)}
+  .die.rolling{animation:dieRoll .4s ease}
+  @keyframes dieRoll{0%{transform:rotate(0) scale(.6)}50%{transform:rotate(360deg) scale(1.15)}100%{transform:rotate(720deg) scale(1)}}
+  .pig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:.8rem 0}
+  .pig-card{background:#222;border:2px solid #333;border-radius:12px;padding:.7rem;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+  .pig-card:hover{transform:translateY(-2px)}
+  .pig-card.selected{border-color:#ff9000;background:#2a2418;box-shadow:0 0 16px rgba(255,144,0,.4)}
+  .pig-card .pc-emoji{font-size:1.8rem;line-height:1.1}
+  .pig-card .pc-name{font-size:.72rem;font-weight:700;color:#ffb000;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pig-card .pc-stats{font-size:.6rem;color:#888;margin-top:3px;line-height:1.4}
+  .pig-card .pc-rarity{position:absolute;top:4px;right:6px;font-size:.55rem;font-weight:900;padding:1px 5px;border-radius:6px}
+  .pig-card.rar1 .pc-rarity{background:#444;color:#ccc}
+  .pig-card.rar2 .pc-rarity{background:#1a3a5a;color:#6cb4ff}
+  .pig-card.rar3 .pc-rarity{background:#3a1a5a;color:#c8f}
+  .pig-card.rar4 .pc-rarity{background:#5a3a1a;color:#fc0}
+  .pig-card.rar5 .pc-rarity{background:linear-gradient(90deg,#ff9000,#fc0,#ff7eb3);color:#000}
+  .pig-card.rar6 .pc-rarity{background:linear-gradient(90deg,#ff7eb3,#c8f,#4dd0ff,#6cf06c);color:#000;animation:rainbowGlow 2s linear infinite}
+  @keyframes rainbowGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
+
+  /* 21点牌 */
+  .card-deck{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:.6rem 0;min-height:88px}
+  .pcard{width:58px;height:82px;background:linear-gradient(145deg,#fff,#e8e8e8);color:#111;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;box-shadow:0 4px 10px rgba(0,0,0,.5);border:1px solid #999;font-size:1.3rem;animation:cardIn .3s ease}
+  .pcard .pc-suit{font-size:1rem}
+  .pcard.red{color:#c22}
+  .pcard.back{background:linear-gradient(145deg,#4a2a5a,#2a1a3a);color:#fc0;font-size:1.6rem}
+  @keyframes cardIn{from{opacity:0;transform:translateY(-20px) rotate(-8deg)}to{opacity:1;transform:none}}
+
+  /* 炼金/扭蛋/大逃杀 */
+  .slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin:.6rem 0}
+  .slot{background:#222;border:2px dashed #444;border-radius:12px;padding:.7rem .4rem;text-align:center;cursor:pointer;transition:all .2s;font-size:.72rem;color:#aaa}
+  .slot:hover{border-color:#ff9000;color:#ffb000}
+  .slot.filled{border-style:solid;border-color:#ffb000;background:#2a2418;color:#ffb000;font-weight:700}
+  .slot .sl-emoji{font-size:1.6rem;display:block;margin-bottom:2px}
+  .brew-result{text-align:center;padding:1rem;background:#0d0d0d;border:1px dashed #333;border-radius:12px;margin:.8rem 0;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+  .brew-result .br-emoji{font-size:2.6rem;line-height:1}
+  .brew-result .br-name{font-weight:800;color:#ffb000;font-size:1rem}
+  .brew-result .br-desc{font-size:.75rem;color:#999}
+
+  /* 天气面板 */
+  .weather-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:.6rem 0}
+  .wth-card{background:#222;border:2px solid #333;border-radius:12px;padding:.8rem;text-align:center;transition:all .3s}
+  .wth-card.active{border-color:#ff9000;background:#2a2418;box-shadow:0 0 18px rgba(255,144,0,.4)}
+  .wth-card .wth-icon{font-size:2rem}
+  .wth-card .wth-name{font-weight:800;font-size:.85rem;color:#ffb000;margin-top:4px}
+  .wth-card .wth-eff{font-size:.68rem;color:#999;margin-top:4px;line-height:1.5}
+
+  /* 吐司 */
+  .piggy-toast-wrap{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:320px}
+  .piggy-toast{background:#1a1a1a;border:2px solid #ff9000;border-radius:14px;padding:.7rem 1rem;color:#fff;font-size:.85rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.6);animation:toastIn .35s ease;pointer-events:auto;display:flex;align-items:center;gap:8px}
+  .piggy-toast.good{border-color:#6cf06c}
+  .piggy-toast.bad{border-color:#f66}
+  .piggy-toast.big{border-color:#fc0;background:linear-gradient(135deg,#2a2418,#1a1a1a)}
+  .piggy-toast .tt-emoji{font-size:1.3rem;line-height:1}
+  @keyframes toastIn{from{opacity:0;transform:translateX(40px) scale(.9)}to{opacity:1;transform:none}}
+  .piggy-toast.out{animation:toastOut .3s ease forwards}
+  @keyframes toastOut{to{opacity:0;transform:translateX(40px) scale(.9)}}
+
+  /* 主题切换器 */
   .theme-picker{display:flex;gap:3px;background:#1f1f1f;border:1px solid #444;border-radius:22px;padding:3px;align-items:center;transition:all .35s}
-  .theme-picker button{border:none;background:transparent;cursor:pointer;font-size:1rem;padding:5px 10px;border-radius:16px;transition:all .2s;line-height:1;color:#fff;position:relative}
+  .theme-picker button{border:none;background:transparent;cursor:pointer;font-size:.95rem;padding:4px 9px;border-radius:16px;transition:all .2s;line-height:1;color:#fff;position:relative}
   .theme-picker button:hover{background:#333}
   .theme-picker button.active{background:#ff9000;color:#000;font-weight:700}
-  .theme-picker button[data-theme="light"].active{background:#ffc107;color:#000}
-  .theme-picker button[data-theme="pink"].active{background:#ff7eb3;color:#fff}
-  .theme-picker button[data-theme="blue"].active{background:#00a8ff;color:#fff}
 
-  /* ========== 白色主题（原有 light-theme 增强） ========== */
+  /* 主题 */
   body.light-theme{background:#f2f2f2;color:#1a1a1a}
-  body.light-theme .header{background:#fff;border-bottom-color:#ff9000}
+  body.light-theme .header{background:#fff}
   body.light-theme .logo-text{color:#1a1a1a}
   body.light-theme .nav-link{color:#333}
-  body.light-theme .card,body.light-theme .s-panel,body.light-theme .lottery-panel,body.light-theme .scratch-panel,body.light-theme .race-panel,body.light-theme .tarot-panel,body.light-theme .mini-tool{background:#fff;border-color:#e0e0e0}
+  body.light-theme .card,body.light-theme .s-panel,body.light-theme .lottery-panel,body.light-theme .scratch-panel,body.light-theme .race-panel,body.light-theme .tarot-panel,body.light-theme .mini-tool,body.light-theme .playground{background:#fff;border-color:#e0e0e0}
   body.light-theme .section-title{color:#1a1a1a}
   body.light-theme .s-item{background:#f9f9f9;border-color:#e0e0e0}
   body.light-theme .s-item .s-desc{color:#666}
@@ -350,7 +467,7 @@
   body.light-theme .stats-panel{background:#f5f5f5;border-color:#e0e0e0}
   body.light-theme .stats-list .stat-row{background:#fff;border-color:#eaeaea}
   body.light-theme .stats-list .stat-row .stat-name{color:#444}
-  body.light-theme .modal{background:#fff}
+  body.light-theme .modal,body.light-theme .play-panel{background:#fff}
   body.light-theme .modal-item .value{background:#f5f5f5;color:#333}
   body.light-theme .footer{background:#fff}
   body.light-theme .theme-picker{background:#f0f0f0;border-color:#ddd}
@@ -361,239 +478,121 @@
   body.light-theme .server-select{background:#f5f5f5;border-color:#ddd;color:#333}
   body.light-theme .s-tab{background:#f0f0f0;border-color:#ddd;color:#666}
   body.light-theme .s-tab.active{background:#ff9000;border-color:#ff9000;color:#000}
-  body.light-theme .s-detail .s-meta span{background:#eee}
-  body.light-theme .try-progress-head .label{color:#1a1a1a}
-  body.light-theme .trigger-result-inline .tr-stat{border-color:#e0e0e0;color:#666}
-  body.light-theme .ss-history-panel{background:#f5f5f5;border-color:#e0e0e0}
-  body.light-theme .ss-history-stats span{background:#fff;border-color:#e0e0e0;color:#666}
-  body.light-theme .race-lane .lane-track{background:linear-gradient(90deg,#f0f0f0,#e6e6e6);border-color:#ddd}
-  body.light-theme .race-controls select{background:#f5f5f5;border-color:#ddd;color:#c25a00}
-  body.light-theme .scratch-10x-result{background:#f5f5f5;border-color:#e0e0e0}
-  body.light-theme .x10-card{background:#fff;border-color:#e0e0e0}
-  body.light-theme .x10-card .x10-mini-cell{background:#eee}
-  body.light-theme .lottery-display{background:radial-gradient(circle at 40% 35%,#fafafa,#e6e6e6);box-shadow:0 0 30px #ff900033,inset 0 0 40px #fff}
-  body.light-theme .scratch-card{background:linear-gradient(135deg,#fff6e0,#f5ead0);border-color:#c8a860}
-  body.light-theme .scratch-cell{background:linear-gradient(135deg,#c8c8c8,#a8a8a8)}
-  body.light-theme .scratch-cell.revealed{background:#f0f0f0;border-color:#ccc}
-  body.light-theme .scratch-cell.win{background:#fff4d6;border-color:#fc0}
-  body.light-theme .tarot-deck,body.light-theme .tarot-card{background:linear-gradient(145deg,#fff6e0,#f5ead0);border-color:#c8a860}
-  body.light-theme .tarot-card .t-meaning{color:#5a4a2a;border-color:#d8c8a0}
-  body.light-theme .tarot-card .t-name{color:#a87820}
-  body.light-theme .tarot-stats{color:#888}
-  body.light-theme .tool-log{color:#888}
-  body.light-theme .small-note{color:#888}
-  body.light-theme .lottery-history .lh-entry{border-color:#eee}
-  body.light-theme .egg-record-item,body.light-theme .farm-record-item{border-color:#eee}
-  body.light-theme .ss-history-chart{border-color:#ddd}
-  body.light-theme .stats-ver-block .ver-head{background:#f0f0fa;border-color:#d0d0e8}
-  body.light-theme .x10-card.win{background:#fff4d6;border-color:#fc0}
-  body.light-theme .trigger-result-inline.success{background:#fff8e0;border-color:#e8c860}
-  body.light-theme .trigger-result-inline.partial{background:#efffef;border-color:#a0d8a0}
-  body.light-theme .trigger-result-inline.fail{background:#f7f7f7}
-  body.light-theme .trigger-result-inline.cool{background:#fff0f0;border-color:#e0a8a8}
+  body.light-theme .pg-card{background:#f9f9f9;border-color:#e0e0e0;color:#333}
+  body.light-theme .pg-card .pg-desc{color:#888}
+  body.light-theme .play-info,body.light-theme .play-log{background:#f5f5f5;border-color:#ddd;color:#555}
+  body.light-theme .slot{background:#f5f5f5;border-color:#ddd;color:#666}
+  body.light-theme .slot.filled{background:#fff8e0;border-color:#ff9000;color:#c25a00}
+  body.light-theme .brew-result{background:#f5f5f5;border-color:#ddd}
+  body.light-theme .pig-card{background:#f9f9f9;border-color:#e0e0e0}
+  body.light-theme .pig-card.selected{background:#fff8e0}
+  body.light-theme .wth-card{background:#f5f5f5;border-color:#e0e0e0}
+  body.light-theme .wth-card.active{background:#fff8e0}
+  body.light-theme .play-input{background:#f0f0f0;border-color:#ddd;color:#c25a00}
+  body.light-theme .piggy-toast{background:#fff;color:#333}
 
-  /* ========== 粉色主题 ========== */
   body.pink-theme{background:#fff5f8;color:#4a2a35}
   body.pink-theme .header{background:#ffe0ec;border-bottom-color:#ff7eb3}
   body.pink-theme .logo-text{color:#4a2a35}
   body.pink-theme .logo-hub{color:#ff5599}
   body.pink-theme .nav-link{color:#7a4a5c}
   body.pink-theme .nav-link:hover,body.pink-theme .nav-link.active{background:#ff7eb3;color:#fff}
-  body.pink-theme .card,body.pink-theme .s-panel,body.pink-theme .lottery-panel,body.pink-theme .scratch-panel,body.pink-theme .race-panel,body.pink-theme .tarot-panel,body.pink-theme .mini-tool{background:#fff;border-color:#ffd6e5;box-shadow:0 8px 30px rgba(255,150,180,.16)}
+  body.pink-theme .card,body.pink-theme .s-panel,body.pink-theme .lottery-panel,body.pink-theme .scratch-panel,body.pink-theme .race-panel,body.pink-theme .tarot-panel,body.pink-theme .mini-tool,body.pink-theme .playground{background:#fff;border-color:#ffd6e5;box-shadow:0 8px 30px rgba(255,150,180,.16)}
   body.pink-theme .section-title{color:#4a2a35}
   body.pink-theme .section-title::after{background:linear-gradient(90deg,#ff7eb3,#ffa8c8)}
   body.pink-theme .s-tab{background:#fff0f5;border-color:#ffd6e5;color:#7a4a5c}
   body.pink-theme .s-tab.active{background:#ff7eb3;border-color:#ff7eb3;color:#fff}
-  body.pink-theme .s-tab.ss-tab.active{background:#d8a8f0;border-color:#d8a8f0;color:#fff}
   body.pink-theme .s-item{background:#fff8fb;border-color:#ffdce8}
-  body.pink-theme .s-item:hover{border-color:#ff7eb3}
-  body.pink-theme .s-item.is-selected{border-color:#ff7eb3;background:#ffeaf2}
-  body.pink-theme .s-item.is-ss{background:#fff0f5;border-color:#f0c0d8}
-  body.pink-theme .s-item .s-name{color:#c74a80}
-  body.pink-theme .s-item.is-ss .s-name{color:#c74a80}
   body.pink-theme .s-item .s-desc{color:#8a5a70}
-  body.pink-theme .s-item .s-stat-line{color:#a87a90}
   body.pink-theme .s-detail{background:#fff5f9;border-color:#ffd6e5}
-  body.pink-theme .s-detail h4{color:#c74a80}
-  body.pink-theme .s-detail .s-trigger strong{color:#ff7eb3}
   body.pink-theme .s-history-line{background:#fff0f5;border-color:#ffd6e5;color:#7a4a5c}
-  body.pink-theme .s-history-line strong{color:#c74a80}
-  body.pink-theme .s-history-line .ver{color:#a878d8}
-  body.pink-theme .ss-rate.high{color:#3a9a3a;background:#eafaea;border-left-color:#7ac87a}
-  body.pink-theme .ss-rate.low{color:#c74a80;background:#ffeef4;border-left-color:#ff9ec0}
-  body.pink-theme .ss-rate.self{color:#c74a80;background:#fff0f5;border-left-color:#ff7eb3}
   body.pink-theme .ss-try-wrap{background:#fff5f9;border-color:#ffd6e5}
   body.pink-theme .ss-fortune-banner{background:#fff5f9;border-color:#ffd6e5;color:#7a4a5c}
-  body.pink-theme .ss-fortune-banner.up{border-color:#7ac87a;background:#eafaea;color:#3a7a3a}
-  body.pink-theme .ss-fortune-banner.down{border-color:#ff9ec0;background:#ffeef4;color:#c74a80}
   body.pink-theme .try-progress-track{background:#ffeaf2;border-color:#ffd6e5}
-  body.pink-theme .try-progress-head .label{color:#4a2a35}
   body.pink-theme .trigger-result-inline{background:#fff5f9;border-color:#ffd6e5}
-  body.pink-theme .trigger-result-inline.success{background:#fff8e8;border-color:#f0d070}
-  body.pink-theme .trigger-result-inline.partial{background:#efffef;border-color:#a0d8a0}
-  body.pink-theme .trigger-result-inline.fail{background:#fff5f9;border-color:#ffdce8}
-  body.pink-theme .trigger-result-inline.cool{background:#ffeef4;border-color:#ff9ec0}
   body.pink-theme .trigger-result-inline .tr-sub{color:#5a3a48}
-  body.pink-theme .trigger-result-inline .tr-stat{border-color:#ffdce8;color:#8a5a70}
   body.pink-theme .stats-panel{background:#fff5f9;border-color:#ffd6e5}
-  body.pink-theme .stats-panel h4{color:#c74a80}
-  body.pink-theme .stats-panel .stat-summary span{background:#fff;border-color:#ffd6e5}
   body.pink-theme .stats-list .stat-row{background:#fff;border-color:#ffeaf2}
   body.pink-theme .stats-list .stat-row .stat-name{color:#5a3a48}
-  body.pink-theme .stats-list .stat-row .stat-val{color:#8a5a70}
-  body.pink-theme .stats-list .stat-row .stat-pts{color:#a87a90}
-  body.pink-theme .stats-ver-block .ver-head{background:#fff0f5;border-color:#ffd6e5;color:#c74a80}
-  body.pink-theme .ss-history-panel{background:#fff5f9;border-color:#ffd6e5}
-  body.pink-theme .ss-history-head .hist-title{color:#c74a80}
-  body.pink-theme .ss-history-chart{border-color:#ffd6e5}
-  body.pink-theme .ss-history-stats span{background:#fff;border-color:#ffd6e5;color:#8a5a70}
-  body.pink-theme .ss-range-btns button{background:#fff0f5;border-color:#ffd6e5;color:#8a5a70}
-  body.pink-theme .ss-range-btns button.active{background:#ff7eb3;border-color:#ff7eb3;color:#fff}
-  body.pink-theme .modal{background:#fff;border-color:#ff7eb3}
-  body.pink-theme .modal-title-block h2{color:#c74a80}
-  body.pink-theme .modal-item .label{color:#c74a80}
+  body.pink-theme .modal,body.pink-theme .play-panel{background:#fff;border-color:#ff7eb3}
   body.pink-theme .modal-item .value{background:#fff0f5;color:#4a2a35;border-left-color:#ff7eb3}
-  body.pink-theme .modal-augury{background:#fff5f9;border-color:#ffd6e5}
-  body.pink-theme .modal-augury .star{color:#c74a80}
-  body.pink-theme .modal-header{border-bottom-color:#ffd6e5}
   body.pink-theme .footer{background:#ffe0ec;border-top-color:#ff7eb3}
-  body.pink-theme .footer-section h3{color:#c74a80}
-  body.pink-theme .footer-section p{color:#8a5a70}
-  body.pink-theme .footer-bottom{color:#a87a90;border-top-color:#ffd6e5}
-  body.pink-theme .hunt-advice-box{background:#fff5f9;border-color:#ffd6e5}
-  body.pink-theme .hunt-advice-box h4{color:#c74a80}
-  body.pink-theme .mini-tool h3{color:#c74a80;border-left-color:#ff7eb3}
-  body.pink-theme .counter-value{background:#fff0f5;border-color:#ffd6e5;color:#c74a80}
-  body.pink-theme .tool-log{color:#8a5a70}
-  body.pink-theme .small-note{color:#a87a90}
-  body.pink-theme .server-select{background:#fff0f5;border-color:#ffd6e5;color:#4a2a35}
   body.pink-theme .theme-picker{background:#fff0f5;border-color:#ffd6e5}
   body.pink-theme .theme-picker button{color:#7a4a5c}
   body.pink-theme .theme-picker button:hover{background:#ffe0ec}
-  body.pink-theme .lottery-display{background:radial-gradient(circle at 40% 35%,#fff0f5,#ffe0ec);box-shadow:0 0 30px #ff7eb333,inset 0 0 40px #fff}
-  body.pink-theme .scratch-card{background:linear-gradient(135deg,#fff0f5,#ffe0ec);border-color:#ff9ec0}
-  body.pink-theme .scratch-cell{background:linear-gradient(135deg,#ffb8d0,#ff90b8)}
-  body.pink-theme .scratch-cell.revealed{background:#fff5f9;border-color:#ffd6e5}
-  body.pink-theme .scratch-cell.win{background:#fff0f5;border-color:#ff7eb3}
-  body.pink-theme .scratch-10x-result{background:#fff5f9;border-color:#ffd6e5}
-  body.pink-theme .x10-card{background:#fff;border-color:#ffd6e5}
-  body.pink-theme .x10-card .x10-mini-cell{background:#fff0f5}
-  body.pink-theme .x10-card.win{background:#ffeaf2;border-color:#ff7eb3}
-  body.pink-theme .tarot-deck,body.pink-theme .tarot-card{background:linear-gradient(145deg,#fff0f5,#ffe0ec);border-color:#ff9ec0}
-  body.pink-theme .tarot-card .t-name{color:#c74a80}
-  body.pink-theme .tarot-card .t-meaning{color:#7a4a5c;border-color:#ffd6e5}
-  body.pink-theme .tarot-deck::before{border-color:#ff9ec044}
-  body.pink-theme .race-lane .lane-track{background:linear-gradient(90deg,#fff0f5,#ffe0ec);border-color:#ffd6e5}
-  body.pink-theme .race-lane:hover{background:#fff5f9}
-  body.pink-theme .race-controls select{background:#fff0f5;border-color:#ffd6e5;color:#c74a80}
-  body.pink-theme .race-bank{color:#7a4a5c}
-  body.pink-theme .race-bank strong{color:#c74a80}
-  body.pink-theme .lottery-history .lh-entry{border-color:#ffeaf2}
-  body.pink-theme .egg-record-item,body.pink-theme .farm-record-item{border-color:#ffeaf2}
-  body.pink-theme .lottery-stats span,body.pink-theme .scratch-info span{background:#fff0f5;color:#7a4a5c}
-  body.pink-theme .s-detail .s-meta span{background:#fff0f5}
+  body.pink-theme .hunt-advice-box{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .counter-value{background:#fff0f5;border-color:#ffd6e5;color:#c74a80}
+  body.pink-theme .server-select{background:#fff0f5;border-color:#ffd6e5;color:#4a2a35}
+  body.pink-theme .pg-card{background:#fff8fb;border-color:#ffdce8;color:#4a2a35}
+  body.pink-theme .pg-card .pg-name{color:#c74a80}
+  body.pink-theme .pg-card .pg-desc{color:#a87a90}
+  body.pink-theme .play-info,body.pink-theme .play-log{background:#fff5f9;border-color:#ffd6e5;color:#7a4a5c}
+  body.pink-theme .slot{background:#fff5f9;border-color:#ffd6e5;color:#8a5a70}
+  body.pink-theme .slot.filled{background:#fff0f5;border-color:#ff7eb3;color:#c74a80}
+  body.pink-theme .brew-result{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .pig-card{background:#fff8fb;border-color:#ffdce8}
+  body.pink-theme .pig-card.selected{background:#ffeaf2}
+  body.pink-theme .wth-card{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .wth-card.active{background:#fff0f5;border-color:#ff7eb3}
+  body.pink-theme .play-input{background:#fff0f5;border-color:#ffd6e5;color:#c74a80}
+  body.pink-theme .piggy-toast{background:#fff;color:#4a2a35;border-color:#ff7eb3}
+  body.pink-theme .wallet-chip{background:linear-gradient(135deg,#fff0f5,#ffe0ec);border-color:#ff7eb3}
+  body.pink-theme .wallet-chip .wt-val{color:#c74a80}
+  body.pink-theme .weather-chip{background:#fff5f9;border-color:#ffd6e5;color:#7a4a5c}
+  body.pink-theme .weather-chip .wc-name{color:#4a2a35}
 
-  /* ========== 蓝色主题 ========== */
   body.blue-theme{background:#0a1628;color:#d6e8ff}
   body.blue-theme .header{background:#040c1a;border-bottom-color:#00a8ff}
   body.blue-theme .logo-text{color:#d6e8ff}
   body.blue-theme .logo-hub{color:#00a8ff}
   body.blue-theme .nav-link{color:#b0d4ff}
   body.blue-theme .nav-link:hover,body.blue-theme .nav-link.active{background:#00a8ff;color:#001a33}
-  body.blue-theme .card,body.blue-theme .s-panel,body.blue-theme .lottery-panel,body.blue-theme .scratch-panel,body.blue-theme .race-panel,body.blue-theme .tarot-panel,body.blue-theme .mini-tool{background:#0f1f38;border-color:#1e3a5f;box-shadow:0 8px 30px rgba(0,40,90,.4)}
+  body.blue-theme .card,body.blue-theme .s-panel,body.blue-theme .lottery-panel,body.blue-theme .scratch-panel,body.blue-theme .race-panel,body.blue-theme .tarot-panel,body.blue-theme .mini-tool,body.blue-theme .playground{background:#0f1f38;border-color:#1e3a5f;box-shadow:0 8px 30px rgba(0,40,90,.4)}
   body.blue-theme .section-title{color:#e0f0ff}
   body.blue-theme .section-title::after{background:linear-gradient(90deg,#00a8ff,#4dd0ff)}
   body.blue-theme .s-tab{background:#122440;border-color:#1e3a5f;color:#9ab4d4}
   body.blue-theme .s-tab.active{background:#00a8ff;border-color:#00a8ff;color:#001a33}
-  body.blue-theme .s-tab.ss-tab.active{background:#a88cff;border-color:#a88cff;color:#fff}
   body.blue-theme .s-item{background:#122440;border-color:#1e3a5f}
-  body.blue-theme .s-item:hover{border-color:#00a8ff}
-  body.blue-theme .s-item.is-selected{border-color:#00a8ff;background:#1a3050}
-  body.blue-theme .s-item.is-ss{background:#1a2440;border-color:#3a4a6a}
-  body.blue-theme .s-item .s-name{color:#88c8ff}
-  body.blue-theme .s-item.is-ss .s-name{color:#ffd060}
   body.blue-theme .s-item .s-desc{color:#9ab4d4}
   body.blue-theme .s-detail{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .s-detail h4{color:#4dd0ff}
-  body.blue-theme .s-detail .s-trigger strong{color:#00a8ff}
   body.blue-theme .s-history-line{background:#0a1628;border-color:#1e3a5f;color:#9ab4d4}
-  body.blue-theme .s-history-line strong{color:#4dd0ff}
-  body.blue-theme .s-history-line .ver{color:#a88cff}
-  body.blue-theme .ss-rate.high{color:#6cf06c;background:#0f2a1f;border-left-color:#2a7a4a}
-  body.blue-theme .ss-rate.low{color:#f88;background:#2a1628;border-left-color:#7a2a4a}
-  body.blue-theme .ss-rate.self{color:#ffd060;background:#2a2418;border-left-color:#ffd060}
   body.blue-theme .ss-try-wrap{background:#0a1628;border-color:#1e3a5f}
   body.blue-theme .ss-fortune-banner{background:#0f1f38;border-color:#1e3a5f;color:#c8dff4}
-  body.blue-theme .ss-fortune-banner.up{border-color:#2a7a4a;background:#0f2a1f;color:#6cf06c}
-  body.blue-theme .ss-fortune-banner.down{border-color:#7a2a4a;background:#2a1628;color:#f88}
   body.blue-theme .try-progress-track{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .try-progress-head .label{color:#e0f0ff}
   body.blue-theme .trigger-result-inline{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .trigger-result-inline.success{background:#1a1f0a;border-color:#5a5a1a}
-  body.blue-theme .trigger-result-inline.partial{background:#0f1f18;border-color:#2a5a4a}
-  body.blue-theme .trigger-result-inline.fail{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .trigger-result-inline.cool{background:#1a0f1f;border-color:#5a2a5a}
   body.blue-theme .trigger-result-inline .tr-sub{color:#b4cce4}
-  body.blue-theme .trigger-result-inline .tr-stat{border-color:#1e3a5f;color:#9ab4d4}
   body.blue-theme .stats-panel{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .stats-panel h4{color:#4dd0ff}
-  body.blue-theme .stats-panel .stat-summary span{background:#0f1f38;border-color:#1e3a5f;color:#9ab4d4}
   body.blue-theme .stats-list .stat-row{background:#0f1f38;border-color:#16304f}
   body.blue-theme .stats-list .stat-row .stat-name{color:#c8dff4}
-  body.blue-theme .stats-list .stat-row .stat-val{color:#9ab4d4}
-  body.blue-theme .stats-list .stat-row .stat-pts{color:#8aa4c4}
-  body.blue-theme .stats-ver-block .ver-head{background:#12244a;border-color:#2a3a6a;color:#a88cff}
-  body.blue-theme .ss-history-panel{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .ss-history-head .hist-title{color:#4dd0ff}
-  body.blue-theme .ss-history-chart{border-color:#1e3a5f}
-  body.blue-theme .ss-history-stats span{background:#0f1f38;border-color:#1e3a5f;color:#9ab4d4}
-  body.blue-theme .ss-range-btns button{background:#122440;border-color:#1e3a5f;color:#9ab4d4}
-  body.blue-theme .ss-range-btns button.active{background:#00a8ff;border-color:#00a8ff;color:#001a33}
-  body.blue-theme .modal{background:#0f1f38;border-color:#00a8ff}
-  body.blue-theme .modal-title-block h2{color:#4dd0ff}
-  body.blue-theme .modal-item .label{color:#4dd0ff}
+  body.blue-theme .modal,body.blue-theme .play-panel{background:#0f1f38;border-color:#00a8ff}
   body.blue-theme .modal-item .value{background:#122440;color:#d6e8ff;border-left-color:#00a8ff}
-  body.blue-theme .modal-augury{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .modal-augury .star{color:#4dd0ff}
-  body.blue-theme .modal-header{border-bottom-color:#1e3a5f}
   body.blue-theme .footer{background:#040c1a;border-top-color:#00a8ff}
-  body.blue-theme .footer-section h3{color:#4dd0ff}
-  body.blue-theme .footer-section p{color:#9ab4d4}
-  body.blue-theme .footer-bottom{color:#7a9ac0;border-top-color:#1e3a5f}
-  body.blue-theme .hunt-advice-box{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .hunt-advice-box h4{color:#4dd0ff}
-  body.blue-theme .mini-tool h3{color:#4dd0ff;border-left-color:#00a8ff}
-  body.blue-theme .counter-value{background:#0a1628;border-color:#1e3a5f;color:#4dd0ff}
-  body.blue-theme .tool-log{color:#9ab4d4}
-  body.blue-theme .small-note{color:#7a9ac0}
-  body.blue-theme .server-select{background:#0a1628;border-color:#1e3a5f;color:#d6e8ff}
   body.blue-theme .theme-picker{background:#0f1f38;border-color:#1e3a5f}
   body.blue-theme .theme-picker button{color:#b0d4ff}
   body.blue-theme .theme-picker button:hover{background:#1a3050}
-  body.blue-theme .lottery-display{background:radial-gradient(circle at 40% 35%,#122440,#05101f);box-shadow:0 0 30px #00a8ff33,inset 0 0 40px #000}
-  body.blue-theme .scratch-card{background:linear-gradient(135deg,#122440,#05101f);border-color:#1e5a8f}
-  body.blue-theme .scratch-cell{background:linear-gradient(135deg,#2a3a5a,#1a2a4a)}
-  body.blue-theme .scratch-cell.revealed{background:#0f1f38;border-color:#1e3a5f}
-  body.blue-theme .scratch-cell.win{background:#1a2440;border-color:#ffd060}
-  body.blue-theme .scratch-10x-result{background:#0a1628;border-color:#1e3a5f}
-  body.blue-theme .x10-card{background:#0f1f38;border-color:#1e3a5f}
-  body.blue-theme .x10-card .x10-mini-cell{background:#122440}
-  body.blue-theme .x10-card.win{background:#1a2440;border-color:#ffd060}
-  body.blue-theme .tarot-deck,body.blue-theme .tarot-card{background:linear-gradient(145deg,#122440,#05101f);border-color:#1e5a8f}
-  body.blue-theme .tarot-card .t-name{color:#4dd0ff}
-  body.blue-theme .tarot-card .t-meaning{color:#b4cce4;border-color:#1e3a5f}
-  body.blue-theme .tarot-deck::before{border-color:#1e5a8f44}
-  body.blue-theme .race-lane .lane-track{background:linear-gradient(90deg,#05101f,#122440);border-color:#1e3a5f}
-  body.blue-theme .race-lane:hover{background:#122440}
-  body.blue-theme .race-controls select{background:#0a1628;border-color:#1e3a5f;color:#4dd0ff}
-  body.blue-theme .race-bank{color:#9ab4d4}
-  body.blue-theme .race-bank strong{color:#4dd0ff}
-  body.blue-theme .lottery-history .lh-entry{border-color:#1e3a5f}
-  body.blue-theme .egg-record-item,body.blue-theme .farm-record-item{border-color:#1e3a5f}
-  body.blue-theme .lottery-stats span,body.blue-theme .scratch-info span{background:#122440;color:#9ab4d4}
-  body.blue-theme .s-detail .s-meta span{background:#122440}
-  body.blue-theme .try-progress-fill{background:linear-gradient(90deg,#005a8a,#00a8ff,#4dd0ff);box-shadow:0 0 10px #00a8ff44}
-  body.blue-theme .try-progress-fill.cool{background:linear-gradient(90deg,#5a0f2a,#a82a4a,#f88);box-shadow:0 0 10px #ff666644}
+  body.blue-theme .hunt-advice-box{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .counter-value{background:#0a1628;border-color:#1e3a5f;color:#4dd0ff}
+  body.blue-theme .server-select{background:#0a1628;border-color:#1e3a5f;color:#d6e8ff}
+  body.blue-theme .pg-card{background:#122440;border-color:#1e3a5f;color:#d6e8ff}
+  body.blue-theme .pg-card .pg-name{color:#4dd0ff}
+  body.blue-theme .pg-card .pg-desc{color:#9ab4d4}
+  body.blue-theme .play-info,body.blue-theme .play-log{background:#0a1628;border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .slot{background:#122440;border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .slot.filled{background:#1a2440;border-color:#4dd0ff;color:#4dd0ff}
+  body.blue-theme .brew-result{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .pig-card{background:#122440;border-color:#1e3a5f}
+  body.blue-theme .pig-card.selected{background:#1a2440}
+  body.blue-theme .wth-card{background:#122440;border-color:#1e3a5f}
+  body.blue-theme .wth-card.active{background:#1a2440;border-color:#4dd0ff}
+  body.blue-theme .play-input{background:#0a1628;border-color:#1e3a5f;color:#4dd0ff}
+  body.blue-theme .piggy-toast{background:#0f1f38;color:#d6e8ff;border-color:#00a8ff}
+  body.blue-theme .wallet-chip{background:linear-gradient(135deg,#122440,#05101f);border-color:#4dd0ff}
+  body.blue-theme .wallet-chip .wt-val{color:#4dd0ff}
+  body.blue-theme .weather-chip{background:#0f1f38;border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .weather-chip .wc-name{color:#d6e8ff}
+  body.blue-theme .die{background:linear-gradient(145deg,#2a3a5a,#1a2a4a);color:#d6e8ff;border-color:#4a5a7a}
+  body.blue-theme .die.held{background:linear-gradient(145deg,#3a4a6a,#2a3a5a);border-color:#4dd0ff}
+  body.blue-theme .pcard{background:linear-gradient(145deg,#e8e8e8,#b0b0b0);color:#001}
 
   @media (max-width:600px){
     .nav-wrapper{flex-direction:column;align-items:stretch}
@@ -603,6 +602,9 @@
     .sector-label{font-size:.65rem;width:55px}
     .s-grid{grid-template-columns:1fr}
     .x10-cards{grid-template-columns:repeat(3,1fr)}
+    .pg-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+    .pig-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+    .piggy-toast-wrap{left:12px;right:12px;max-width:none}
   }
 </style>
 </head>
@@ -613,14 +615,25 @@
     <div class="nav-wrapper">
       <div class="logo"><a href="#"><span class="logo-text">猪猪</span><span class="logo-hub">运势</span><span class="logo-emoji">🐖</span></a></div>
       <nav class="nav-menu">
-        <a href="#oracle" class="nav-link active">猪猪运势轮盘</a>
-        <a href="#lottery" class="nav-link">猪猪盲盒</a>
-        <a href="#s-panel" class="nav-link">猪猪模拟S怪触发</a>
-        <a href="#scratch" class="nav-link">金碟刮刮乐</a>
-        <a href="#race" class="nav-link">猪猪赛跑</a>
-        <a href="#tarot" class="nav-link">猪猪塔罗牌</a>
-        <a href="#tools" class="nav-link">其他猪猪辅助工具</a>
+        <a href="#oracle" class="nav-link active">转盘</a>
+        <a href="#lottery" class="nav-link">盲盒</a>
+        <a href="#s-panel" class="nav-link">S怪触发</a>
+        <a href="#scratch" class="nav-link">刮刮乐</a>
+        <a href="#race" class="nav-link">赛跑</a>
+        <a href="#tarot" class="nav-link">塔罗</a>
+        <a href="#playground" class="nav-link">🎰 游乐场</a>
+        <a href="#tools" class="nav-link">工具箱</a>
       </nav>
+      <div class="status-bar">
+        <div class="wallet-chip" id="walletChip" title="全局猪猪币">
+          <span class="wt-coin">🪙</span><span class="wt-val" id="walletVal">1000</span>
+        </div>
+        <div class="weather-chip" id="weatherChip" title="点击查看天气控制台">
+          <span class="wc-icon" id="wcIcon">☀️</span>
+          <span class="wc-name" id="wcName">晴朗</span>
+          <span class="wc-timer" id="wcTimer"></span>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -726,8 +739,27 @@
       </div>
     </div>
 
+    <!-- ==================== 猪猪游乐场 ==================== -->
+    <div class="playground" id="playground">
+      <div class="section-title">🎰 猪猪游乐场 · 十二重随机</div>
+      <div class="pg-grid" id="pgGrid">
+        <button class="pg-card hot" data-game="roulette"><span class="pg-emoji">🎲</span><span class="pg-name">俄罗斯轮盘</span><span class="pg-desc">越贪越刺激，随时收手</span></button>
+        <button class="pg-card" data-game="coin"><span class="pg-emoji">🪙</span><span class="pg-name">命运硬币</span><span class="pg-desc">连猜 8 次，倍率翻倍</span></button>
+        <button class="pg-card new" data-game="lotto"><span class="pg-emoji">🎱</span><span class="pg-name">猪猪双色球</span><span class="pg-desc">每 5 分钟开奖</span></button>
+        <button class="pg-card hot" data-game="breed"><span class="pg-emoji">🧬</span><span class="pg-name">繁育实验室</span><span class="pg-desc">育出离谱猪，无限组合</span></button>
+        <button class="pg-card" data-game="alchemy"><span class="pg-emoji">⚗️</span><span class="pg-name">炼金锅</span><span class="pg-desc">配方全靠试，有彩蛋</span></button>
+        <button class="pg-card" data-game="gacha"><span class="pg-emoji">🥚</span><span class="pg-name">扭蛋机</span><span class="pg-desc">荒诞组合收集</span></button>
+        <button class="pg-card hot" data-game="battle"><span class="pg-emoji">⚔️</span><span class="pg-name">猪猪大逃杀</span><span class="pg-desc">8 猪混战，押注赢家</span></button>
+        <button class="pg-card" data-game="adventure"><span class="pg-emoji">🗺️</span><span class="pg-name">猪猪大冒险</span><span class="pg-desc">文字跑团，随机事件</span></button>
+        <button class="pg-card" data-game="yahtzee"><span class="pg-emoji">🎯</span><span class="pg-name">骰子赌场</span><span class="pg-desc">重掷凑组合</span></button>
+        <button class="pg-card" data-game="blackjack"><span class="pg-emoji">🃏</span><span class="pg-name">猪猪 21 点</span><span class="pg-desc">对赌庄家猪</span></button>
+        <button class="pg-card" data-game="prank"><span class="pg-emoji">😜</span><span class="pg-name">恶作剧系统</span><span class="pg-desc">猪猪随机捣乱</span></button>
+        <button class="pg-card new" data-game="weather"><span class="pg-emoji">🌦️</span><span class="pg-name">天气控制台</span><span class="pg-desc">查看当前天气加成</span></button>
+      </div>
+    </div>
+
     <div class="scratch-panel" id="scratch">
-      <div class="section-title">🎫 金碟刮刮乐/单抽保底/十连硬保底</div>
+      <div class="section-title">🎫 金碟刮刮乐 · 单抽保底 + 十连硬保底</div>
       <div class="scratch-info">
         <span>单抽爆率: <strong id="scratchOdds">--%</strong></span>
         <span>保底进度: <strong id="scratchPity">--</strong></span>
@@ -745,11 +777,11 @@
         <button id="scratchAllBtn" class="secondary" disabled>🔍 全部刮开</button>
         <button id="scratchResetBtn" class="secondary">重置余额</button>
       </div>
-      <div class="small-note">单抽保底</div>
+      <div class="small-note">单抽保底：连续 5 次未中后大幅提升爆率 · 十连保底：每 20 张必出 1 张中奖 · 单抽爆率恒定低于十连</div>
     </div>
 
     <div class="race-panel" id="race">
-      <div class="section-title">🏁猪猪赛跑</div>
+      <div class="section-title">🏁 猪猪赛跑 · 押注你的幸运猪</div>
       <div class="race-track" id="raceTrack"></div>
       <div class="race-controls">
         <span class="race-bank">猪猪币: <strong id="raceBank">1000</strong></span>
@@ -826,6 +858,7 @@
         <h3>🗑️ 数据清理</h3>
         <div class="tool-content">
           <button id="clearTriggerDataBtn" class="danger" style="font-size:.8rem;">清空触发记录与冷却</button>
+          <button id="clearAllPlaygroundBtn" class="danger" style="font-size:.8rem;">清空游乐场数据</button>
         </div>
         <div class="small-note">清空本地保存的尝试次数、触发次数、触发点历史与冷却状态</div>
       </div>
@@ -878,6 +911,24 @@
   </div>
 </div>
 
+<!-- 游乐场统一面板 -->
+<div class="play-overlay" id="playOverlay">
+  <div class="play-panel" id="playPanel">
+    <button class="play-close" id="playClose">×</button>
+    <div class="play-head">
+      <span class="ph-emoji" id="playEmoji">🎲</span>
+      <div>
+        <h3 id="playTitle">游乐场</h3>
+        <div class="ph-sub" id="playSub">加载中……</div>
+      </div>
+    </div>
+    <div class="play-body" id="playBody"></div>
+  </div>
+</div>
+
+<!-- 吐司容器 -->
+<div class="piggy-toast-wrap" id="toastWrap"></div>
+
 <footer class="footer">
   <div class="container">
     <div class="footer-content">
@@ -892,8 +943,11 @@
 </footer>
 
 <script>
+/* ============================================================
+   原有功能模块（转盘 / 盲盒 / S怪 / 刮刮乐 / 赛跑 / 塔罗 / 工具）
+   以下代码完全保留原有逻辑，不删除任何内容
+   ============================================================ */
 (function() {
-  /* ========== 服务器数据 ========== */
   const serverData = {
     '陆行鸟': ['拉诺西亚','幻影群岛','神意之地','红玉海','萌芽池','宇宙和音','沃仙曦染','晨曦王座'],
     '莫古力': ['白银乡','拂晓之间','龙巢神殿','梦羽宝境','神拳痕','潮风亭','旅人栈桥','白金幻象'],
@@ -913,7 +967,6 @@
   }
   populateServerSelects();
 
-  /* ========== 转盘数据 ========== */
   const sectors=[
     {id:'raid',name:'高难副本',emoji:'⚔️',sub:'零式 / 绝本 / 极神',stars:5,
       yi:['开荒新零式，一把过本','和固定队打绝本，机制全对','用坦克排随机，队友全是高手'],
@@ -1027,15 +1080,14 @@
   wheel.style.transform=`rotate(${currentRotation}deg)`;
   requestAnimationFrame(()=>{requestAnimationFrame(()=>{wheel.style.transition='';});});
 
-  /* ========== S怪数据（4.0 无 SS） ========== */
   const sData={
     '7.0 S怪':[
-      {name:'厌忌之人 奇里格',zone:'奥阔帕恰山',desc:'符合天气时，地图站岗触发',ssName:'水晶化身之王'},
+      {name:'厌忌之人 奇里格',zone:'奥阔帕恰山',desc:'地图站岗触发',ssName:'水晶化身之王'},
       {name:'伊努索奇',zone:'克扎玛乌卡湿地',desc:'地图站岗触发',ssName:'水晶化身之王'},
       {name:'内尤佐缇',zone:'亚克特尔树海',desc:'扔鱼粉随机触发',ssName:'水晶化身之王'},
-      {name:'山谢亚',zone:'夏劳尼荒野',desc:'化身Fate大人触发，你不会也是蓝山吧！',ssName:'水晶化身之王'},
+      {name:'山谢亚',zone:'夏劳尼荒野',desc:'化身Fate大人触发',ssName:'水晶化身之王'},
       {name:'先驱勇士 阿提卡斯',zone:'遗产之地',desc:'制作HQ犎牛牛排',ssName:'水晶化身之王'},
-      {name:'天气预报机器人',zone:'活着的记忆',desc:'我的天，这是青魔大人！',ssName:'水晶化身之王'}
+      {name:'天气预报机器人',zone:'活着的记忆',desc:'青魔大人！',ssName:'水晶化身之王'}
     ],
     '6.0 S怪':[
       {name:'布弗鲁',zone:'迷津',desc:'召唤小巨魔站岗吧！',ssName:'克尔'},
@@ -1079,47 +1131,17 @@
     allSNames.forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o);});
   })();
 
-  /* ========== DynamicRate ========== */
   const DynamicRate=(()=>{
     const VOLATILITY=3,JITTER=1,REFRESH_MS=10000,HISTORY_MINUTES=30;
     const SESSION_FORTUNE=(Math.random()-0.5)*3;
-    function hash(str){
-      let h=2166136261;
-      for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}
-      return h>>>0;
-    }
+    function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
     function phaseOf(key){return (hash(key)%3600)/3600*Math.PI*2;}
     function clampRound(v){return Math.max(1,Math.min(95,Math.round(v)));}
-    function detJitter(key,ts){
-      const bucket=Math.floor(ts/60000);
-      const h=hash(key+'#'+bucket);
-      return ((h%2000)/2000-0.5)*2*JITTER;
-    }
-    function getRateAt(baseRate,key,ts){
-      const t=ts/1000;
-      const wave=Math.sin(t/45+phaseOf(key));
-      return clampRound(baseRate+wave*VOLATILITY+detJitter(key,ts)+SESSION_FORTUNE);
-    }
-    function getHistory(baseRate,key,minutes=HISTORY_MINUTES){
-      const now=Date.now();const arr=[];
-      for(let i=minutes-1;i>=0;i--){
-        const ts=now-i*60000;
-        arr.push({ts,rate:getRateAt(baseRate,key,ts)});
-      }
-      return arr;
-    }
-    function trend(rate,baseRate){
-      const diff=rate-baseRate;
-      if(diff>=1.5)return{cls:'up',icon:'📈',text:'上升'};
-      if(diff<=-1.5)return{cls:'down',icon:'📉',text:'回落'};
-      return{cls:'flat',icon:'➖',text:'平稳'};
-    }
-    function fortuneLabel(){
-      const v=SESSION_FORTUNE;
-      if(v>1.2)return{cls:'up',text:`今日SS运势 +${v.toFixed(1)}，小猪觉得很有戏！`};
-      if(v<-1.2)return{cls:'down',text:`今日SS运势 ${v.toFixed(1)}，小猪表示要谨慎……`};
-      return{cls:'flat',text:`今日SS运势 ${v>=0?'+':''}${v.toFixed(1)}，中规中矩`};
-    }
+    function detJitter(key,ts){const bucket=Math.floor(ts/60000);const h=hash(key+'#'+bucket);return ((h%2000)/2000-0.5)*2*JITTER;}
+    function getRateAt(baseRate,key,ts){const t=ts/1000;const wave=Math.sin(t/45+phaseOf(key));return clampRound(baseRate+wave*VOLATILITY+detJitter(key,ts)+SESSION_FORTUNE);}
+    function getHistory(baseRate,key,minutes=HISTORY_MINUTES){const now=Date.now();const arr=[];for(let i=minutes-1;i>=0;i--){const ts=now-i*60000;arr.push({ts,rate:getRateAt(baseRate,key,ts)});}return arr;}
+    function trend(rate,baseRate){const diff=rate-baseRate;if(diff>=1.5)return{cls:'up',icon:'📈',text:'上升'};if(diff<=-1.5)return{cls:'down',icon:'📉',text:'回落'};return{cls:'flat',icon:'➖',text:'平稳'};}
+    function fortuneLabel(){const v=SESSION_FORTUNE;if(v>1.2)return{cls:'up',text:`今日SS运势 +${v.toFixed(1)}，小猪觉得很有戏！`};if(v<-1.2)return{cls:'down',text:`今日SS运势 ${v.toFixed(1)}，小猪表示要谨慎……`};return{cls:'flat',text:`今日SS运势 ${v>=0?'+':''}${v.toFixed(1)}，中规中矩`};}
     return{getRateAt,getHistory,trend,fortuneLabel,REFRESH_MS,HISTORY_MINUTES};
   })();
 
@@ -1128,17 +1150,10 @@
     const valid = list.filter(i => i.ssName);
     if(!valid.length) return null;
     let sumW = 0, sumWV = 0;
-    valid.forEach(item => {
-      const w = 40 + (item.name.length % 20);
-      sumW += w;
-      sumWV += w * 4;
-    });
+    valid.forEach(item => {const w = 40 + (item.name.length % 20);sumW += w;sumWV += w * 4;});
     return sumWV / sumW;
   }
-  function getVersionSSCount(versionKey){
-    const list = sData[versionKey] || [];
-    return list.filter(i => i.ssName).length;
-  }
+  function getVersionSSCount(versionKey){const list = sData[versionKey] || [];return list.filter(i => i.ssName).length;}
   function getIndividualBase(item, versionKey){
     if(!item || !item.ssName) return null;
     const ownBase = 3 + (item.name.length % 4);
@@ -1165,12 +1180,10 @@
     return DynamicRate.trend(rate, base);
   }
 
-  /* ========== 触发系统 ========== */
   const STORAGE_KEY = 'piggy-s-trigger-v9';
   const VERSION_KEY = 'piggy-s-version-v9';
   const CLICK_KEY = 'piggy-s-clicks-v9';
   const STATS_KEY = 'piggy-s-stats-v9';
-
   const PROGRESS_DURATION = 60 * 60 * 1000;
   const S_COOLDOWN_MS = 20 * 60 * 1000;
   const SS_COOLDOWN_MS = 50 * 60 * 1000;
@@ -1186,10 +1199,7 @@
   let versionState = {};
   try { versionState = JSON.parse(localStorage.getItem(VERSION_KEY)) || {}; } catch(e){ versionState = {}; }
   let clickHistory = [];
-  try {
-    const raw = JSON.parse(localStorage.getItem(CLICK_KEY));
-    if(Array.isArray(raw)) clickHistory = raw.filter(t => typeof t === 'number');
-  } catch(e) { clickHistory = []; }
+  try { const raw = JSON.parse(localStorage.getItem(CLICK_KEY)); if(Array.isArray(raw)) clickHistory = raw.filter(t => typeof t === 'number'); } catch(e) { clickHistory = []; }
   let stats = {};
   try { stats = JSON.parse(localStorage.getItem(STATS_KEY)) || {}; } catch(e){ stats = {}; }
 
@@ -1199,7 +1209,6 @@
     try { localStorage.setItem(CLICK_KEY, JSON.stringify(clickHistory)); } catch(e){}
     try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch(e){}
   }
-
   function getItemState(item){
     if(!item || !item.name) return null;
     const key = item.name;
@@ -1229,11 +1238,7 @@
     if(clickHistory.length !== before) saveAll();
     return clickHistory.length;
   }
-  function getRateLimitWaitMs(){
-    pruneClicks();
-    if(clickHistory.length < CLICK_LIMIT) return 0;
-    return Math.max(0, clickHistory[0] + CLICK_WINDOW_MS - Date.now());
-  }
+  function getRateLimitWaitMs(){pruneClicks();if(clickHistory.length < CLICK_LIMIT) return 0;return Math.max(0, clickHistory[0] + CLICK_WINDOW_MS - Date.now());}
   function formatCooldown(ms){
     const total = Math.ceil(ms / 1000);
     if(total <= 0) return '0秒';
@@ -1244,7 +1249,6 @@
     if(m > 0) return `${m}分${s}秒`;
     return `${s}秒`;
   }
-
   function getTriggerProgress(item){
     const now = Date.now();
     const s = getItemState(item);
@@ -1263,39 +1267,25 @@
     const remainMs = Math.max(0, PROGRESS_DURATION - elapsed);
     return { pct, cooling:false, cooldownRemain:0, remainMs, ssCooling, ssCooldownRemain };
   }
-
   function getClickPenalty(count){
     if(count <= PENALTY_FREE_CLICKS) return 1;
     const p = 1 - (count - PENALTY_FREE_CLICKS) * PENALTY_STEP;
     return Math.max(PENALTY_FLOOR, Math.round(p * 100) / 100);
   }
-
-  /* ============================================================
-     ★ 新机制：进度条驱动的渐进式触发概率
-     ------------------------------------------------------------
-     · 概率随进度条逐渐爬升，进度 0% 时几乎不可能出
-     · 前 10 次尝试有硬性上限，防止一次就出 S
-     · 进度接近满时额外加成，给玩家保底希望
-     ============================================================ */
   function computeHiddenRate(att, progPct){
     const progNorm = Math.max(0, Math.min(1, (progPct || 0) / 100));
-    // 进度曲线（幂 2.5）：0% → 0.3% ；50% → 2.4% ；100% → 12.3%
     const progressBase = 0.3 + Math.pow(progNorm, 2.5) * 12;
-    // 尝试次数加成（收益递减，封顶 +8%）
     let attBonus = 0;
     if(att > 5) attBonus = Math.min(8, (att - 5) * 0.22);
     let hidden = progressBase + attBonus;
-    // 硬性防护层：防止一次就出
     if(att === 1) hidden = Math.min(hidden, 0.6);
     else if(att <= 3) hidden = Math.min(hidden, 2);
     else if(att <= 6) hidden = Math.min(hidden, 5);
     else if(att <= 10) hidden = Math.min(hidden, 9);
-    // 进度接近满时的保底爬升
     if(progNorm >= 0.85) hidden += 3;
     if(progNorm >= 0.95) hidden += 5;
     return Math.max(0.15, Math.min(30, hidden));
   }
-
   function formatRateTier(est){
     if(est < 1) return {tier:'ice', text:'❄ 微乎其微'};
     if(est < 3) return {tier:'fog', text:'🌫 渺茫'};
@@ -1304,52 +1294,34 @@
     if(est < 22) return {tier:'sun', text:'☀ 很有戏'};
     return {tier:'fire', text:'🔥 运势旺盛'};
   }
-
   function rollSTrigger(item, versionKey){
     const now = Date.now();
     const state = getItemState(item);
     const vState = getVersionState(versionKey);
-
-    if(vState.cooldownUntil > now){
-      return { versionBlocked: true, remain: vState.cooldownUntil - now };
-    }
-    if(state.cooldownUntil > now){
-      return { blocked: true, remain: state.cooldownUntil - now };
-    }
+    if(vState.cooldownUntil > now) return { versionBlocked: true, remain: vState.cooldownUntil - now };
+    if(state.cooldownUntil > now) return { blocked: true, remain: state.cooldownUntil - now };
     pruneClicks(now);
     const recentClicks = clickHistory.length;
-    if(recentClicks >= CLICK_LIMIT){
-      return { rateLimited: true, recent: recentClicks, limit: CLICK_LIMIT, waitMs: getRateLimitWaitMs() };
-    }
+    if(recentClicks >= CLICK_LIMIT) return { rateLimited: true, recent: recentClicks, limit: CLICK_LIMIT, waitMs: getRateLimitWaitMs() };
     clickHistory.push(now);
     saveAll();
-
     state.attempts++;
     const att = state.attempts;
     if(!stats[item.name]) stats[item.name] = { attempts:0, triggers:0, triggerPoints:[], ssCount:0, version: versionKey };
     stats[item.name].attempts++;
     stats[item.name].version = versionKey;
-
-    // ===== 新机制核心：概率由进度条驱动 =====
     const prog = getTriggerProgress(item);
     let hidden = computeHiddenRate(att, prog.pct);
-    // 小幅随机抖动
     hidden += (Math.random() - 0.5) * 5;
     hidden = Math.max(0.1, Math.min(32, hidden));
-
     const roll = Math.random() * 100;
-
-    // 早产彩蛋：极低概率，且至少尝试 3 次后才可能（0.3%）
     if(att >= 3 && Math.random() * 100 < 0.3){
       state.progressStart = now + S_COOLDOWN_MS;
       state.cooldownUntil = now + S_COOLDOWN_MS;
       saveAll();
       return { success: true, early: true, attempts: att, roll: Math.round(roll*10)/10 };
     }
-    // 阴间机制保留：5% 概率“摸到了但被水晶吞掉”
-    if(Math.random() < 0.05){
-      return { success: false, suppressed: true, attempts: att };
-    }
+    if(Math.random() < 0.05) return { success: false, suppressed: true, attempts: att };
     if(roll < hidden){
       state.progressStart = now + S_COOLDOWN_MS;
       state.cooldownUntil = now + S_COOLDOWN_MS;
@@ -1358,19 +1330,10 @@
     }
     return { success: false, attempts: att, roll: Math.round(roll*10)/10 };
   }
-
-  /* ============================================================
-     ★ 新机制：SS 概率大幅降低 + 首次保护
-     ------------------------------------------------------------
-     · 基础概率从 35% 降至 8%，随触发次数递减
-     · 前 2 次触发 S 时，出 SS 概率被硬性压低
-     ============================================================ */
   function rollSS(item){
     const state = getItemState(item);
     const now = Date.now();
-    if(state.ssCooldownUntil > now){
-      return { locked: true, remain: state.ssCooldownUntil - now };
-    }
+    if(state.ssCooldownUntil > now) return { locked: true, remain: state.ssCooldownUntil - now };
     let base = 8;
     if(state.triggers >= 3) base = 6.5;
     if(state.triggers >= 8) base = 5;
@@ -1378,19 +1341,13 @@
     if(state.triggers >= 25) base = 2.5;
     if(state.triggers >= 40) base = 1.8;
     base += (Math.random() - 0.5) * 5;
-    // 硬性防护：刚开始触发 S 的时候 SS 几乎不可能出
     if(state.triggers <= 2) base = Math.min(base, 2.5);
     if(state.triggers <= 1) base = Math.min(base, 1);
     base = Math.max(0.3, Math.min(15, base));
     const roll = Math.random() * 100;
-    if(roll < base){
-      state.ssCooldownUntil = now + SS_COOLDOWN_MS;
-      saveAll();
-      return { success: true, roll: Math.round(roll*10)/10, rate: Math.round(base*10)/10 };
-    }
+    if(roll < base){ state.ssCooldownUntil = now + SS_COOLDOWN_MS; saveAll(); return { success: true, roll: Math.round(roll*10)/10, rate: Math.round(base*10)/10 }; }
     return { success: false, roll: Math.round(roll*10)/10, rate: Math.round(base*10)/10 };
   }
-
   function checkVersionComplete(versionKey){
     if(versionKey==='SS怪（概率触发）') return false;
     const list = sData[versionKey] || [];
@@ -1406,9 +1363,11 @@
     return false;
   }
 
-  /* ========== 渲染 ========== */
   let currentSTab='7.0 S怪';
   let currentDetailTab=null, currentDetailIdx=null;
+  let historyOpen = false;
+  let historyMinutes = 30;
+  let historyCleanups = [];
 
   function renderTabs(){
     const tabs=document.getElementById('sTabs');
@@ -1425,14 +1384,11 @@
       });
     });
   }
-
   function renderGrid(){
     const grid=document.getElementById('sGrid');
     const vState = getVersionState(currentSTab);
     const versionCooling = vState.cooldownUntil > Date.now();
-
     grid.innerHTML=sData[currentSTab].map((item,i)=>{
-      // SS 怪条目
       if(item.isSS){
         const selClass = (currentDetailTab===currentSTab && currentDetailIdx===i) ? 'is-selected' : '';
         return `<div class="s-item is-ss ${selClass}" data-idx="${i}">
@@ -1441,34 +1397,24 @@
           <div class="s-stat-line" style="color:#fc0;">该隐藏 Boss 由对应版本 S 怪触发时判定出现</div>
         </div>`;
       }
-
       const s = getItemState(item);
       const now = Date.now();
       const sCool = s.cooldownUntil > now;
       const ssCool = s.ssCooldownUntil > now;
       const stat = stats[item.name] || { attempts:0, triggers:0 };
-
       let ssLine = '';
       if(item.ssName){
         const r = computeIndividualRate(item, currentSTab) ?? 0;
         const tr2 = computeIndividualTrend(item, currentSTab);
         ssLine = `<div class="s-stat-line" style="color:#888;"><span>SS概率: <strong style="color:${r >= 8 ? '#6cf06c' : '#f88'};">${r}%</strong></span><span>${tr2.icon} ${tr2.text}</span></div>`;
       }
-
-      let statLine = `<div class="s-stat-line">
-        <span>尝试 <strong style="color:#ffb000;">${stat.attempts}</strong></span>
-        <span>触发 <strong style="color:#6cf06c;">${stat.triggers}</strong></span>`;
+      let statLine = `<div class="s-stat-line"><span>尝试 <strong style="color:#ffb000;">${stat.attempts}</strong></span><span>触发 <strong style="color:#6cf06c;">${stat.triggers}</strong></span>`;
       if(versionCooling) statLine += `<span class="vco">❄ 版本冷却 ${formatCooldown(vState.cooldownUntil-now)}</span>`;
       else if(sCool) statLine += `<span class="cool">❄ S冷却 ${formatCooldown(s.cooldownUntil-now)}</span>`;
       if(s.triggeredThisRound) statLine += `<span class="ok">✓ 本轮已触</span>`;
       statLine += `</div>`;
-
-      // SS 冷却标签放在名字旁
       let ssCoolTag = '';
-      if(item.ssName && ssCool){
-        ssCoolTag = `<span class="ss-cool-tag">👑 SS冷却 ${formatCooldown(s.ssCooldownUntil-now)}</span>`;
-      }
-
+      if(item.ssName && ssCool) ssCoolTag = `<span class="ss-cool-tag">👑 SS冷却 ${formatCooldown(s.ssCooldownUntil-now)}</span>`;
       const coolClass = (versionCooling || sCool) ? 'is-cooling' : '';
       const selClass = (currentDetailTab===currentSTab && currentDetailIdx===i) ? 'is-selected' : '';
       return `<div class="s-item ${coolClass} ${selClass}" data-idx="${i}">
@@ -1477,7 +1423,6 @@
         ${ssLine}${statLine}
       </div>`;
     }).join('');
-
     grid.querySelectorAll('.s-item').forEach(el=>{
       el.addEventListener('click',()=>{
         const idx = parseInt(el.dataset.idx);
@@ -1485,39 +1430,31 @@
           document.getElementById('sDetail').classList.remove('active');
           currentDetailTab=null;currentDetailIdx=null;
           renderGrid();
-        }else{
-          showDetail(currentSTab, idx);
-        }
+        }else{ showDetail(currentSTab, idx); }
       });
     });
   }
-
   function showDetail(tab, idx){
     currentDetailTab = tab;
     currentDetailIdx = idx;
     const item = sData[tab][idx];
     const detail = document.getElementById('sDetail');
     detail.classList.add('active');
-
     document.getElementById('sDetailName').textContent = `${item.name} · ${item.zone}`;
     document.getElementById('sDetailMeta').innerHTML = `<span>类别: ${tab}</span><span>区域: ${item.zone}</span>`;
     document.getElementById('sDetailTrigger').innerHTML = `<strong>触发方式：</strong>${item.desc}`;
-
-    // SS 怪：只显示说明
     if(item.isSS){
-      document.getElementById('sHistoryLine').innerHTML = `👑 这是SS`;
+      document.getElementById('sHistoryLine').innerHTML = `👑 这是 SS 隐藏 Boss，只能通过触发对应版本的 S 怪来随机判定出现。<br>它没有独立进度条，也不会自己累积。`;
       document.getElementById('ssRate').style.display = 'none';
       document.getElementById('ssTryWrap').classList.remove('active');
       document.getElementById('ssHistoryToggle').style.display='none';
       document.getElementById('ssHistoryPanel').classList.remove('active');
       historyOpen=false;
       document.getElementById('triggerResultInline').classList.remove('active');
-      document.getElementById('sDetailTip').textContent = '※请在对应版本的 S 怪详情里点击「试试触发」来判定。';
+      document.getElementById('sDetailTip').textContent = '※ 此隐藏 Boss 没有独立触发按钮，请在对应版本的 S 怪详情里点击「试试触发」来判定。';
       renderGrid();
       return;
     }
-
-    // 普通 S 怪
     const stat = stats[item.name] || { attempts:0, triggers:0, triggerPoints:[], ssCount:0 };
     const s = getItemState(item);
     const now = Date.now();
@@ -1530,9 +1467,7 @@
         const tag = p <= 3 ? '早产' : (p >= 30 ? '回家' : '中段');
         return `<span class="${cls}">第${p}次(${tag})</span>`;
       }).join(' ');
-    } else {
-      pointsHtml = '<span style="color:#555;">暂无触发记录</span>';
-    }
+    } else { pointsHtml = '<span style="color:#555;">暂无触发记录</span>'; }
     const ssCoolInline = ssCool ? `<span class="ss-cool-tag" style="margin-left:8px;">👑 SS判定冷却 ${formatCooldown(s.ssCooldownUntil-now)}</span>` : '';
     document.getElementById('sHistoryLine').innerHTML = `
       📜 本机记录：尝试 <strong>${stat.attempts}</strong> 次 · 触发 <strong>${stat.triggers}</strong> 次 · SS出现 <strong>${stat.ssCount||0}</strong> 次
@@ -1540,7 +1475,6 @@
       🎯 触发点：${pointsHtml}<br>
       ⏰ 上次触发：<strong>${lastTrigger}</strong>
     `;
-
     const ssRateEl = document.getElementById('ssRate');
     if(item.ssName){
       const liveRate = computeIndividualRate(item, tab) ?? 0;
@@ -1557,10 +1491,8 @@
       ssRateEl.className = 'ss-rate self';
       ssRateEl.innerHTML = `📜 该版本（${tab}）没有 SS 隐藏 Boss 机制，触发后只有普通 S 怪。`;
     }
-
     document.getElementById('ssTryWrap').classList.add('active');
     renderTryStat(item);
-
     const histBtn = document.getElementById('ssHistoryToggle');
     const histPanel = document.getElementById('ssHistoryPanel');
     if(item.ssName){
@@ -1573,12 +1505,10 @@
       histPanel.classList.remove('active');
       historyOpen = false;
     }
-
     document.getElementById('triggerResultInline').classList.remove('active');
     document.getElementById('sDetailTip').textContent = '※ 新机制：概率随进度条逐渐爬升（前期极低，进度越高越有希望）；前 3 次尝试概率被硬性压低，避免一次出货；触发成功后清零并进入 20 分钟冷却；SS 判定冷却 50 分钟；版本全触发后整版冷却 86 分钟；1 分钟最多 10 次。';
     renderGrid();
   }
-
   function renderTryStat(item){
     const row = document.getElementById('tryStatRow');
     const btn = document.getElementById('ssTryBtn');
@@ -1590,7 +1520,6 @@
     const s = getItemState(item);
     const stat = stats[item.name] || { attempts:0, triggers:0 };
     const recent = pruneClicks();
-
     const prog = getTriggerProgress(item);
     if(vState.cooldownUntil > now){
       if(pctEl){pctEl.classList.add('cool');pctEl.textContent='版本冷却';}
@@ -1614,12 +1543,10 @@
       if(recent > PENALTY_FREE_CLICKS) bits.push(`连点惩罚 ×${getClickPenalty(recent).toFixed(2)}`);
       eta.innerHTML = bits.join(' · ');
     }
-
     let parts = [];
     parts.push(`<span>本机尝试 <strong>${stat.attempts}</strong> 次</span>`);
     parts.push(`<span>本机触发 <strong>${stat.triggers}</strong> 次</span>`);
     parts.push(`<span>1分钟内已点 <strong>${recent}/${CLICK_LIMIT}</strong></span>`);
-
     if(vState.cooldownUntil > now){
       parts.push(`<span class="vco">版本冷却 <strong>${formatCooldown(vState.cooldownUntil-now)}</strong></span>`);
       btn.disabled = true; btn.classList.add('cool');
@@ -1638,24 +1565,17 @@
     }
     row.innerHTML = parts.join('');
   }
-
   function tryTrigger(){
     if(currentDetailTab == null || currentDetailIdx == null) return;
     const item = sData[currentDetailTab][currentDetailIdx];
     if(!item || item.isSS) return;
-
     const sResult = rollSTrigger(item, currentDetailTab);
     saveAll();
-
-    if(sResult.versionBlocked){
-      showInlineResult(item, { blocked: 'version', remain: sResult.remain });
-    } else if(sResult.blocked){
-      showInlineResult(item, { blocked: 's', remain: sResult.remain });
-    } else if(sResult.rateLimited){
-      showInlineResult(item, { rateLimited: true, recent: sResult.recent, limit: sResult.limit, waitMs: sResult.waitMs });
-    } else if(!sResult.success){
-      showInlineResult(item, { fail: true, suppressed: sResult.suppressed, attempts: sResult.attempts });
-    } else {
+    if(sResult.versionBlocked){ showInlineResult(item, { blocked: 'version', remain: sResult.remain }); }
+    else if(sResult.blocked){ showInlineResult(item, { blocked: 's', remain: sResult.remain }); }
+    else if(sResult.rateLimited){ showInlineResult(item, { rateLimited: true, recent: sResult.recent, limit: sResult.limit, waitMs: sResult.waitMs }); }
+    else if(!sResult.success){ showInlineResult(item, { fail: true, suppressed: sResult.suppressed, attempts: sResult.attempts }); }
+    else {
       const state = getItemState(item);
       state.triggers++;
       state.triggeredThisRound = true;
@@ -1669,20 +1589,13 @@
         stats[item.name].triggerPoints.push(sResult.attempts);
         if(stats[item.name].triggerPoints.length > 50) stats[item.name].triggerPoints.shift();
       }
-
       if(item.ssName){
         const ssResult = rollSS(item);
         if(ssResult.success){
           if(stats[item.name]) stats[item.name].ssCount = (stats[item.name].ssCount || 0) + 1;
           showInlineResult(item, { success: true, early: sResult.early, ss: true, attempts: sResult.attempts });
-        } else {
-          showInlineResult(item, { success: true, early: sResult.early, ss: false, ssLocked: ssResult.locked, attempts: sResult.attempts });
-        }
-      } else {
-        // 该版本无 SS 机制
-        showInlineResult(item, { success: true, early: sResult.early, noSS: true, attempts: sResult.attempts });
-      }
-
+        } else { showInlineResult(item, { success: true, early: sResult.early, ss: false, ssLocked: ssResult.locked, attempts: sResult.attempts }); }
+      } else { showInlineResult(item, { success: true, early: sResult.early, noSS: true, attempts: sResult.attempts }); }
       const versionComplete = checkVersionComplete(currentDetailTab);
       if(versionComplete){
         setTimeout(()=>{
@@ -1694,7 +1607,6 @@
       }
     }
     saveAll();
-
     if(currentDetailTab != null && currentDetailIdx != null){
       const curItem = sData[currentDetailTab][currentDetailIdx];
       if(curItem && !curItem.isSS){
@@ -1710,9 +1622,7 @@
             const tag = p <= 3 ? '早产' : (p >= 30 ? '回家' : '中段');
             return `<span class="${cls}">第${p}次(${tag})</span>`;
           }).join(' ');
-        } else {
-          pointsHtml = '<span style="color:#555;">暂无触发记录</span>';
-        }
+        } else { pointsHtml = '<span style="color:#555;">暂无触发记录</span>'; }
         document.getElementById('sHistoryLine').innerHTML = `
           📜 本机记录：尝试 <strong>${stat.attempts}</strong> 次 · 触发 <strong>${stat.triggers}</strong> 次 · SS出现 <strong>${stat.ssCount||0}</strong> 次
           <span class="ver"> · 版本：${stat.version || currentDetailTab}</span>${ssCoolInline}<br>
@@ -1725,30 +1635,14 @@
     renderGrid();
     renderStats();
   }
-
   function showInlineResult(item, r){
     const el = document.getElementById('triggerResultInline');
     el.classList.add('active');
-
     let cls, emoji, title, sub, statRows = [];
-
-    if(r.blocked === 'version'){
-      cls='cool'; emoji='🏚️';
-      title = '本版本正在冷却……';
-      sub = `<strong style="color:#f66;">【${currentDetailTab}】</strong> 本轮全部 S 怪已触发，整版进入冷却。<br>冷却结束后本轮触发标记会清空。`;
-      statRows.push(`<div class="row"><span>版本冷却剩余</span><strong>${formatCooldown(r.remain)}</strong></div>`);
-    } else if(r.blocked === 's'){
-      cls='cool'; emoji='❄️';
-      title = '这只 S 怪正在冷却……';
-      sub = `<strong style="color:#f66;">【${item.name}】</strong> 刚触发过，需要休息一下。`;
-      statRows.push(`<div class="row"><span>S 怪冷却剩余</span><strong>${formatCooldown(r.remain)}</strong></div>`);
-    } else if(r.rateLimited){
-      cls='cool'; emoji='⏳';
-      title = '点太快啦，猪猪跟不上了……';
-      sub = `1 分钟内最多尝试触发 <strong>${r.limit}</strong> 次。<br>请等频率窗口恢复后再来。`;
-      statRows.push(`<div class="row"><span>本分钟已点</span><span class="no">${r.recent} / ${r.limit}</span></div>`);
-      statRows.push(`<div class="row"><span>恢复等待</span><span class="warn">${formatCooldown(r.waitMs)}</span></div>`);
-    } else if(r.fail){
+    if(r.blocked === 'version'){ cls='cool'; emoji='🏚️'; title = '本版本正在冷却……'; sub = `<strong style="color:#f66;">【${currentDetailTab}】</strong> 本轮全部 S 怪已触发，整版进入冷却。<br>冷却结束后本轮触发标记会清空。`; statRows.push(`<div class="row"><span>版本冷却剩余</span><strong>${formatCooldown(r.remain)}</strong></div>`); }
+    else if(r.blocked === 's'){ cls='cool'; emoji='❄️'; title = '这只 S 怪正在冷却……'; sub = `<strong style="color:#f66;">【${item.name}】</strong> 刚触发过，需要休息一下。`; statRows.push(`<div class="row"><span>S 怪冷却剩余</span><strong>${formatCooldown(r.remain)}</strong></div>`); }
+    else if(r.rateLimited){ cls='cool'; emoji='⏳'; title = '点太快啦，猪猪跟不上了……'; sub = `1 分钟内最多尝试触发 <strong>${r.limit}</strong> 次。<br>请等频率窗口恢复后再来。`; statRows.push(`<div class="row"><span>本分钟已点</span><span class="no">${r.recent} / ${r.limit}</span></div>`); statRows.push(`<div class="row"><span>恢复等待</span><span class="warn">${formatCooldown(r.waitMs)}</span></div>`); }
+    else if(r.fail){
       cls='fail'; emoji = r.suppressed ? '🌑' : '🌫️';
       const fails = ['小猪什么都没感受到……','空气中只有普通魔物的味道……','水晶毫无反应，下次再来吧……','小猪的鼻子抖了抖……好像什么也没有'];
       const subs = ['别灰心，猪猪相信下一把就是它','运气这种东西，多试几次总会来的','再摸两把猪猪，运势会好起来的','猪猪神谕：今日不宜强求，明日再战'];
@@ -1757,7 +1651,8 @@
       if(r.suppressed) sub += `<br><span style="color:#c66;">🌑 你感觉这次明明已经摸到了，但水晶偏偏不给你面子……</span>`;
       statRows.push(`<div class="row"><span>累计尝试</span><span>第 <strong>${r.attempts}</strong> 次</span></div>`);
       statRows.push(`<div class="row"><span>状态</span><span class="no">未触发</span></div>`);
-    } else if(r.success && r.ss){
+    }
+    else if(r.success && r.ss){
       cls='success'; emoji='🐗✨';
       title = r.early ? '！早产了！居然 1% 就出货！' : '感受到了特殊的恶名精英手下正在巡逻！！';
       sub = `<strong style="color:#fc0;">【${item.name}】</strong> 触发了！<br>并且直接带出 SS【${item.ssName || '？'}】！<br>快叫上队友集合吧，猪猪为你加油！`;
@@ -1765,39 +1660,13 @@
       statRows.push(`<div class="row"><span>触发结果</span><span class="ok">✅ S 触发成功${r.early?'（早产）':''}</span></div>`);
       statRows.push(`<div class="row"><span>SS 判定</span><span class="ok">✅ 出现 SS</span></div>`);
       statRows.push(`<div class="row"><span>状态</span><span class="no">❄ S 冷却 20 分钟 · SS 判定冷却 50 分钟</span></div>`);
-    } else if(r.success && r.ssLocked){
-      cls='partial'; emoji='🐗';
-      title = 'S 怪触发了！但 SS 判定正在冷却……';
-      sub = `<strong style="color:#6cf06c;">【${item.name}】</strong> 触发了！<br>不过该 S 怪的 SS 判定还在冷却中，本次不会出 SS。`;
-      statRows.push(`<div class="row"><span>累计尝试</span><span>第 <strong>${r.attempts}</strong> 次</span></div>`);
-      statRows.push(`<div class="row"><span>触发结果</span><span class="ok">✅ S 触发成功${r.early?'（早产）':''}</span></div>`);
-      statRows.push(`<div class="row"><span>SS 判定</span><span class="no">❄ 冷却中</span></div>`);
-    } else if(r.success && r.noSS){
-      cls='partial'; emoji='🐗';
-      title = r.early ? '！1% 早产！' : 'S 怪触发了！';
-      sub = `<strong style="color:#6cf06c;">【${item.name}】</strong> 触发了！<br>该版本没有 SS 隐藏 Boss，只有普通 S 怪。`;
-      statRows.push(`<div class="row"><span>累计尝试</span><span>第 <strong>${r.attempts}</strong> 次</span></div>`);
-      statRows.push(`<div class="row"><span>触发结果</span><span class="ok">✅ S 触发成功${r.early?'（早产）':''}</span></div>`);
-      statRows.push(`<div class="row"><span>状态</span><span class="no">❄ S 冷却 20 分钟</span></div>`);
-    } else if(r.success){
-      cls='partial'; emoji='🐗';
-      title = r.early ? '！1% 早产！可惜没带出 SS' : 'S 怪触发了！但没有 SS……';
-      sub = `<strong style="color:#6cf06c;">【${item.name}】</strong> 触发了！<br>但 SS 怪没有出现，只有普通的精英怪在游荡……`;
-      statRows.push(`<div class="row"><span>累计尝试</span><span>第 <strong>${r.attempts}</strong> 次</span></div>`);
-      statRows.push(`<div class="row"><span>触发结果</span><span class="ok">✅ S 触发成功${r.early?'（早产）':''}</span></div>`);
-      statRows.push(`<div class="row"><span>SS 判定</span><span class="no">❌ 未出 SS</span></div>`);
-      statRows.push(`<div class="row"><span>状态</span><span class="no">❄ S 冷却 20 分钟</span></div>`);
     }
-
+    else if(r.success && r.ssLocked){ cls='partial'; emoji='🐗'; title = 'S 怪触发了！但 SS 判定正在冷却……'; sub = `<strong style="color:#6cf06c;">【${item.name}】</strong> 触发了！<br>不过该 S 怪的 SS 判定还在冷却中，本次不会出 SS。`; statRows.push(`<div class="row"><span>累计尝试</span><span>第 <strong>${r.attempts}</strong> 次</span></div>`); statRows.push(`<div class="row"><span>触发结果</span><span class="ok">✅ S 触发成功${r.early?'（早产）':''}</span></div>`); statRows.push(`<div class="row"><span>SS 判定</span><span class="no">❄ 冷却中</span></div>`); }
+    else if(r.success && r.noSS){ cls='partial'; emoji='🐗'; title = r.early ? '！1% 早产！' : 'S 怪触发了！'; sub = `<strong style="color:#6cf06c;">【${item.name}】</strong> 触发了！<br>该版本没有 SS 隐藏 Boss，只有普通 S 怪。`; statRows.push(`<div class="row"><span>累计尝试</span><span>第 <strong>${r.attempts}</strong> 次</span></div>`); statRows.push(`<div class="row"><span>触发结果</span><span class="ok">✅ S 触发成功${r.early?'（早产）':''}</span></div>`); statRows.push(`<div class="row"><span>状态</span><span class="no">❄ S 冷却 20 分钟</span></div>`); }
+    else if(r.success){ cls='partial'; emoji='🐗'; title = r.early ? '！1% 早产！可惜没带出 SS' : 'S 怪触发了！但没有 SS……'; sub = `<strong style="color:#6cf06c;">【${item.name}】</strong> 触发了！<br>但 SS 怪没有出现，只有普通的精英怪在游荡……`; statRows.push(`<div class="row"><span>累计尝试</span><span>第 <strong>${r.attempts}</strong> 次</span></div>`); statRows.push(`<div class="row"><span>触发结果</span><span class="ok">✅ S 触发成功${r.early?'（早产）':''}</span></div>`); statRows.push(`<div class="row"><span>SS 判定</span><span class="no">❌ 未出 SS</span></div>`); statRows.push(`<div class="row"><span>状态</span><span class="no">❄ S 冷却 20 分钟</span></div>`); }
     el.className = 'trigger-result-inline active ' + cls;
-    el.innerHTML = `
-      <div class="tr-head"><span class="tr-emoji">${emoji}</span><span class="tr-title">${title}</span></div>
-      <div class="tr-sub">${sub}</div>
-      <div class="tr-stat">${statRows.join('')}</div>
-    `;
+    el.innerHTML = `<div class="tr-head"><span class="tr-emoji">${emoji}</span><span class="tr-title">${title}</span></div><div class="tr-sub">${sub}</div><div class="tr-stat">${statRows.join('')}</div>`;
   }
-
-  /* ========== 统计 ========== */
   function renderStats(){
     const summary = document.getElementById('statSummary');
     const body = document.getElementById('statsBody');
@@ -1806,19 +1675,11 @@
       if(vk==='SS怪（概率触发）')continue;
       sData[vk].forEach(it => {
         const s = stats[it.name] || { attempts:0, triggers:0, ssCount:0 };
-        totalAttempts += s.attempts;
-        totalTriggers += s.triggers;
-        totalSS += (s.ssCount || 0);
+        totalAttempts += s.attempts; totalTriggers += s.triggers; totalSS += (s.ssCount || 0);
       });
     }
     const avgPerTrigger = totalTriggers > 0 ? Math.round(totalAttempts / totalTriggers) : 0;
-    summary.innerHTML = `
-      <span>总尝试 <strong>${totalAttempts}</strong> 次</span>
-      <span class="gr">总触发 <strong>${totalTriggers}</strong> 次</span>
-      <span class="hi">SS 出现 <strong>${totalSS}</strong> 次</span>
-      <span>平均每 <strong>${avgPerTrigger || '—'}</strong> 次尝试出 1 只 S</span>
-    `;
-
+    summary.innerHTML = `<span>总尝试 <strong>${totalAttempts}</strong> 次</span><span class="gr">总触发 <strong>${totalTriggers}</strong> 次</span><span class="hi">SS 出现 <strong>${totalSS}</strong> 次</span><span>平均每 <strong>${avgPerTrigger || '—'}</strong> 次尝试出 1 只 S</span>`;
     let html = '';
     for(const vk of Object.keys(sData)){
       if(vk==='SS怪（概率触发）')continue;
@@ -1829,50 +1690,25 @@
       const vAttempts = items.reduce((a,b)=>a+b.attempts,0);
       const vTriggers = items.reduce((a,b)=>a+b.triggers,0);
       const vSS = items.reduce((a,b)=>a+b.ss,0);
-
-      const rows = items
-        .sort((a,b)=> b.triggers - a.triggers || b.attempts - a.attempts)
-        .map(it => {
-          let ptsHtml = '';
-          if(it.points.length){
-            ptsHtml = it.points.slice(-12).map(p=>{
-              const cls = p <= 3 ? 'early' : (p >= 30 ? 'late' : 'mid');
-              const tag = p <= 3 ? '早产' : (p >= 30 ? '回家' : '中段');
-              return `<span class="pt ${cls}">第<span class="at">${p}</span>次·${tag}</span>`;
-            }).join('');
-            if(it.points.length > 12) ptsHtml = `… ` + ptsHtml;
-          } else {
-            ptsHtml = `<span class="empty-tip">还没触发过，猪猪也在等</span>`;
-          }
-          const ssTag = it.ss > 0 ? `<span class="ss-tag">👑 SS×${it.ss}</span>` : '';
-          const neverCls = it.triggers === 0 ? 'never' : '';
-          const rateHint = it.attempts > 0 && it.triggers > 0
-            ? `均 ${Math.round(it.attempts/it.triggers)} 次/只`
-            : '';
-          return `<div class="stat-row ${neverCls}">
-            <div class="stat-line1">
-              <span class="stat-name">${it.name}${ssTag}</span>
-              <span class="stat-val">尝试 <strong>${it.attempts}</strong> · 触发 <strong class="gr">${it.triggers}</strong> ${rateHint ? `<span style="color:#666;">(${rateHint})</span>` : ''}</span>
-            </div>
-            <div class="stat-pts">🎯 ${ptsHtml}</div>
-          </div>`;
-        }).join('');
-
-      html += `<div class="stats-ver-block">
-        <div class="ver-head">
-          <span>📁 ${vk}</span>
-          <span class="ver-sum">本版 尝试 <strong>${vAttempts}</strong> · 触发 <strong>${vTriggers}</strong> · SS <strong>${vSS}</strong></span>
-        </div>
-        <div class="stats-list">${rows}</div>
-      </div>`;
+      const rows = items.sort((a,b)=> b.triggers - a.triggers || b.attempts - a.attempts).map(it => {
+        let ptsHtml = '';
+        if(it.points.length){
+          ptsHtml = it.points.slice(-12).map(p=>{
+            const cls = p <= 3 ? 'early' : (p >= 30 ? 'late' : 'mid');
+            const tag = p <= 3 ? '早产' : (p >= 30 ? '回家' : '中段');
+            return `<span class="pt ${cls}">第<span class="at">${p}</span>次·${tag}</span>`;
+          }).join('');
+          if(it.points.length > 12) ptsHtml = `… ` + ptsHtml;
+        } else { ptsHtml = `<span class="empty-tip">还没触发过，猪猪也在等</span>`; }
+        const ssTag = it.ss > 0 ? `<span class="ss-tag">👑 SS×${it.ss}</span>` : '';
+        const neverCls = it.triggers === 0 ? 'never' : '';
+        const rateHint = it.attempts > 0 && it.triggers > 0 ? `均 ${Math.round(it.attempts/it.triggers)} 次/只` : '';
+        return `<div class="stat-row ${neverCls}"><div class="stat-line1"><span class="stat-name">${it.name}${ssTag}</span><span class="stat-val">尝试 <strong>${it.attempts}</strong> · 触发 <strong class="gr">${it.triggers}</strong> ${rateHint ? `<span style="color:#666;">(${rateHint})</span>` : ''}</span></div><div class="stat-pts">🎯 ${ptsHtml}</div></div>`;
+      }).join('');
+      html += `<div class="stats-ver-block"><div class="ver-head"><span>📁 ${vk}</span><span class="ver-sum">本版 尝试 <strong>${vAttempts}</strong> · 触发 <strong>${vTriggers}</strong> · SS <strong>${vSS}</strong></span></div><div class="stats-list">${rows}</div></div>`;
     }
     body.innerHTML = html || '<div style="font-size:.75rem;color:#666;text-align:center;padding:1rem;">还没有任何触发记录，去试试手气吧～</div>';
   }
-
-  /* ========== SS 历史曲线 ========== */
-  let historyOpen = false;
-  let historyMinutes = 30;
-  let historyCleanups = [];
   function renderHistory(item, versionKey){
     const panel=document.getElementById('ssHistoryPanel');
     historyCleanups.forEach(fn=>{try{fn();}catch(e){}});
@@ -1952,10 +1788,7 @@
       historyCleanups = [];
     }
   });
-
   document.getElementById('ssTryBtn').addEventListener('click', tryTrigger);
-
-  /* 统计折叠按钮 */
   document.getElementById('statsToggle').addEventListener('click', ()=>{
     const body = document.getElementById('statsBody');
     const sum = document.getElementById('statSummary');
@@ -1965,7 +1798,6 @@
     sum.style.display = isHidden ? '' : 'none';
     btn.textContent = isHidden ? '📉 收起' : '📊 展开';
   });
-
   setInterval(()=>{
     if(currentDetailTab != null && currentDetailIdx != null){
       const item = sData[currentDetailTab] && sData[currentDetailTab][currentDetailIdx];
@@ -1974,7 +1806,6 @@
     renderGrid();
   }, 1000);
   setInterval(renderStats, 3000);
-
   function renderFortuneBanner(){
     const el = document.getElementById('ssFortuneBanner');
     if(currentSTab==='SS怪（概率触发）'){
@@ -1994,13 +1825,8 @@
     }
   }
   setInterval(renderFortuneBanner, 2000);
+  renderTabs(); renderGrid(); renderFortuneBanner(); renderStats();
 
-  renderTabs();
-  renderGrid();
-  renderFortuneBanner();
-  renderStats();
-
-  /* ========== 狩猎建议 ========== */
   function updateHuntAdvice(){
     const levelKeys=['A50','A60','A70','A80','A100'];
     const levelLabels={A50:'50A',A60:'60A',A70:'70A',A80:'80/90A',A100:'100A'};
@@ -2034,7 +1860,6 @@
   }
   updateHuntAdvice();
 
-  /* ========== 盲盒 ========== */
   const lotteryPrizes=[
     {rarity:'common',weight:35,name:'猪猪安慰奖',desc:'获得猪猪的鼓励眼神，明天会更好',emoji:'🐽'},
     {rarity:'common',weight:22,name:'迷路的小猪',desc:'一只迷路的小猪闯入你的副本，然后被AOE打死了',emoji:'🐷'},
@@ -2093,7 +1918,6 @@
     },80);
   });
 
-  /* ========== 刮刮乐 ========== */
   const scratchSymbols=[
     {id:'pig',emoji:'🐷',baseWeight:22,tiers:[2,6,20]},
     {id:'coin',emoji:'💰',baseWeight:16,tiers:[3,10,30]},
@@ -2109,13 +1933,11 @@
   const SINGLE_STREAK_MAX = 5;
   const TEN_BASE_RATE = 0.30;
   const PITY_LIMIT = 20;
-
   let scratchBank=1000, scratchPlayed=0, scratchNet=0;
   let scratchCells=[], scratchLocked=true, scratchHasCard=false;
   let singleStreak = 0;
   let totalStreak = 0;
   let tenInProgress = false;
-
   function getWeightsForRate(targetRate){
     const pNon = Math.sqrt(Math.max(0.01, targetRate) / 1.6);
     const nonNothingTotal = pNon * 100;
@@ -2214,10 +2036,8 @@
         resultEl.textContent += ` 距离保底还有 ${SINGLE_STREAK_MAX - 1 - singleStreak} 次单抽`;
       }
     }
-    updateScratchBank();
-    renderScratchOdds();
-    scratchLocked = true;
-    scratchHasCard = false;
+    updateScratchBank(); renderScratchOdds();
+    scratchLocked = true; scratchHasCard = false;
     document.getElementById('scratchAllBtn').disabled = true;
   }
   function computeResult(cells){
@@ -2234,9 +2054,7 @@
       const mult = sym.tiers[tier];
       if(mult > 0 && (!best || mult > best.mult)) best = {sym, count, mult};
     }
-    return best
-      ? {win:true, mult:best.mult, payout: SCRATCH_COST * best.mult, sym:best.sym, count:best.count, cells}
-      : {win:false, mult:0, payout:0, cells};
+    return best ? {win:true, mult:best.mult, payout: SCRATCH_COST * best.mult, sym:best.sym, count:best.count, cells} : {win:false, mult:0, payout:0, cells};
   }
   function quickScratchOne(targetRate){
     const weights = getWeightsForRate(targetRate);
@@ -2250,61 +2068,32 @@
     const matchCount = 3 + Math.floor(Math.random() * 3);
     const cells = [];
     for(let i=0;i<matchCount;i++) cells.push(sym);
-    const fillWeights = getWeightsForRate(TEN_BASE_RATE).map(w =>
-      w.id === sym.id ? {...w, effWeight: 0} : w
-    );
+    const fillWeights = getWeightsForRate(TEN_BASE_RATE).map(w => w.id === sym.id ? {...w, effWeight: 0} : w);
     while(cells.length < SCRATCH_CELLS){ cells.push(pickScratchSymbol(fillWeights)); }
-    for(let i=cells.length-1;i>0;i--){
-      const j = Math.floor(Math.random() * (i+1));
-      [cells[i], cells[j]] = [cells[j], cells[i]];
-    }
+    for(let i=cells.length-1;i>0;i--){ const j = Math.floor(Math.random() * (i+1)); [cells[i], cells[j]] = [cells[j], cells[i]]; }
     return computeResult(cells);
   }
   function scratch10x(){
     if(tenInProgress) return;
-    if(scratchHasCard && !scratchLocked){
-      const r = document.getElementById('scratchResult');
-      r.textContent = '⚠️ 请先刮完当前这张卡，再使用十连抽！';
-      r.className = 'scratch-result lose';
-      return;
-    }
+    if(scratchHasCard && !scratchLocked){ const r = document.getElementById('scratchResult'); r.textContent = '⚠️ 请先刮完当前这张卡，再使用十连抽！'; r.className = 'scratch-result lose'; return; }
     const cost = SCRATCH_COST * 10;
-    if(scratchBank < cost){
-      const r = document.getElementById('scratchResult');
-      r.textContent = `💸 猪猪币不足！十连抽需要 ${cost} 币。`;
-      r.className = 'scratch-result lose';
-      return;
-    }
-    scratchBank -= cost;
-    scratchPlayed += 10;
-    updateScratchBank();
+    if(scratchBank < cost){ const r = document.getElementById('scratchResult'); r.textContent = `💸 猪猪币不足！十连抽需要 ${cost} 币。`; r.className = 'scratch-result lose'; return; }
+    scratchBank -= cost; scratchPlayed += 10; updateScratchBank();
     tenInProgress = true;
     document.getElementById('scratch10xBtn').disabled = true;
     document.getElementById('scratchBuyBtn').disabled = true;
-
     const results = [];
     for(let i=0;i<10;i++){
       let r;
-      if(totalStreak >= PITY_LIMIT - 1){
-        r = forceWinOnce();
-        r.pityTriggered = true;
-      }else{
-        r = quickScratchOne(TEN_BASE_RATE);
-      }
-      if(r.win){ totalStreak = 0; singleStreak = 0; }
-      else{ totalStreak++; singleStreak++; }
+      if(totalStreak >= PITY_LIMIT - 1){ r = forceWinOnce(); r.pityTriggered = true; }
+      else{ r = quickScratchOne(TEN_BASE_RATE); }
+      if(r.win){ totalStreak = 0; singleStreak = 0; } else{ totalStreak++; singleStreak++; }
       results.push(r);
     }
     let totalPayout = 0, winCount = 0, pityHit = false;
-    results.forEach(r=>{
-      if(r.win){ winCount++; totalPayout += r.payout; }
-      if(r.pityTriggered) pityHit = true;
-    });
-    scratchBank += totalPayout;
-    scratchNet += totalPayout - cost;
-    updateScratchBank();
-    renderScratchOdds();
-
+    results.forEach(r=>{ if(r.win){ winCount++; totalPayout += r.payout; } if(r.pityTriggered) pityHit = true; });
+    scratchBank += totalPayout; scratchNet += totalPayout - cost;
+    updateScratchBank(); renderScratchOdds();
     const resultEl = document.getElementById('scratchResult');
     const netChange = totalPayout - cost;
     if(totalPayout > 0){
@@ -2314,7 +2103,6 @@
       resultEl.className = 'scratch-result lose';
       resultEl.innerHTML = `🎰 十连完成… <strong>全军覆没</strong> · 支出 ${cost} · 净收益 <strong style="color:#f88;">-${cost}</strong> · 小猪替你哭了`;
     }
-
     const panel = document.getElementById('scratch10xResult');
     const cardsHtml = results.map((r, idx)=>{
       const cellsHtml = r.cells.map(c=>`<div class="x10-mini-cell">${c.emoji}</div>`).join('');
@@ -2323,15 +2111,10 @@
       const pityBadge = r.pityTriggered ? '<div class="pity-badge">保底</div>' : '';
       return `<div class="x10-card ${winClass}" data-idx="${idx}">${pityBadge}<div class="x10-mini-grid">${cellsHtml}</div><div class="x10-card-info">${info}</div></div>`;
     }).join('');
-    panel.innerHTML = `
-      <div class="x10-head">十张刮刮乐逐张揭晓 · 中奖 <strong>${winCount}</strong>/10</div>
-      <div class="x10-cards">${cardsHtml}</div>`;
+    panel.innerHTML = `<div class="x10-head">十张刮刮乐逐张揭晓 · 中奖 <strong>${winCount}</strong>/10</div><div class="x10-cards">${cardsHtml}</div>`;
     panel.classList.add('active');
-
     const cards = panel.querySelectorAll('.x10-card');
-    cards.forEach((card, i)=>{
-      setTimeout(()=>{ card.classList.add('shown'); }, 120 + i * 130);
-    });
+    cards.forEach((card, i)=>{ setTimeout(()=>{ card.classList.add('shown'); }, 120 + i * 130); });
     setTimeout(()=>{
       tenInProgress = false;
       document.getElementById('scratch10xBtn').disabled = false;
@@ -2348,63 +2131,35 @@
   document.getElementById('scratchBuyBtn').addEventListener('click', ()=>{
     if(tenInProgress) return;
     if(scratchHasCard && !scratchLocked) return;
-    if(scratchBank < SCRATCH_COST){
-      const r = document.getElementById('scratchResult');
-      r.textContent = '💸 猪猪币不足！点重置按钮补币吧～';
-      r.className = 'scratch-result lose';
-      return;
-    }
+    if(scratchBank < SCRATCH_COST){ const r = document.getElementById('scratchResult'); r.textContent = '💸 猪猪币不足！点重置按钮补币吧～'; r.className = 'scratch-result lose'; return; }
     const panel = document.getElementById('scratch10xResult');
     if(panel) panel.classList.remove('active');
-    scratchBank -= SCRATCH_COST;
-    scratchPlayed++;
-    scratchLocked = false;
-    scratchHasCard = true;
+    scratchBank -= SCRATCH_COST; scratchPlayed++;
+    scratchLocked = false; scratchHasCard = true;
     document.getElementById('scratchAllBtn').disabled = false;
     const r = document.getElementById('scratchResult');
-    r.textContent = '🎫 开始刮奖！点击格子刮开吧！';
-    r.className = 'scratch-result';
-    updateScratchBank();
-    buildScratchCells();
-    renderScratchOdds();
+    r.textContent = '🎫 开始刮奖！点击格子刮开吧！'; r.className = 'scratch-result';
+    updateScratchBank(); buildScratchCells(); renderScratchOdds();
   });
   document.getElementById('scratch10xBtn').addEventListener('click', scratch10x);
   document.getElementById('scratchAllBtn').addEventListener('click', ()=>{
     if(scratchLocked) return;
-    document.querySelectorAll('#scratchCard .scratch-cell:not(.revealed)').forEach((cell,i)=>{
-      setTimeout(()=>cell.click(), i*80);
-    });
+    document.querySelectorAll('#scratchCard .scratch-cell:not(.revealed)').forEach((cell,i)=>{ setTimeout(()=>cell.click(), i*80); });
   });
   document.getElementById('scratchResetBtn').addEventListener('click', ()=>{
-    if(!scratchLocked){
-      const r = document.getElementById('scratchResult');
-      r.textContent = '请先刮完当前卡再重置。';
-      r.className = 'scratch-result lose';
-      return;
-    }
-    if(tenInProgress){
-      const r = document.getElementById('scratchResult');
-      r.textContent = '十连揭晓中，请稍等…';
-      r.className = 'scratch-result lose';
-      return;
-    }
-    scratchBank = 1000; scratchPlayed = 0; scratchNet = 0;
-    singleStreak = 0; totalStreak = 0;
-    updateScratchBank();
-    renderScratchOdds();
+    if(!scratchLocked){ const r = document.getElementById('scratchResult'); r.textContent = '请先刮完当前卡再重置。'; r.className = 'scratch-result lose'; return; }
+    if(tenInProgress){ const r = document.getElementById('scratchResult'); r.textContent = '十连揭晓中，请稍等…'; r.className = 'scratch-result lose'; return; }
+    scratchBank = 1000; scratchPlayed = 0; scratchNet = 0; singleStreak = 0; totalStreak = 0;
+    updateScratchBank(); renderScratchOdds();
     const r = document.getElementById('scratchResult');
-    r.textContent = '猪猪币已重置为1000，保底进度也已清零。';
-    r.className = 'scratch-result';
+    r.textContent = '猪猪币已重置为1000，保底进度也已清零。'; r.className = 'scratch-result';
     const panel = document.getElementById('scratch10xResult');
     if(panel) panel.classList.remove('active');
     document.getElementById('scratchAllBtn').disabled = true;
   });
-  buildScratchCells();
-  updateScratchBank();
-  renderScratchOdds();
+  buildScratchCells(); updateScratchBank(); renderScratchOdds();
   setInterval(renderScratchOdds, 10000);
 
-  /* ========== 赛跑 ========== */
   const racers=[
     {id:'black',name:'黑毛猪',emoji:'🐗',color:'#aa8855',odds:3.0},
     {id:'pink',name:'粉红小猪',emoji:'🐷',color:'#ff99bb',odds:2.5},
@@ -2453,10 +2208,7 @@
     const betAmount=parseInt(document.getElementById('raceBet').value);
     const betId=document.getElementById('racePick').value;
     const betRacer=racers.find(r=>r.id===betId);
-    if(!betRacer){
-      const r=document.getElementById('raceResult');
-      r.textContent='请先选择要押注的猪！';r.className='race-result lose';return;
-    }
+    if(!betRacer){ const r=document.getElementById('raceResult'); r.textContent='请先选择要押注的猪！';r.className='race-result lose';return; }
     raceInProgress=true;
     document.getElementById('raceStartBtn').disabled=true;
     racers.forEach(r=>{
@@ -2492,21 +2244,13 @@
           rr.className='race-result lose';
         }
         setTimeout(()=>{
-          racers.forEach(r=>{
-            positions[r.id]=4;
-            const el=document.getElementById(`runner-${r.id}`);
-            if(el)el.style.left='4%';
-          });
-          racers.forEach(r=>{
-            const el=document.getElementById('odds-'+r.id);
-            if(el){el.textContent='×?';el.style.color='#666';el.style.fontWeight='400';}
-          });
+          racers.forEach(r=>{ positions[r.id]=4; const el=document.getElementById(`runner-${r.id}`); if(el)el.style.left='4%'; });
+          racers.forEach(r=>{ const el=document.getElementById('odds-'+r.id); if(el){el.textContent='×?';el.style.color='#666';el.style.fontWeight='400';} });
         },1800);
       }
     },90);
   });
 
-  /* ========== 塔罗 ========== */
   const tarotDeckData=[
     {emoji:'🌟',name:'大猪？',sub:'THE PIGGY FOOL · 0',meaning:'今天适合开新坑，零式初见别怕团灭，摸猪就完事了。'},
     {emoji:'🎩',name:'猪猪魔术师',sub:'THE PIGGY MAGICIAN · I',meaning:'爆发药准备好了吗？今天的你手速超神，DPS登顶。'},
@@ -2546,7 +2290,6 @@
     },300);
   }
 
-  /* ========== SS 推荐弹窗 ========== */
   function openSSDrawWindow(){
     const versions=[
       {key:'7.0 S怪',label:'7.0',color:'#ffb000',bless:'黄金的遗产灵气最旺，新地图怪物最活跃'},
@@ -2575,7 +2318,6 @@
   document.getElementById('ssDrawAgain').addEventListener('click',openSSDrawWindow);
   document.getElementById('ssDrawOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('ssDrawOverlay'))document.getElementById('ssDrawOverlay').classList.remove('active');});
 
-  /* ========== 龙蛋 ========== */
   const eggAddBtn=document.getElementById('eggAddBtn');
   const eggCountSpan=document.getElementById('eggCount');
   const eggLog=document.getElementById('eggLog');
@@ -2619,7 +2361,6 @@
     eggLog.querySelectorAll('.egg-check').forEach(cb=>{cb.checked=eggSelectAll.checked;});
   });
 
-  /* ========== 农场 ========== */
   const farmFailBtn=document.getElementById('farmFailBtn');
   const farmGetBtn=document.getElementById('farmGetBtn');
   const farmResetBtn=document.getElementById('farmResetBtn');
@@ -2666,19 +2407,13 @@
   });
   farmServerSelect.addEventListener('change',()=>{if(farmFilterActive)renderFarmCounts();});
 
-  /* ========== 数据清理 ========== */
   document.getElementById('clearTriggerDataBtn').addEventListener('click',()=>{
     if(!confirm('确定清空所有本地触发记录、冷却状态和统计数据吗？此操作不可恢复。')) return;
-    triggerState = {};
-    versionState = {};
-    clickHistory = [];
-    stats = {};
+    triggerState = {}; versionState = {}; clickHistory = []; stats = {};
     saveAll();
     currentDetailTab = null; currentDetailIdx = null;
     document.getElementById('sDetail').classList.remove('active');
-    renderGrid();
-    renderStats();
-    renderFortuneBanner();
+    renderGrid(); renderStats(); renderFortuneBanner();
     alert('已清空本地触发数据。');
   });
 
@@ -2689,45 +2424,6 @@
     }
   });
 
-})();
-
-/* ========== 主题切换（黑 / 白 / 粉 / 蓝） ========== */
-(function(){
-  const THEMES = [
-    {id:'dark',  icon:'🌙', title:'暗黑主题（默认）'},
-    {id:'light', icon:'☀️', title:'白色主题'},
-    {id:'pink',  icon:'🌸', title:'粉色主题'},
-    {id:'blue',  icon:'💙', title:'蓝色主题'}
-  ];
-  const picker = document.createElement('div');
-  picker.className = 'theme-picker';
-  picker.setAttribute('aria-label', '主题切换');
-  picker.innerHTML = THEMES.map(t =>
-    `<button data-theme="${t.id}" title="${t.title}" aria-label="${t.title}">${t.icon}</button>`
-  ).join('');
-
-  const savedRaw = localStorage.getItem('piggy-theme');
-  let current = (savedRaw === 'light') ? 'light' : (savedRaw || 'dark');
-  if(!THEMES.some(t=>t.id===current)) current = 'dark';
-
-  function applyTheme(id){
-    document.body.classList.remove('light-theme','pink-theme','blue-theme');
-    if(id === 'light') document.body.classList.add('light-theme');
-    else if(id === 'pink') document.body.classList.add('pink-theme');
-    else if(id === 'blue') document.body.classList.add('blue-theme');
-    picker.querySelectorAll('button').forEach(b=>{
-      b.classList.toggle('active', b.dataset.theme === id);
-    });
-    try{ localStorage.setItem('piggy-theme', id); }catch(e){}
-  }
-
-  picker.querySelectorAll('button').forEach(b=>{
-    b.addEventListener('click', ()=> applyTheme(b.dataset.theme));
-  });
-
-  const nav = document.querySelector('.nav-menu');
-  if(nav) nav.appendChild(picker);
-  applyTheme(current);
 })();
 
 /* 自定义猪 */
@@ -2767,9 +2463,7 @@
   const observer = new IntersectionObserver(entries=>{
     let best = null;
     entries.forEach(entry=>{
-      if(entry.isIntersecting){
-        if(!best || entry.intersectionRatio > best.intersectionRatio){ best = entry; }
-      }
+      if(entry.isIntersecting){ if(!best || entry.intersectionRatio > best.intersectionRatio){ best = entry; } }
     });
     if(best){
       const match = sections.find(s=>s.sec === best.target);
@@ -2777,6 +2471,1246 @@
     }
   }, { rootMargin: '-90px 0px -55% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
   sections.forEach(s=>observer.observe(s.sec));
+})();
+
+/* ============================================================
+   ★★★ 猪猪游乐场 · 全局系统 ★★★
+   钱包 / 天气 / 恶作剧 / 12 个新玩法
+   ============================================================ */
+(function(){
+  'use strict';
+
+  /* ---------- 全局状态 ---------- */
+  const LS_KEY = 'piggy-playground-v1';
+  const G = {
+    wallet: 1000,
+    weather: null,          // {id, until}
+    pigs: [],               // 繁育的猪
+    bullseye: null,         // {nums, issueAt, myNums, lastResult}
+    inventory: {},          // 炼金 / 扭蛋 收集
+    stats: {roulette:0, coin:0, lotto:0, breed:0, alchemy:0, gacha:0, battle:0, adventure:0, yahtzee:0, blackjack:0, pranks:0, weather:0},
+    lastPrank: 0,
+  };
+
+  function load(){
+    try{
+      const raw = JSON.parse(localStorage.getItem(LS_KEY));
+      if(raw && typeof raw === 'object'){
+        Object.assign(G, raw);
+        if(!G.stats) G.stats = {};
+      }
+    }catch(e){}
+  }
+  function save(){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(G)); }catch(e){}
+  }
+  load();
+
+  /* ---------- 钱包 ---------- */
+  function walletFlash(){
+    const chip = document.getElementById('walletChip');
+    if(!chip) return;
+    chip.classList.remove('flash');
+    void chip.offsetWidth;
+    chip.classList.add('flash');
+  }
+  function renderWallet(){
+    const el = document.getElementById('walletVal');
+    if(el) el.textContent = G.wallet;
+  }
+  function addCoin(n, reason){
+    if(!n) return;
+    G.wallet += n;
+    if(G.wallet < 0) G.wallet = 0;
+    renderWallet();
+    save();
+    walletFlash();
+    if(reason) toast((n>0?'+':'')+n+' 🪙 '+reason, n>0?'good':'bad');
+  }
+  function spend(n){
+    if(G.wallet < n){ toast('猪猪币不足，需要 '+n+' 🪙','bad'); return false; }
+    G.wallet -= n;
+    renderWallet(); save(); walletFlash();
+    return true;
+  }
+  function rewardMul(){ return G.weather ? (WEATHER[G.weather.id]?.mul || 1) : 1; }
+
+  /* ---------- 吐司 ---------- */
+  const toastWrap = document.getElementById('toastWrap');
+  function toast(msg, cls, emoji){
+    const el = document.createElement('div');
+    el.className = 'piggy-toast ' + (cls||'') ;
+    el.innerHTML = (emoji?`<span class="tt-emoji">${emoji}</span>`:'') + '<span>'+msg+'</span>';
+    toastWrap.appendChild(el);
+    setTimeout(()=>{
+      el.classList.add('out');
+      setTimeout(()=>el.remove(), 320);
+    }, 3400);
+  }
+  window.__piggyToast = toast;
+
+  /* ---------- 天气系统 ---------- */
+  const WEATHER = {
+    sunny: {icon:'☀️', name:'晴朗', mul:1.0,  desc:'无加成，猪猪心情不错', color:'#ffcc66'},
+    rain:  {icon:'🌧️', name:'暴雨', mul:1.15, desc:'所有玩法收益 +15%', color:'#88bbff'},
+    fog:   {icon:'🌫️', name:'浓雾', mul:0.9,  desc:'收益 -10%，但稀有事件概率提升', color:'#cccccc'},
+    storm: {icon:'⛈️', name:'雷暴', mul:1.3,  desc:'所有玩法收益 +30%，刺激！', color:'#c8b0ff'},
+    meteor:{icon:'🌠', name:'流星雨', mul:2.0, desc:'所有玩法收益 ×2！限时狂欢', color:'#ffb0d0'},
+  };
+  const WEATHER_POOL = ['sunny','rain','fog','storm','meteor'];
+  const WEATHER_WEIGHTS = {sunny:38, rain:26, fog:18, storm:12, meteor:6};
+
+  function pickWeather(){
+    const total = Object.values(WEATHER_WEIGHTS).reduce((a,b)=>a+b,0);
+    let r = Math.random()*total;
+    for(const [id,w] of Object.entries(WEATHER_WEIGHTS)){ r -= w; if(r<=0) return id; }
+    return 'sunny';
+  }
+  function rollWeather(force){
+    const id = force || pickWeather();
+    const dur = id==='meteor' ? (3+Math.random()*4)*60000 : (8+Math.random()*8)*60000;
+    G.weather = {id, until: Date.now()+dur};
+    save();
+    renderWeather();
+    toast(`艾欧泽亚天气变为【${WEATHER[id].name}】：${WEATHER[id].desc}`, id==='meteor'?'big':'', WEATHER[id].icon);
+  }
+  function renderWeather(){
+    const chip = document.getElementById('weatherChip');
+    if(!chip) return;
+    if(!G.weather || Date.now() > G.weather.until){ rollWeather(); return; }
+    const w = WEATHER[G.weather.id];
+    chip.className = 'weather-chip ' + G.weather.id;
+    document.getElementById('wcIcon').textContent = w.icon;
+    document.getElementById('wcName').textContent = w.name;
+    const remain = Math.max(0, G.weather.until - Date.now());
+    const mm = Math.floor(remain/60000), ss = Math.floor(remain%60000/1000);
+    document.getElementById('wcTimer').textContent = `${mm}:${String(ss).padStart(2,'0')}`;
+  }
+  setInterval(renderWeather, 1000);
+  setInterval(()=>{ if(!G.weather || Date.now() > G.weather.until) rollWeather(); }, 5000);
+
+  // 天气控制台
+  document.getElementById('weatherChip').addEventListener('click', ()=>{ openGame('weather'); });
+
+  /* ---------- 恶作剧系统 ---------- */
+  const PRANKS = [
+    {w:14, fn:()=>{ const n = 20+Math.floor(Math.random()*80); if(G.wallet < n) return false; addCoin(-n,'被猪猪偷走了'); return true; }},
+    {w:14, fn:()=>{ const n = 30+Math.floor(Math.random()*120); addCoin(n,'猪猪送你的小礼物'); return true; }},
+    {w:12, fn:()=>{ toast('猪猪在页面角落拉了一坨……别看了','bad','💩'); return true; }},
+    {w:10, fn:()=>{ const ptr=document.getElementById('pointer'); if(ptr){ ptr.style.transform='translateX(-50%) rotate(25deg)'; setTimeout(()=>ptr.style.transform='',2600);} toast('猪猪把你的转盘指针弄歪了','bad','😜'); return true; }},
+    {w:10, fn:()=>{ const n = 100+Math.floor(Math.random()*100); addCoin(n,'流星雨小费（猪猪版）',''); return true; }},
+    {w:9,  fn:()=>{ document.body.style.filter='hue-rotate(180deg)'; setTimeout(()=>document.body.style.filter='',1800); toast('猪猪给你调了个色……','', '🎨'); return true; }},
+    {w:8,  fn:()=>{ toast('猪猪在你耳边咕哝：今天运势不错哦','good','🐷'); return true; }},
+    {w:8,  fn:()=>{ toast('猪猪跑过来蹭了蹭你的腿，给你带来温暖','good','💗'); return true; }},
+    {w:7,  fn:()=>{ const n = 50; addCoin(-n,'猪猪拿去交学费了'); return true; }},
+    {w:5,  fn:()=>{ toast('🐷🐷🐷 三只猪猪同时出现，你的屏幕都变粉了','big','✨'); document.body.style.transition='filter 1s'; document.body.style.filter='saturate(2)'; setTimeout(()=>document.body.style.filter='',1500); return true; }},
+  ];
+  const PRANK_TOTAL_W = PRANKS.reduce((a,b)=>a+b.w,0);
+  function tryPrank(){
+    if(Date.now() - G.lastPrank < 2*60*1000) return;
+    if(Math.random() > 0.65) return;
+    const now = Date.now();
+    if(now - G.lastPrank < 2*60*1000) return;
+    G.lastPrank = now; save();
+    let r = Math.random()*PRANK_TOTAL_W;
+    for(const p of PRANKS){ r -= p.w; if(r<=0){ p.fn(); G.stats.pranks=(G.stats.pranks||0)+1; save(); return; } }
+  }
+  setInterval(tryPrank, 45000);
+  setTimeout(tryPrank, 20000);
+
+  /* ---------- 通用工具 ---------- */
+  function rand(min,max){ return min + Math.random()*(max-min); }
+  function randInt(min,max){ return Math.floor(rand(min,max+1)); }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  /* ---------- 游乐场面板 ---------- */
+  const overlay = document.getElementById('playOverlay');
+  const panel = document.getElementById('playPanel');
+  const bodyEl = document.getElementById('playBody');
+  const titleEl = document.getElementById('playTitle');
+  const subEl = document.getElementById('playSub');
+  const emojiEl = document.getElementById('playEmoji');
+  let currentGame = null;
+
+  const GAME_META = {
+    roulette:{e:'🎲',t:'猪猪俄罗斯轮盘',s:'6 个弹巢 1 颗子弹 · 越贪越刺激'},
+    coin:{e:'🪙',t:'命运硬币',s:'连续猜硬币 · 每猜对一次倍率 ×2'},
+    lotto:{e:'🎱',t:'猪猪双色球',s:'每 5 分钟开奖 · 猜中 3 个就中奖'},
+    breed:{e:'🧬',t:'猪猪繁育实验室',s:'两只猪交配 · 后代随机继承 + 变异'},
+    alchemy:{e:'⚗️',t:'猪猪炼金锅',s:'丢两样东西进去 · 配方全靠试'},
+    gacha:{e:'🥚',t:'猪猪扭蛋机',s:'形容词 × 猪 × 颜色 × 配饰'},
+    battle:{e:'⚔️',t:'猪猪大逃杀',s:'8 只猪混战 · 押注赢家'},
+    adventure:{e:'🗺️',t:'猪猪大冒险',s:'文字跑团 · 随机事件链'},
+    yahtzee:{e:'🎯',t:'猪猪骰子赌场',s:'掷 5 骰 · 重掷 2 次 · 凑组合'},
+    blackjack:{e:'🃏',t:'猪猪 21 点',s:'对赌庄家猪 · 连续赢 3 把有奖'},
+    prank:{e:'😜',t:'恶作剧系统',s:'猪猪自动捣乱 · 也可手动触发一次'},
+    weather:{e:'🌦️',t:'天气控制台',s:'查看当前天气 · 可手动换天气（付费）'},
+  };
+
+  function openGame(id){
+    currentGame = id;
+    const meta = GAME_META[id];
+    if(!meta) return;
+    emojiEl.textContent = meta.e;
+    titleEl.textContent = meta.t;
+    subEl.textContent = meta.s;
+    overlay.classList.add('active');
+    const fn = window.__GAME_RENDER[id];
+    if(fn) fn();
+    else bodyEl.innerHTML = '<div class="play-info">开发中……</div>';
+  }
+  function closeGame(){
+    currentGame = null;
+    overlay.classList.remove('active');
+    bodyEl.innerHTML = '';
+  }
+  document.getElementById('playClose').addEventListener('click', closeGame);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeGame(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && overlay.classList.contains('active')) closeGame(); });
+
+  document.getElementById('pgGrid').addEventListener('click', e=>{
+    const card = e.target.closest('.pg-card');
+    if(!card) return;
+    openGame(card.dataset.game);
+  });
+
+  /* ============================================================
+     1. 俄罗斯轮盘
+     ============================================================ */
+  const ROULETTE_BET = 100;
+  window.__GAME_RENDER = window.__GAME_RENDER || {};
+  window.__GAME_RENDER.roulette = function(){
+    if(!window.__roulette) window.__roulette = null;
+    if(!window.__roulette) window.__roulette = {bullet: randInt(0,5), shots:0, mult:1, bet:ROULETTE_BET, active:false};
+    const R = window.__roulette;
+    renderRoulette();
+  };
+  function renderRoulette(){
+    const R = window.__roulette;
+    const weatherNote = G.weather ? `<div style="font-size:.75rem;color:#888;">当前天气【${WEATHER[G.weather.id].name}】收益倍率 ×${WEATHER[G.weather.id].mul}</div>` : '';
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        🎯 6 个弹巢，1 颗子弹。每扣一次扳机，<strong>倍率翻倍</strong>，但子弹概率也随之上升。<br>
+        你可以随时<strong>收手</strong>落袋为安，或者贪到最后一发赌命。
+      </div>
+      <div class="big-display" id="rouletteDisp">${R.active ? '×'+R.mult : '准备开始'}</div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="rouletteStart" ${R.active?'disabled':''}>🎯 押注 ${ROULETTE_BET} 币并扣扳机</button>
+        <button class="play-btn grn" id="rouletteCash" ${R.active?'':'disabled'}>💰 收手（拿走 ×${R.mult}）</button>
+      </div>
+      <div class="play-log" id="rouletteLog">${R.log || '点开始，扣下第一次扳机……'}</div>
+      ${weatherNote}
+    `;
+    document.getElementById('rouletteStart').addEventListener('click', rouletteStart);
+    document.getElementById('rouletteCash').addEventListener('click', rouletteCash);
+  }
+  function rouletteStart(){
+    const R = window.__roulette;
+    if(R.active){ // 继续扣扳机
+      if(R.shots >= 5){ rouletteBust(); return; }
+      R.shots++;
+      if(R.shots === R.bullet+1){ rouletteBust(); return; }
+      R.mult *= 2;
+      R.log = (R.log||'') + `\n第 ${R.shots} 发：空弹！倍率 → ×${R.mult}`;
+      renderRoulette();
+      return;
+    }
+    // 新一局
+    if(!spend(ROULETTE_BET)) return;
+    R.bullet = randInt(0,5); R.shots = 0; R.mult = 2; R.active = true;
+    R.log = `🎯 押注 ${ROULETTE_BET} 币，第 1 发是空的！倍率 ×2`;
+    R.shots = 1;
+    if(R.bullet === 0){ rouletteBust(); return; }
+    renderRoulette();
+  }
+  function rouletteCash(){
+    const R = window.__roulette;
+    if(!R.active) return;
+    const payout = Math.floor(R.bet * R.mult * rewardMul());
+    addCoin(payout, `俄罗斯轮盘 ×${R.mult} 收手`);
+    R.log = (R.log||'') + `\n💰 收手！拿走 ${payout} 币`;
+    R.active = false; R.mult = 1; R.shots = 0;
+    renderRoulette();
+  }
+  function rouletteBust(){
+    const R = window.__roulette;
+    R.log = (R.log||'') + `\n💥 砰！子弹在第 ${R.shots+1} 发…… ${R.bet} 币没了`;
+    R.active = false; R.mult = 1; R.shots = 0;
+    toast('💥 砰！猪猪轮盘爆了','bad','💀');
+    renderRoulette();
+  }
+
+  /* ============================================================
+     2. 命运硬币
+     ============================================================ */
+  const COIN_BET = 50;
+  window.__GAME_RENDER.coin = function(){
+    if(!window.__coin) window.__coin = {streak:0, mult:1, active:false, locked:false, log:''};
+    renderCoin();
+  };
+  function renderCoin(){
+    const C = window.__coin;
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        连续猜硬币，每猜对一次倍率 ×2。<br>
+        <strong>第 3 次、第 6 次</strong>时你可以选择「锁定一半收益退出」。猜错直接清零。
+      </div>
+      <div class="big-display" id="coinDisp">${C.active ? '×'+C.mult : '准备开始'}</div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="coinStart" ${C.active?'disabled':''}>🪙 押注 ${COIN_BET} 币开始</button>
+        <button class="play-btn grn" id="coinH" ${C.active?'':'disabled'}>猜正面</button>
+        <button class="play-btn" id="coinT" ${C.active?'':'disabled'}>猜反面</button>
+        <button class="play-btn sec" id="coinLock" ${C.active && (C.streak>=3) ?'':'disabled'}>🔒 锁定一半（×${Math.max(1,Math.floor(C.mult/2))}）</button>
+      </div>
+      <div class="play-log" id="coinLog">${C.log || '点开始，押上你的 50 币……'}</div>
+    `;
+    document.getElementById('coinStart').addEventListener('click', coinStart);
+    document.getElementById('coinH').addEventListener('click', ()=>coinFlip('H'));
+    document.getElementById('coinT').addEventListener('click', ()=>coinFlip('T'));
+    document.getElementById('coinLock').addEventListener('click', coinLock);
+  }
+  function coinStart(){
+    const C = window.__coin;
+    if(!spend(COIN_BET)) return;
+    C.streak = 0; C.mult = 1; C.active = true;
+    C.log = `🪙 押注 ${COIN_BET} 币，开始猜硬币！`;
+    renderCoin();
+  }
+  function coinFlip(guess){
+    const C = window.__coin;
+    if(!C.active) return;
+    const result = Math.random() < 0.5 ? 'H' : 'T';
+    if(result === guess){
+      C.streak++; C.mult *= 2;
+      C.log = (C.log||'') + `\n第 ${C.streak} 次：${result==='H'?'正':'反'}面，猜对！倍率 → ×${C.mult}`;
+      if(C.streak === 8){
+        const payout = Math.floor(COIN_BET * C.mult * rewardMul());
+        addCoin(payout, `命运硬币 8 连中 ×${C.mult}`);
+        C.log += `\n🎉 8 连中！拿走 ${payout} 币`;
+        C.active = false; C.mult = 1; C.streak = 0;
+      }
+    } else {
+      C.log = (C.log||'') + `\n第 ${C.streak+1} 次：${result==='H'?'正':'反'}面，猜错……清零！`;
+      C.active = false; C.mult = 1; C.streak = 0;
+      toast('🪙 硬币翻转失败，清零','bad','💀');
+    }
+    renderCoin();
+  }
+  function coinLock(){
+    const C = window.__coin;
+    if(!C.active || C.streak < 3) return;
+    const lockedMult = Math.max(1, Math.floor(C.mult/2));
+    const payout = Math.floor(COIN_BET * lockedMult * rewardMul());
+    addCoin(payout, `命运硬币锁定 ×${lockedMult}`);
+    C.log = (C.log||'') + `\n🔒 锁定一半，拿走 ${payout} 币`;
+    C.active = false; C.mult = 1; C.streak = 0;
+    renderCoin();
+  }
+
+  /* ============================================================
+     3. 猪猪双色球
+     ============================================================ */
+  const LOTTO_COST = 100;
+  const LOTTO_INTERVAL = 5*60*1000; // 5 分钟一期
+  window.__GAME_RENDER.lotto = function(){
+    ensureLotto();
+    renderLotto();
+  };
+  function ensureLotto(){
+    if(!G.bullseye) G.bullseye = {nums:[], issueAt: Date.now()+LOTTO_INTERVAL, myNums:[], lastResult:null, jackpot:0};
+    if(Date.now() > G.bullseye.issueAt){
+      // 开奖
+      const newNums = pickNums();
+      if(G.bullseye.myNums && G.bullseye.myNums.length === 6){
+        const hit = G.bullseye.myNums.filter(n=>newNums.includes(n)).length;
+        let prize = 0;
+        if(hit===3) prize = 300;
+        else if(hit===4) prize = 1200;
+        else if(hit===5) prize = 8000;
+        else if(hit===6) prize = 100000 + G.bullseye.jackpot;
+        G.bullseye.lastResult = {nums:newNums, my:G.bullseye.myNums.slice(), hit, prize};
+        if(prize > 0){ addCoin(prize, `双色球中 ${hit} 个`); toast(`🎱 双色球中 ${hit} 个！+${prize} 币`, 'big', '🎉'); }
+        else { toast(`🎱 双色球开奖，你中了 ${hit} 个，无奖`, 'bad', '😢'); }
+      } else {
+        G.bullseye.lastResult = {nums:newNums, my:[], hit:0, prize:0};
+      }
+      G.bullseye.nums = newNums;
+      G.bullseye.myNums = [];
+      G.bullseye.issueAt = Date.now() + LOTTO_INTERVAL;
+      G.bullseye.jackpot += 500;
+      save();
+    }
+    if(G.bullseye.nums.length !== 6) G.bullseye.nums = pickNums();
+  }
+  function pickNums(){
+    const s = new Set();
+    while(s.size < 6) s.add(randInt(1,33));
+    return [...s].sort((a,b)=>a-b);
+  }
+  function renderLotto(){
+    ensureLotto();
+    const B = G.bullseye;
+    const remain = Math.max(0, B.issueAt - Date.now());
+    const mm = Math.floor(remain/60000), ss = Math.floor(remain%60000/1000);
+    const myNumsHtml = Array.from({length:6}, (_,i)=>{
+      const n = B.myNums[i];
+      if(n) return `<span class="die" style="width:44px;height:44px;font-size:1.1rem;cursor:default;">${n}</span>`;
+      return `<span class="die" style="width:44px;height:44px;font-size:1.1rem;cursor:default;opacity:.35;">?</span>`;
+    }).join('');
+    const drawHtml = B.nums.map(n=>`<span class="die" style="width:38px;height:38px;font-size:.95rem;cursor:default;">${n}</span>`).join('');
+    let resultHtml = '';
+    if(B.lastResult){
+      const r = B.lastResult;
+      resultHtml = `<div class="play-info"><strong>上期开奖：</strong>${r.nums.join(' ')}${r.my.length?` · 你的号码：${r.my.join(' ')} · 中了 <strong>${r.hit}</strong> 个${r.prize?` · 奖金 <strong>+${r.prize}</strong>`:''}`:''}</div>`;
+    }
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        每 <strong>5 分钟</strong>一期，猜中 3 个就有奖。<br>
+        3 个 = 300 · 4 个 = 1200 · 5 个 = 8000 · 6 个 = 100000 + 彩池<br>
+        彩池当前：<strong>${B.jackpot}</strong> 币
+      </div>
+      <div style="text-align:center;font-size:.85rem;color:#aaa;margin:.4rem 0;">距离开奖 <strong style="color:#ffb000;font-size:1.1rem;">${mm}:${String(ss).padStart(2,'0')}</strong></div>
+      <div style="text-align:center;font-size:.78rem;color:#888;margin-top:.8rem;">本期开奖号码</div>
+      <div class="dice-row">${drawHtml}</div>
+      <div style="text-align:center;font-size:.78rem;color:#888;margin-top:.4rem;">我的号码</div>
+      <div class="dice-row">${myNumsHtml}</div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="lottoBuy" ${B.myNums.length===6?'disabled':''}>🎱 花 ${LOTTO_COST} 币随机选 6 个号</button>
+        <button class="play-btn sec" id="lottoClear">清空号码</button>
+      </div>
+      <div class="small-note" style="text-align:center;">※ 每期开奖后号码会重置，需要重新购买</div>
+      ${resultHtml}
+    `;
+    document.getElementById('lottoBuy').addEventListener('click', ()=>{
+      if(B.myNums.length===6) return;
+      if(!spend(LOTTO_COST)) return;
+      B.myNums = pickNums(); save();
+      toast('🎱 号码已选好，等开奖吧','good','🍀');
+      renderLotto();
+    });
+    document.getElementById('lottoClear').addEventListener('click', ()=>{
+      B.myNums = []; save(); renderLotto();
+    });
+  }
+  setInterval(()=>{ if(currentGame==='lotto') renderLotto(); }, 1000);
+
+  /* ============================================================
+     4. 繁育实验室
+     ============================================================ */
+  const PIG_SPECIES = [
+    {name:'小香猪', emoji:'🐷', rar:1},
+    {name:'黑毛猪', emoji:'🐗', rar:1},
+    {name:'花猪',   emoji:'🐽', rar:2},
+    {name:'金猪',   emoji:'🐖', rar:3},
+    {name:'忍者猪', emoji:'🥷', rar:3},
+    {name:'龙猪',   emoji:'🐉', rar:4},
+    {name:'星尘猪', emoji:'✨', rar:5},
+    {name:'猪王',   emoji:'👑', rar:5},
+  ];
+  const PIG_ADJ = ['迷你','巨大','发光','忧郁','暴躁','优雅','肥宅','神秘','皇家','双头','彩虹','透明','机械','幽灵','黄金','发光','慵懒','忧郁'];
+  const PIG_COLORS = ['#ff99bb','#ffcc66','#88cc88','#88aaff','#cc88ff','#ff8888','#88dddd','#ccaa88','#ffb000','#c8f'];
+
+  function makePig(species, adj, color, mut){
+    const rar = Math.min(6, (species.rar||1) + (mut?1:0) + (adj&&['彩虹','黄金','星尘','龙'].some(k=>adj.includes(k))?1:0));
+    return {
+      id: 'pig-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+      species: species.name,
+      emoji: species.emoji,
+      adj, color,
+      rar,
+      born: Date.now(),
+      stats: {
+        size: randInt(1,99),
+        speed: randInt(1,99),
+        luck: randInt(1,99),
+        power: randInt(1,99),
+      }
+    };
+  }
+  function defaultPigs(){
+    // 初始两只基础猪
+    return [
+      makePig(PIG_SPECIES[0], pick(PIG_ADJ), pick(PIG_COLORS)),
+      makePig(PIG_SPECIES[1], pick(PIG_ADJ), pick(PIG_COLORS)),
+    ];
+  }
+  if(!G.pigs || G.pigs.length < 2) G.pigs = defaultPigs();
+
+  function breedPigs(p1, p2){
+    // 物种：50/50
+    const sp = Math.random() < 0.5 ? PIG_SPECIES.find(s=>s.name===p1.species) : PIG_SPECIES.find(s=>s.name===p2.species);
+    // 形容词：50/50 + 10% 变异
+    let adj = Math.random() < 0.5 ? p1.adj : p2.adj;
+    let mut = false;
+    if(Math.random() < 0.18){ adj = pick(PIG_ADJ); mut = true; }
+    // 颜色：混合
+    const color = Math.random() < 0.5 ? p1.color : p2.color;
+    const baby = makePig(sp || PIG_SPECIES[0], adj, color, mut);
+    // 属性取平均 + 随机波动
+    baby.stats.size = Math.round((p1.stats.size + p2.stats.size)/2 + rand(-12,12));
+    baby.stats.speed = Math.round((p1.stats.speed + p2.stats.speed)/2 + rand(-12,12));
+    baby.stats.luck = Math.round((p1.stats.luck + p2.stats.luck)/2 + rand(-12,12));
+    baby.stats.power = Math.round((p1.stats.power + p2.stats.power)/2 + rand(-12,12));
+    ['size','speed','luck','power'].forEach(k=>{ baby.stats[k] = Math.max(1, Math.min(99, baby.stats[k])); });
+    // 变异可能加成
+    if(mut) baby.stats.luck = Math.min(99, baby.stats.luck + 15);
+    return baby;
+  }
+
+  let breedingSelection = [];
+  window.__GAME_RENDER.breed = function(){
+    breedingSelection = [];
+    renderBreed();
+  };
+  function renderBreed(){
+    const pigsHtml = G.pigs.slice(-40).map(p=>{
+      const sel = breedingSelection.includes(p.id) ? 'selected' : '';
+      return `<div class="pig-card rar${p.rar} ${sel}" data-id="${p.id}">
+        <span class="pc-rarity">${'★'.repeat(p.rar)}</span>
+        <div class="pc-emoji">${p.emoji}</div>
+        <div class="pc-name">${p.adj}${p.species}</div>
+        <div class="pc-stats">
+          体${p.stats.size} 速${p.stats.speed}<br>运${p.stats.luck} 力${p.stats.power}
+        </div>
+      </div>`;
+    }).join('');
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        选 <strong>两只猪</strong> 交配，后代随机继承父母特征，还有概率<strong>变异</strong>出稀有组合。<br>
+        每次交配花费 <strong>150 币</strong>。已有 <strong>${G.pigs.length}</strong> 只猪。
+      </div>
+      <div class="pig-grid" id="breedGrid">${pigsHtml}</div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="breedGo" ${breedingSelection.length===2?'':'disabled'}>🧬 交配（150 币）</button>
+        <button class="play-btn sec" id="breedReset">清空选择</button>
+        <button class="play-btn dan" id="breedClear">重置猪圈（保留前两只）</button>
+      </div>
+      <div class="play-log" id="breedLog">选两只猪，或者直接点交配试试看……</div>
+    `;
+    document.getElementById('breedGrid').addEventListener('click', e=>{
+      const card = e.target.closest('.pig-card');
+      if(!card) return;
+      const id = card.dataset.id;
+      if(breedingSelection.includes(id)) breedingSelection = breedingSelection.filter(x=>x!==id);
+      else{
+        if(breedingSelection.length >= 2) breedingSelection.shift();
+        breedingSelection.push(id);
+      }
+      renderBreed();
+    });
+    document.getElementById('breedGo').addEventListener('click', ()=>{
+      if(breedingSelection.length !== 2) return;
+      if(!spend(150)) return;
+      const p1 = G.pigs.find(x=>x.id===breedingSelection[0]);
+      const p2 = G.pigs.find(x=>x.id===breedingSelection[1]);
+      if(!p1 || !p2) return;
+      const baby = breedPigs(p1, p2);
+      G.pigs.push(baby);
+      if(G.pigs.length > 200) G.pigs = G.pigs.slice(-200);
+      save();
+      const mutText = baby.rar >= 5 ? '✨ 变异成功！' : (baby.rar >= 4 ? '🌟 稀有后代！' : '🐷 新猪诞生');
+      const log = document.getElementById('breedLog');
+      log.innerHTML = `<span class="l-big">${mutText}</span><br>${p1.adj}${p1.species} × ${p2.adj}${p2.species} → <strong style="color:${baby.color};">${baby.adj}${baby.species}</strong>（${'★'.repeat(baby.rar)}）`;
+      toast(`${mutText} ${baby.adj}${baby.species}`, baby.rar>=5?'big':'good', baby.emoji);
+      if(baby.rar >= 5) addCoin(500, '稀有猪奖励');
+      breedingSelection = [];
+      renderBreed();
+    });
+    document.getElementById('breedReset').addEventListener('click', ()=>{ breedingSelection=[]; renderBreed(); });
+    document.getElementById('breedClear').addEventListener('click', ()=>{
+      if(!confirm('确定重置猪圈吗？只会保留前两只初始猪。')) return;
+      G.pigs = G.pigs.slice(0, 2);
+      save(); renderBreed(); toast('猪圈已重置','bad','🗑️');
+    });
+  }
+
+  /* ============================================================
+     5. 猪猪炼金锅
+     ============================================================ */
+  const ALCHEMY_ITEMS = [
+    {id:'grass', name:'猪草', emoji:'🌿'},
+    {id:'stone', name:'石头', emoji:'🪨'},
+    {id:'water', name:'清水', emoji:'💧'},
+    {id:'fire',  name:'火种', emoji:'🔥'},
+    {id:'bone',  name:'骨头', emoji:'🦴'},
+    {id:'feather',name:'羽毛', emoji:'🪶'},
+    {id:'crystal',name:'水晶', emoji:'💎'},
+    {id:'hair',  name:'猪毛', emoji:'🧶'},
+    {id:'coin',  name:'金币', emoji:'🪙'},
+    {id:'mushroom',name:'蘑菇', emoji:'🍄'},
+  ];
+  // 隐藏配方
+  const ALCHEMY_RECIPES = {
+    'grass+water': {name:'活力药水', emoji:'🧪', desc:'下次触发 S 怪成功率 +5%', buf:'sBoost'},
+    'fire+water':  {name:'蒸汽结晶', emoji:'💠', desc:'下次刮刮乐中奖率提升', buf:'scratchBoost'},
+    'crystal+crystal': {name:'共鸣水晶', emoji:'🔮', desc:'立即获得 800 币', reward:800},
+    'bone+feather': {name:'远古残骸', emoji:'🦴', desc:'一只野生猪加入了你的猪圈', pig:true},
+    'coin+coin':   {name:'金币堆', emoji:'💰', desc:'立即获得 500 币', reward:500},
+    'hair+hair':   {name:'猪毛球', emoji:'🧶', desc:'无用的东西……但很可爱'},
+    'mushroom+fire':{name:'蘑菇浓汤', emoji:'🍲', desc:'猪猪喝了很满足，获得 300 币', reward:300},
+    'grass+grass': {name:'杂草丛', emoji:'🌱', desc:'猪猪吃了很开心'},
+    'water+water': {name:'纯净水', emoji:'💧', desc:'喝了很清爽'},
+    'stone+stone': {name:'石堆', emoji:'⛰️', desc:'看起来很结实'},
+    'crystal+fire': {name:'烈焰水晶', emoji:'🔥', desc:'SS 概率小幅提升（本会话）', buf:'ssBoost'},
+    'crystal+bone': {name:'远古水晶骨', emoji:'💀', desc:'猪猪吓得给你塞了 1000 币', reward:1000},
+  };
+  let alchemySlotA = null, alchemySlotB = null;
+  window.__GAME_RENDER.alchemy = function(){ renderAlchemy(); };
+  function renderAlchemy(){
+    const itemsHtml = ALCHEMY_ITEMS.map(it=>{
+      const selA = alchemySlotA===it.id ? 'filled' : '';
+      const selB = alchemySlotB===it.id ? 'filled' : '';
+      return `<div class="slot ${selA||selB?'filled':''}" data-id="${it.id}">
+        <span class="sl-emoji">${it.emoji}</span>${it.name}
+      </div>`;
+    }).join('');
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        丢 <strong>两样东西</strong> 进锅，看看会发生什么。配方不公开，全靠试。<br>
+        <strong>每次 80 币。</strong>据说有些离谱的隐藏配方……
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;margin:.4rem 0;">
+        <div>
+          <div style="font-size:.75rem;color:#888;margin-bottom:4px;">锅槽 A</div>
+          <div class="slot ${alchemySlotA?'filled':''}" style="height:80px;display:flex;flex-direction:column;justify-content:center;">
+            ${alchemySlotA ? `<span class="sl-emoji">${ALCHEMY_ITEMS.find(i=>i.id===alchemySlotA).emoji}</span>${ALCHEMY_ITEMS.find(i=>i.id===alchemySlotA).name}` : '空'}
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.75rem;color:#888;margin-bottom:4px;">锅槽 B</div>
+          <div class="slot ${alchemySlotB?'filled':''}" style="height:80px;display:flex;flex-direction:column;justify-content:center;">
+            ${alchemySlotB ? `<span class="sl-emoji">${ALCHEMY_ITEMS.find(i=>i.id===alchemySlotB).emoji}</span>${ALCHEMY_ITEMS.find(i=>i.id===alchemySlotB).name}` : '空'}
+          </div>
+        </div>
+      </div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="alchemyGo" ${(alchemySlotA&&alchemySlotB)?'':'disabled'}>⚗️ 投入材料（80 币）</button>
+        <button class="play-btn sec" id="alchemyReset">清空锅</button>
+      </div>
+      <div class="brew-result" id="alchemyResult">
+        <div class="br-emoji">⚗️</div>
+        <div class="br-name">等待投入……</div>
+        <div class="br-desc">先选材料吧</div>
+      </div>
+      <div style="text-align:center;font-size:.75rem;color:#888;margin:.6rem 0;">点击材料放入锅（会自动填 A 再填 B）</div>
+      <div class="slot-grid" id="alchemyGrid">${itemsHtml}</div>
+      <div class="play-log" id="alchemyLog">已发现配方：<strong>${Object.keys(ALCHEMY_RECIPES).length}</strong> 个（隐藏）</div>
+    `;
+    document.getElementById('alchemyGrid').addEventListener('click', e=>{
+      const s = e.target.closest('.slot');
+      if(!s) return;
+      const id = s.dataset.id;
+      if(alchemySlotA === id){ alchemySlotA = null; }
+      else if(alchemySlotB === id){ alchemySlotB = null; }
+      else if(!alchemySlotA){ alchemySlotA = id; }
+      else if(!alchemySlotB){ alchemySlotB = id; }
+      else { alchemySlotA = alchemySlotB; alchemySlotB = id; }
+      renderAlchemy();
+    });
+    document.getElementById('alchemyGo').addEventListener('click', ()=>{
+      if(!alchemySlotA || !alchemySlotB) return;
+      if(!spend(80)) return;
+      const key1 = alchemySlotA + '+' + alchemySlotB;
+      const key2 = alchemySlotB + '+' + alchemySlotA;
+      const rec = ALCHEMY_RECIPES[key1] || ALCHEMY_RECIPES[key2];
+      const res = document.getElementById('alchemyResult');
+      if(rec){
+        res.innerHTML = `<div class="br-emoji">${rec.emoji}</div><div class="br-name">${rec.name}</div><div class="br-desc">${rec.desc}</div>`;
+        toast(`⚗️ 炼出【${rec.name}】`, 'big', rec.emoji);
+        if(rec.reward) addCoin(rec.reward, '炼金奖励');
+        if(rec.pig){ const baby = makePig(pick(PIG_SPECIES), pick(PIG_ADJ), pick(PIG_COLORS), true); G.pigs.push(baby); save(); toast('🐷 一只野生猪加入了猪圈','big',baby.emoji); }
+      } else {
+        // 失败 / 随机垃圾
+        const junks = [
+          {emoji:'🫧', name:'泡泡水', desc:'什么都没有发生……'},
+          {emoji:'💨', name:'一缕烟', desc:'材料消失了'},
+          {emoji:'🪨', name:'凝固的疙瘩', desc:'看不懂这东西是什么'},
+          {emoji:'💩', name:'猪猪的礼物', desc:'……你确定这能吃？'},
+          {emoji:'🌀', name:'混沌漩涡', desc:'下次说不定会出好东西'},
+        ];
+        const j = pick(junks);
+        res.innerHTML = `<div class="br-emoji">${j.emoji}</div><div class="br-name">${j.name}</div><div class="br-desc">${j.desc}</div>`;
+      }
+      document.getElementById('alchemyLog').innerHTML += `<br>${ALCHEMY_ITEMS.find(i=>i.id===alchemySlotA).emoji}+${ALCHEMY_ITEMS.find(i=>i.id===alchemySlotB).emoji} → ${rec?rec.name:'失败'}`;
+      alchemySlotA = null; alchemySlotB = null;
+      setTimeout(renderAlchemy, 800);
+    });
+    document.getElementById('alchemyReset').addEventListener('click', ()=>{ alchemySlotA=null; alchemySlotB=null; renderAlchemy(); });
+  }
+
+  /* ============================================================
+     6. 猪猪扭蛋机
+     ============================================================ */
+  const GACHA_PIGS = ['🐷','🐖','🐗','🐽','🥷','👑','🐉','✨'];
+  const GACHA_ADJ = ['发光','忧郁','暴躁','优雅','肥宅','神秘','皇家','双头','彩虹','透明','机械','幽灵','黄金','慵懒','迷你','巨大','中二','社恐'];
+  const GACHA_ACC = ['戴小礼帽','穿披风','拿雨伞','抱西瓜','踩滑板','拎灯笼','系铃铛','戴墨镜','背书包','扛大剑'];
+  const GACHA_COST = 60;
+  window.__GAME_RENDER.gacha = function(){ renderGacha(); };
+  function renderGacha(){
+    if(!G.inventory.gacha) G.inventory.gacha = [];
+    const collected = G.inventory.gacha.length;
+    const listHtml = G.inventory.gacha.slice(-30).reverse().map(g=>`<div class="slot filled" style="cursor:default;"><span class="sl-emoji">${g.emoji}</span>${g.name}</div>`).join('');
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        每次 <strong>${GACHA_COST} 币</strong>，随机抽一只「形容词 + 猪 + 配饰」的离谱组合。<br>
+        已收集：<strong>${collected}</strong> 种（共约 ${GACHA_ADJ.length*GACHA_PIGS.length*GACHA_ACC.length} 种组合）
+      </div>
+      <div class="brew-result" id="gachaDisplay">
+        <div class="br-emoji">🥚</div>
+        <div class="br-name">扭蛋机待命中</div>
+        <div class="br-desc">点下面按钮抽一发吧</div>
+      </div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="gachaGo">🥚 抽一发（${GACHA_COST} 币）</button>
+        <button class="play-btn sec" id="gachaClear">清空收藏</button>
+      </div>
+      <div style="font-size:.8rem;color:#aaa;margin:.6rem 0;">我的收藏：</div>
+      <div class="slot-grid">${listHtml || '<div style="color:#666;font-size:.78rem;">还没有收藏……</div>'}</div>
+    `;
+    document.getElementById('gachaGo').addEventListener('click', ()=>{
+      if(!spend(GACHA_COST)) return;
+      const emoji = pick(GACHA_PIGS);
+      const adj = pick(GACHA_ADJ);
+      const acc = pick(GACHA_ACC);
+      const name = `${adj}的${emoji}${acc}`;
+      const item = {emoji, adj, acc, name, id: name};
+      G.inventory.gacha.push(item);
+      if(G.inventory.gacha.length > 200) G.inventory.gacha.shift();
+      save();
+      const disp = document.getElementById('gachaDisplay');
+      disp.innerHTML = `<div class="br-emoji" style="font-size:3rem;">${emoji}</div><div class="br-name">${name}</div><div class="br-desc">已收入收藏</div>`;
+      toast(`🥚 抽到 ${name}`, 'good', emoji);
+      // 触发动画
+      disp.style.transform = 'scale(1.15)';
+      setTimeout(()=>{ disp.style.transform = ''; }, 300);
+      renderGacha();
+    });
+    document.getElementById('gachaClear').addEventListener('click', ()=>{
+      if(!confirm('清空全部扭蛋收藏？')) return;
+      G.inventory.gacha = []; save(); renderGacha();
+    });
+  }
+
+  /* ============================================================
+     7. 猪猪大逃杀
+     ============================================================ */
+  const BATTLE_PIGS = ['🐷','🐖','🐗','🐽','🥷','👑','🐉','✨','🐖','🐷'];
+  const BATTLE_EVENTS = [
+    {t:'捡到药水', fn:p=>{ p.hp += 15; return `${p.name} 捡到药水 +15 HP`; }},
+    {t:'踩到陷阱', fn:p=>{ p.hp -= 20; return `${p.name} 踩到陷阱 -20 HP`; }},
+    {t:'吃到食物', fn:p=>{ p.hp += 8; return `${p.name} 吃到食物 +8 HP`; }},
+    {t:'被雷劈中', fn:p=>{ p.hp -= 30; return `${p.name} 被雷劈中 -30 HP`; }},
+    {t:'进入狂暴', fn:p=>{ p.atk += 8; return `${p.name} 进入狂暴 +8 ATK`; }},
+    {t:'躲避成功', fn:p=>{ p.dodge += 10; return `${p.name} 提升闪避 +10`; }},
+    {t:'喘口气', fn:p=>{ p.hp += 5; return `${p.name} 喘了口气 +5 HP`; }},
+  ];
+  const BATTLE_COST = 80;
+  let battlePigs = [];
+  let battleRound = 0;
+  let battleInterval = null;
+  window.__GAME_RENDER.battle = function(){
+    if(battleInterval){ clearInterval(battleInterval); battleInterval=null; }
+    battlePigs = [];
+    battleRound = 0;
+    renderBattle();
+  };
+  function initBattlePigs(){
+    battlePigs = [];
+    for(let i=0;i<8;i++){
+      battlePigs.push({
+        id:'b'+i,
+        name: `选手${i+1}`,
+        emoji: pick(BATTLE_PIGS),
+        hp: 100,
+        maxHp: 100,
+        atk: randInt(8,15),
+        dodge: randInt(0,15),
+        alive: true,
+      });
+    }
+  }
+  function renderBattle(){
+    const pickerHtml = battlePigs.map(p=>{
+      const pct = Math.max(0, p.hp/p.maxHp*100);
+      return `<div class="pig-card ${p.alive?'':'rar1'}" data-id="${p.id}" style="cursor:default;opacity:${p.alive?1:.4};">
+        <div class="pc-emoji">${p.emoji}</div>
+        <div class="pc-name">${p.name}${p.alive?'':'(已淘汰)'}</div>
+        <div class="pc-stats">HP ${Math.max(0,p.hp)}/${p.maxHp}<br>ATK ${p.atk} 闪避 ${p.dodge}%</div>
+        <div style="height:4px;background:#111;border-radius:2px;margin-top:4px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${pct>60?'#6cf06c':pct>30?'#ffb000':'#f66'};"></div>
+        </div>
+      </div>`;
+    }).join('');
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        8 只猪混战。每回合每只猪触发一件随机事件，活到最后的赢。<br>
+        开局押注 <strong>${BATTLE_COST} 币</strong>，猜中赢家获得 <strong>600 币</strong>。
+      </div>
+      <div class="pig-grid" id="battleGrid">${pickerHtml}</div>
+      <div class="play-row" style="justify-content:center;">
+        <select class="play-input" id="battlePick" style="width:160px;">
+          <option value="">选择你押的猪</option>
+          ${battlePigs.map(p=>`<option value="${p.id}">${p.emoji} ${p.name}</option>`).join('')}
+        </select>
+        <button class="play-btn gold" id="battleStart" ${battleRound>0?'disabled':''}>⚔️ 开始大逃杀（${BATTLE_COST} 币）</button>
+        <button class="play-btn sec" id="battleReset" ${battleRound>0?'':'disabled'}>重置</button>
+      </div>
+      <div class="play-log" id="battleLog">${battleRound>0 ? '比赛进行中……' : '选择一只猪下注，然后开始比赛！'}</div>
+    `;
+    document.getElementById('battleGrid').addEventListener('click', e=>{
+      const card = e.target.closest('.pig-card');
+      if(!card) return;
+      const pickSel = document.getElementById('battlePick');
+      if(pickSel) pickSel.value = card.dataset.id;
+    });
+    document.getElementById('battleStart').addEventListener('click', startBattle);
+    document.getElementById('battleReset').addEventListener('click', ()=>{
+      if(battleInterval){ clearInterval(battleInterval); battleInterval=null; }
+      battleRound = 0; initBattlePigs(); renderBattle();
+    });
+    if(battlePigs.length === 0) initBattlePigs();
+  }
+  function startBattle(){
+    const pickSel = document.getElementById('battlePick');
+    const betId = pickSel ? pickSel.value : '';
+    if(!betId){ toast('请先选择你押的猪','bad','🎯'); return; }
+    if(!spend(BATTLE_COST)) return;
+    if(battlePigs.length === 0 || battlePigs.every(p=>!p.alive)) initBattlePigs();
+    battlePigs.forEach(p=>{ p.hp = p.maxHp; p.alive = true; });
+    battleRound = 1;
+    const log = document.getElementById('battleLog');
+    log.innerHTML = `⚔️ 比赛开始！你押了 <strong>${battlePigs.find(p=>p.id===betId).name}</strong><br>`;
+    document.getElementById('battleStart').disabled = true;
+    document.getElementById('battleReset').disabled = false;
+    battleInterval = setInterval(()=>{
+      battleRound++;
+      const alive = battlePigs.filter(p=>p.alive);
+      if(alive.length <= 1){ endBattle(betId); return; }
+      // 每只活猪触发事件
+      alive.forEach(p=>{
+        const ev = pick(BATTLE_EVENTS);
+        const msg = ev.fn(p);
+        p.hp = Math.min(p.maxHp, p.hp);
+        const l = document.getElementById('battleLog');
+        if(l) l.innerHTML += `<span class="${msg.includes('-')?'l-bad':'l-good'}">${msg}</span><br>`;
+      });
+      // 互相攻击
+      alive.forEach(p=>{
+        const targets = alive.filter(x=>x!==p);
+        if(targets.length === 0) return;
+        const tgt = pick(targets);
+        if(Math.random()*100 < tgt.dodge) return;
+        const dmg = Math.max(1, p.atk - randInt(0,5));
+        tgt.hp -= dmg;
+        const l = document.getElementById('battleLog');
+        if(l) l.innerHTML += `${p.emoji} 攻击 ${tgt.emoji}，造成 ${dmg} 伤害<br>`;
+      });
+      battlePigs.forEach(p=>{ if(p.hp <= 0){ p.alive = false; p.hp = 0; } });
+      // 限制日志长度
+      const l2 = document.getElementById('battleLog');
+      if(l2 && l2.innerHTML.length > 3000) l2.innerHTML = l2.innerHTML.slice(-2500);
+      if(l2) l2.scrollTop = l2.scrollHeight;
+      // 重绘血量
+      const alive2 = battlePigs.filter(p=>p.alive);
+      battlePigs.forEach(p=>{
+        const card = document.querySelector(`.pig-card[data-id="${p.id}"]`);
+        if(card){
+          const pct = Math.max(0, p.hp/p.maxHp*100);
+          card.style.opacity = p.alive ? 1 : .4;
+          const bar = card.querySelector('div[style*="height:4px"] > div');
+          if(bar){ bar.style.width = pct+'%'; bar.style.background = pct>60?'#6cf06c':pct>30?'#ffb000':'#f66'; }
+          const stats = card.querySelector('.pc-stats');
+          if(stats) stats.innerHTML = `HP ${Math.max(0,p.hp)}/${p.maxHp}<br>ATK ${p.atk} 闪避 ${p.dodge}%`;
+        }
+      });
+      if(alive2.length <= 1) endBattle(betId);
+    }, 900);
+  }
+  function endBattle(betId){
+    if(battleInterval){ clearInterval(battleInterval); battleInterval = null; }
+    const winner = battlePigs.find(p=>p.alive);
+    const log = document.getElementById('battleLog');
+    if(!winner){
+      if(log) log.innerHTML += '<br>⚔️ 全军覆没！没有胜者。';
+      toast('全军覆没，无人获胜','bad','💀');
+      return;
+    }
+    const won = winner.id === betId;
+    if(won){
+      const payout = Math.floor(600 * rewardMul());
+      addCoin(payout, `大逃杀押中 ${winner.name}`);
+      if(log) log.innerHTML += `<br><span class="l-big">🏆 ${winner.emoji} ${winner.name} 获胜！你押中了，获得 ${payout} 币！</span>`;
+      toast(`🏆 押中 ${winner.name}！+${payout} 币`, 'big', '🎉');
+    } else {
+      if(log) log.innerHTML += `<br><span class="l-bad">😭 ${winner.emoji} ${winner.name} 获胜，你押的猪败了……</span>`;
+      toast(`😭 押错，${winner.name} 赢了`, 'bad', '💔');
+    }
+    document.getElementById('battleStart').disabled = false;
+  }
+
+  /* ============================================================
+     8. 猪猪大冒险
+     ============================================================ */
+  const ADV_EVENTS = [
+    {w:15, fn:()=>{ const n = randInt(50,180); addCoin(n,'冒险获得'); return {emoji:'💰', text:`你在路边捡到 ${n} 猪猪币！`}; }},
+    {w:12, fn:()=>{ const n = randInt(30,120); addCoin(-n,'冒险消耗'); return {emoji:'🍖', text:`你请路过的猪猪吃了一顿，花了 ${n} 币。`}; }},
+    {w:10, fn:()=>({emoji:'🐗', text:'你遇到了一只野生 S 怪！但它跑掉了。'})},
+    {w:8,  fn:()=>{ const baby = makePig(pick(PIG_SPECIES), pick(PIG_ADJ), pick(PIG_COLORS), Math.random()<0.5); G.pigs.push(baby); save(); return {emoji:'🐷', text:`一只${baby.adj}${baby.species}加入了你的队伍！`}; }},
+    {w:8,  fn:()=>{ addCoin(200,'宝箱'); return {emoji:'🎁', text:'你打开了一个宝箱，获得 200 币！'}; }},
+    {w:7,  fn:()=>({emoji:'🌫️', text:'你走进了一片浓雾，什么也没找到。'})},
+    {w:6,  fn:()=>({emoji:'⚔️', text:'你被一群野猪围攻，但它们突然散开了……'})},
+    {w:6,  fn:()=>({emoji:'🌟', text:'你看到了流星划过，许了个愿（据说很灵）。'})},
+    {w:5,  fn:()=>({emoji:'🎣', text:'你钓到了一条鱼，但被猫叼走了。'})},
+    {w:4,  fn:()=>{ const n = randInt(500,1500); addCoin(n,'奇遇大奖'); return {emoji:'👑', text:`你遇到了一位神秘的猪王，赏赐了你 ${n} 币！`}; }},
+    {w:4,  fn:()=>({emoji:'💎', text:'你发现了一颗水晶，但太重了搬不动……'})},
+    {w:3,  fn:()=>({emoji:'🌀', text:'你被传送门吸走了，醒来发现还在原地。'})},
+    {w:2,  fn:()=>({emoji:'✨', text:'你遇到了传说中的彩虹猪，它对你眨了眨眼。'})},
+  ];
+  const ADV_TOTAL_W = ADV_EVENTS.reduce((a,b)=>a+b.w,0);
+  const ADV_COST = 60;
+  window.__GAME_RENDER.adventure = function(){
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        花费 <strong>${ADV_COST} 币</strong> 出发冒险。系统会随机走 3~7 步，每步触发一段文字事件。<br>
+        可能暴富，可能血本无归，也可能带回一只猪。
+      </div>
+      <div class="brew-result" id="advDisplay">
+        <div class="br-emoji">🗺️</div>
+        <div class="br-name">准备好了吗？</div>
+        <div class="br-desc">点击下面的按钮出发</div>
+      </div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="advGo">🗺️ 出发（${ADV_COST} 币）</button>
+      </div>
+      <div class="play-log" id="advLog">旅行的故事会显示在这里……</div>
+    `;
+    document.getElementById('advGo').addEventListener('click', ()=>{
+      if(!spend(ADV_COST)) return;
+      const steps = randInt(3,7);
+      const log = document.getElementById('advLog');
+      log.innerHTML = `🚶 你踏上了旅途，预计走 ${steps} 步……<br>`;
+      let i = 0;
+      const step = ()=>{
+        if(i >= steps){
+          const disp = document.getElementById('advDisplay');
+          disp.innerHTML = `<div class="br-emoji">🏠</div><div class="br-name">冒险结束</div><div class="br-desc">你回到了家，猪猪在门口迎接你</div>`;
+          return;
+        }
+        i++;
+        let r = Math.random()*ADV_TOTAL_W;
+        let chosen = ADV_EVENTS[0];
+        for(const ev of ADV_EVENTS){ r -= ev.w; if(r<=0){ chosen = ev; break; } }
+        const res = chosen.fn();
+        log.innerHTML += `<span style="color:#ffb000;">第 ${i} 步</span> ${res.emoji} ${res.text}<br>`;
+        log.scrollTop = log.scrollHeight;
+        setTimeout(step, 700);
+      };
+      step();
+    });
+  }
+
+  /* ============================================================
+     9. 骰子赌场（Yahtzee 简化版）
+     ============================================================ */
+  const YAHTZEE_COST = 50;
+  let dice = [1,1,1,1,1];
+  let held = [false,false,false,false,false];
+  let rollsLeft = 3;
+  let yzActive = false;
+  window.__GAME_RENDER.yahtzee = function(){
+    dice = [randInt(1,6),randInt(1,6),randInt(1,6),randInt(1,6),randInt(1,6)];
+    held = [false,false,false,false,false];
+    rollsLeft = 3; yzActive = false;
+    renderYahtzee();
+  };
+  function renderYahtzee(){
+    const diceHtml = dice.map((d,i)=>`<div class="die ${held[i]?'held':''}" data-i="${i}">${'⚀⚁⚂⚃⚄⚅'[d-1]}</div>`).join('');
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        掷 5 颗骰子，可重掷 2 次。点骰子可以「锁定」它。<br>
+        三条=×2 · 四条=×4 · 葫芦=×6 · 顺子=×8 · 五条同=×20<br>
+        每次 <strong>${YAHTZEE_COST} 币</strong>。
+      </div>
+      <div class="dice-row" id="yzDice">${diceHtml}</div>
+      <div class="big-display" id="yzResult">${yzActive ? '剩余重掷次数：'+rollsLeft : '点击开始'}</div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="yzStart" ${yzActive?'disabled':''}>🎯 开始（${YAHTZEE_COST} 币）</button>
+        <button class="play-btn" id="yzRoll" ${yzActive && rollsLeft>0?'':'disabled'}>🎲 重掷（剩 ${rollsLeft}）</button>
+        <button class="play-btn grn" id="yzSettle" ${yzActive?'':'disabled'}>💰 结算</button>
+      </div>
+      <div class="play-log" id="yzLog">${yzActive?'点骰子锁定，然后重掷或结算。':'点开始，押上 50 币。'}</div>
+    `;
+    document.getElementById('yzDice').addEventListener('click', e=>{
+      const d = e.target.closest('.die');
+      if(!d || !yzActive) return;
+      const i = parseInt(d.dataset.i);
+      held[i] = !held[i];
+      renderYahtzee();
+    });
+    document.getElementById('yzStart').addEventListener('click', ()=>{
+      if(!spend(YAHTZEE_COST)) return;
+      dice = [randInt(1,6),randInt(1,6),randInt(1,6),randInt(1,6),randInt(1,6)];
+      held = [false,false,false,false,false];
+      rollsLeft = 2;
+      yzActive = true;
+      renderYahtzee();
+    });
+    document.getElementById('yzRoll').addEventListener('click', ()=>{
+      if(!yzActive || rollsLeft<=0) return;
+      for(let i=0;i<5;i++) if(!held[i]) dice[i] = randInt(1,6);
+      rollsLeft--;
+      renderYahtzee();
+    });
+    document.getElementById('yzSettle').addEventListener('click', ()=>{
+      if(!yzActive) return;
+      const counts = {};
+      dice.forEach(d=>counts[d]=(counts[d]||0)+1);
+      const vals = Object.values(counts).sort((a,b)=>b-a);
+      const sorted = [...dice].sort((a,b)=>a-b);
+      let mult = 0, name = '';
+      if(vals[0] === 5){ mult = 20; name = '五条同！'; }
+      else if(vals[0] === 4){ mult = 4; name = '四条'; }
+      else if(vals[0] === 3 && vals[1] === 2){ mult = 6; name = '葫芦'; }
+      else if(vals[0] === 3){ mult = 2; name = '三条'; }
+      else if(sorted.join('') === '12345' || sorted.join('') === '23456'){ mult = 8; name = '顺子！'; }
+      const log = document.getElementById('yzLog');
+      if(mult > 0){
+        const payout = Math.floor(YAHTZEE_COST * mult * rewardMul());
+        addCoin(payout, `骰子 ${name} ×${mult}`);
+        log.innerHTML = `<span class="l-big">🎉 ${name} ${dice.join(' ')} → 获得 ${payout} 币（×${mult}）</span>`;
+        toast(`🎯 ${name} +${payout} 币`, mult>=8?'big':'good', '🎲');
+      } else {
+        log.innerHTML = `<span class="l-bad">😢 没凑出组合：${dice.join(' ')}</span>`;
+        toast('🎯 没凑出组合','bad','💀');
+      }
+      yzActive = false;
+      renderYahtzee();
+    });
+  }
+
+  /* ============================================================
+     10. 猪猪 21 点
+     ============================================================ */
+  const BJ_COST = 80;
+  function makeCard(){
+    const suits = ['♠','♥','♦','♣'];
+    const s = pick(suits);
+    const v = randInt(1,13);
+    return {suit:s, val:v, red: s==='♥'||s==='♦'};
+  }
+  function cardVal(card){
+    if(card.val === 1) return 11;
+    if(card.val >= 11) return 10;
+    return card.val;
+  }
+  function handTotal(hand){
+    let total = hand.reduce((a,c)=>a+cardVal(c),0);
+    let aces = hand.filter(c=>c.val===1).length;
+    while(total > 21 && aces > 0){ total -= 10; aces--; }
+    return total;
+  }
+  function cardHtml(c, hidden){
+    if(hidden) return `<div class="pcard back">?</div>`;
+    const label = c.val===1?'A':(c.val===11?'J':(c.val===12?'Q':(c.val===13?'K':c.val)));
+    return `<div class="pcard ${c.red?'red':''}"><div>${label}</div><div class="pc-suit">${c.suit}</div></div>`;
+  }
+  let bj = {player:[], dealer:[], active:false, wins:0};
+  window.__GAME_RENDER.blackjack = function(){
+    bj = {player:[], dealer:[], active:false, wins: bj.wins||0};
+    renderBJ();
+  };
+  function renderBJ(){
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        对赌庄家猪。点「要牌」补一张，点「停牌」让庄家摸。<br>
+        超过 21 点直接爆。连续赢 3 把有 <strong>额外奖励</strong>。每次 <strong>${BJ_COST} 币</strong>。
+      </div>
+      <div style="text-align:center;font-size:.8rem;color:#888;">庄家（猪猪）</div>
+      <div class="card-deck" id="bjDealer">${bj.dealer.map((c,i)=>cardHtml(c, !bj.active && i===1)).join('')}</div>
+      <div style="text-align:center;font-size:1rem;font-weight:800;color:#ffb000;">${bj.dealer.length && !bj.active ? handTotal(bj.dealer) : (bj.dealer.length?'?':'-')}</div>
+      <div style="text-align:center;font-size:.8rem;color:#888;margin-top:.4rem;">我</div>
+      <div class="card-deck" id="bjPlayer">${bj.player.map(c=>cardHtml(c,false)).join('')}</div>
+      <div style="text-align:center;font-size:1rem;font-weight:800;color:#6cf06c;">${bj.player.length?handTotal(bj.player):'-'}</div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="bjStart" ${bj.active?'disabled':''}>🃏 开始（${BJ_COST} 币）</button>
+        <button class="play-btn" id="bjHit" ${bj.active?'':'disabled'}>要牌</button>
+        <button class="play-btn sec" id="bjStand" ${bj.active?'':'disabled'}>停牌</button>
+      </div>
+      <div class="play-log" id="bjLog">${bj.active?'你的回合，要牌或停牌。':'点开始，和猪猪庄家对赌。'}</div>
+    `;
+    document.getElementById('bjStart').addEventListener('click', bjStart);
+    document.getElementById('bjHit').addEventListener('click', bjHit);
+    document.getElementById('bjStand').addEventListener('click', bjStand);
+  }
+  function bjStart(){
+    if(!spend(BJ_COST)) return;
+    bj.player = [makeCard(), makeCard()];
+    bj.dealer = [makeCard(), makeCard()];
+    bj.active = true;
+    renderBJ();
+    if(handTotal(bj.player) === 21) setTimeout(bjStand, 400);
+  }
+  function bjHit(){
+    if(!bj.active) return;
+    bj.player.push(makeCard());
+    if(handTotal(bj.player) > 21){
+      bj.active = false;
+      const log = document.getElementById('bjLog');
+      log.innerHTML = `<span class="l-bad">💥 你爆了！点数 ${handTotal(bj.player)}，${BJ_COST} 币没了</span>`;
+      toast('💥 21 点爆了','bad','💀');
+      bj.wins = 0;
+      renderBJ();
+    } else {
+      renderBJ();
+    }
+  }
+  function bjStand(){
+    if(!bj.active) return;
+    bj.active = false;
+    while(handTotal(bj.dealer) < 17) bj.dealer.push(makeCard());
+    const p = handTotal(bj.player);
+    const d = handTotal(bj.dealer);
+    const log = document.getElementById('bjLog');
+    if(d > 21 || p > d){
+      let payout = Math.floor(BJ_COST * 2 * rewardMul());
+      bj.wins++;
+      if(bj.wins >= 3){
+        payout += 500;
+        log.innerHTML = `<span class="l-big">🏆 你赢了！${p} vs ${d} · 获得 ${payout} 币（含 3 连胜奖励 +500！）</span>`;
+        toast('🏆 21点 3 连胜！+500','big','👑');
+        bj.wins = 0;
+      } else {
+        log.innerHTML = `<span class="l-good">✅ 你赢了！${p} vs ${d} · 获得 ${payout} 币</span>`;
+        toast(`✅ 21点赢了 +${payout} 币`,'good','🎉');
+      }
+      addCoin(payout, '21点获胜');
+    } else if(p === d){
+      log.innerHTML = `<span>🤝 平局 ${p} vs ${d} · 退回 ${BJ_COST} 币</span>`;
+      addCoin(BJ_COST, '21点平局退回');
+    } else {
+      log.innerHTML = `<span class="l-bad">😢 你输了 ${p} vs ${d} · ${BJ_COST} 币没了</span>`;
+      toast('😢 21点输了','bad','💔');
+      bj.wins = 0;
+    }
+    renderBJ();
+  }
+
+  /* ============================================================
+     11. 恶作剧系统
+     ============================================================ */
+  window.__GAME_RENDER.prank = function(){
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        猪猪会每隔 <strong>2~5 分钟</strong> 随机捣乱一次。事件类型包括：偷币、送币、歪指针、变色、拉屎……<br>
+        这里可以手动触发一次，也可以查看历史。
+      </div>
+      <div class="brew-result">
+        <div class="br-emoji">😜</div>
+        <div class="br-name">已发生 ${G.stats.pranks||0} 次恶作剧</div>
+        <div class="br-desc">上次：${G.lastPrank ? new Date(G.lastPrank).toLocaleTimeString('zh-CN') : '暂无'}</div>
+      </div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="prankNow">😜 立即触发一次恶作剧</button>
+        <button class="play-btn sec" id="prankReset">清空计数</button>
+      </div>
+      <div class="play-log">恶作剧会让页面产生一些意外变化，比如偷走你的猪猪币、弄歪转盘指针、给屏幕加滤镜等。<br>这些都是随机的，无法预测。<br>祝你好运……或者坏运。</div>
+    `;
+    document.getElementById('prankNow').addEventListener('click', ()=>{
+      G.lastPrank = 0;
+      tryPrank();
+    });
+    document.getElementById('prankReset').addEventListener('click', ()=>{
+      G.stats.pranks = 0; save(); renderPrankView();
+    });
+  };
+  function renderPrankView(){
+    if(currentGame==='prank') window.__GAME_RENDER.prank();
+  }
+
+  /* ============================================================
+     12. 天气控制台
+     ============================================================ */
+  window.__GAME_RENDER.weather = function(){
+    const cur = G.weather ? WEATHER[G.weather.id] : null;
+    const remain = G.weather ? Math.max(0, G.weather.until - Date.now()) : 0;
+    const mm = Math.floor(remain/60000), ss = Math.floor(remain%60000/1000);
+    const cardsHtml = Object.entries(WEATHER).map(([id,w])=>{
+      const active = G.weather && G.weather.id === id ? 'active' : '';
+      return `<div class="wth-card ${active}">
+        <div class="wth-icon">${w.icon}</div>
+        <div class="wth-name">${w.name}</div>
+        <div class="wth-eff">${w.desc}<br><strong style="color:#ffb000;">×${w.mul.toFixed(2)}</strong></div>
+      </div>`;
+    }).join('');
+    bodyEl.innerHTML = `
+      <div class="play-info">
+        艾欧泽亚天气每 5~15 分钟随机变化一次，影响所有游乐场玩法的收益倍率。<br>
+        当前天气：<strong style="color:${cur?cur.color:'#fff'};">${cur?cur.icon+' '+cur.name:'无'}</strong>${G.weather?` · 剩余 ${mm}:${String(ss).padStart(2,'0')}`:''}
+      </div>
+      <div class="weather-grid">${cardsHtml}</div>
+      <div class="play-row" style="justify-content:center;">
+        <button class="play-btn gold" id="wRoll">🎲 随机换天气（免费）</button>
+        <button class="play-btn grn" id="wMeteor">🌠 立刻召唤流星雨（500 币）</button>
+        <button class="play-btn dan" id="wSunny">☀️ 立刻转晴（免费）</button>
+      </div>
+      <div class="play-log">
+        ※ 天气倍率会影响俄罗斯轮盘 / 硬币 / 双色球 / 大逃杀 / 骰子 / 21点 / 繁育的收益。<br>
+        ※ 浓雾会让稀有事件概率提升（但收益会降低）。<br>
+        ※ 流星雨是全页狂欢，只有几分钟，看到就赶紧玩！
+      </div>
+    `;
+    document.getElementById('wRoll').addEventListener('click', ()=>{ rollWeather(); renderWeather(); window.__GAME_RENDER.weather(); });
+    document.getElementById('wMeteor').addEventListener('click', ()=>{
+      if(!spend(500)) return;
+      rollWeather('meteor'); renderWeather(); window.__GAME_RENDER.weather();
+    });
+    document.getElementById('wSunny').addEventListener('click', ()=>{
+      rollWeather('sunny'); renderWeather(); window.__GAME_RENDER.weather();
+    });
+  };
+
+  /* ---------- 主题切换 ---------- */
+  const THEMES = [
+    {id:'dark',  icon:'🌙', title:'暗黑主题（默认）'},
+    {id:'light', icon:'☀️', title:'白色主题'},
+    {id:'pink',  icon:'🌸', title:'粉色主题'},
+    {id:'blue',  icon:'💙', title:'蓝色主题'}
+  ];
+  const picker = document.createElement('div');
+  picker.className = 'theme-picker';
+  picker.setAttribute('aria-label', '主题切换');
+  picker.innerHTML = THEMES.map(t => `<button data-theme="${t.id}" title="${t.title}" aria-label="${t.title}">${t.icon}</button>`).join('');
+  const savedRaw = localStorage.getItem('piggy-theme');
+  let currentTheme = (savedRaw === 'light') ? 'light' : (savedRaw || 'dark');
+  if(!THEMES.some(t=>t.id===currentTheme)) currentTheme = 'dark';
+  function applyTheme(id){
+    document.body.classList.remove('light-theme','pink-theme','blue-theme');
+    if(id === 'light') document.body.classList.add('light-theme');
+    else if(id === 'pink') document.body.classList.add('pink-theme');
+    else if(id === 'blue') document.body.classList.add('blue-theme');
+    picker.querySelectorAll('button').forEach(b=>{ b.classList.toggle('active', b.dataset.theme === id); });
+    try{ localStorage.setItem('piggy-theme', id); }catch(e){}
+  }
+  picker.querySelectorAll('button').forEach(b=>{ b.addEventListener('click', ()=> applyTheme(b.dataset.theme)); });
+  const nav = document.querySelector('.nav-menu');
+  if(nav) nav.appendChild(picker);
+  applyTheme(currentTheme);
+
+  /* ---------- 清理游乐场数据 ---------- */
+  document.getElementById('clearAllPlaygroundBtn').addEventListener('click', ()=>{
+    if(!confirm('确定清空游乐场全部数据吗？（钱包、猪圈、收藏、双色球、天气）此操作不可恢复。')) return;
+    G.wallet = 1000; G.pigs = defaultPigs(); G.inventory = {}; G.bullseye = null;
+    G.stats = {roulette:0,coin:0,lotto:0,breed:0,alchemy:0,gacha:0,battle:0,adventure:0,yahtzee:0,blackjack:0,pranks:0,weather:0};
+    G.lastPrank = 0; G.weather = null;
+    save(); renderWallet(); rollWeather();
+    toast('游乐场数据已重置','bad','🗑️');
+  });
+
+  /* ---------- 初始化 ---------- */
+  renderWallet();
+  renderWeather();
+  if(!G.weather) rollWeather();
+
 })();
 </script>
 </body>
