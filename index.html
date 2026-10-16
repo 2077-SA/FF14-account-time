@@ -7,18 +7,18 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box;font-family:'Arial','Helvetica',system-ui,sans-serif}
   html{scroll-padding-top:90px}
-  body{min-height:100vh;background:#0f0f0f;color:#fff;line-height:1.6}
+  body{min-height:100vh;background:#0f0f0f;color:#fff;line-height:1.6;transition:background .35s,color .35s}
   .container{max-width:1100px;margin:0 auto;padding:0 20px}
-  .header{background:#000;border-bottom:2px solid #ff9000;position:sticky;top:0;z-index:100}
+  .header{background:#000;border-bottom:2px solid #ff9000;position:sticky;top:0;z-index:100;transition:background .35s,border-color .35s}
   .nav-wrapper{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:20px;flex-wrap:wrap}
   .logo a{text-decoration:none;font-size:26px;font-weight:bold;display:flex;align-items:center;gap:4px}
   .logo-text{color:#fff}.logo-hub{color:#ff9000}.logo-emoji{font-size:28px}
-  .nav-menu{display:flex;gap:5px;flex-wrap:wrap}
+  .nav-menu{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
   .nav-link{color:#fff;text-decoration:none;font-weight:500;padding:8px 16px;border-radius:20px;transition:all .3s;font-size:.9rem}
   .nav-link:hover,.nav-link.active{background:#ff9000;color:#000}
   .main-content{padding:30px 0 50px}
-  .card{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:2rem;box-shadow:0 8px 30px rgba(0,0,0,.4);margin-bottom:30px}
-  .section-title{font-size:22px;font-weight:bold;color:#fff;position:relative;margin-bottom:24px;display:flex;align-items:center;gap:10px}
+  .card{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:2rem;box-shadow:0 8px 30px rgba(0,0,0,.4);margin-bottom:30px;transition:background .35s,border-color .35s}
+  .section-title{font-size:22px;font-weight:bold;color:#fff;position:relative;margin-bottom:24px;display:flex;align-items:center;gap:10px;transition:color .35s}
   .section-title::after{content:'';position:absolute;bottom:-6px;left:0;width:60px;height:3px;background:linear-gradient(90deg,#ff9000,#ffb000);border-radius:2px}
   .wheel-section{display:flex;flex-direction:column;align-items:center;margin:1rem 0}
   .wheel-container{position:relative;width:320px;height:320px;margin-bottom:1.2rem}
@@ -39,7 +39,7 @@
   .spin-time-row{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:.85rem;color:#aaa}
   .spin-time-row input{width:70px;background:#111;border:1px solid #444;color:#ffb000;padding:4px 8px;border-radius:8px;text-align:center;font-weight:700;font-size:.9rem;outline:none}
   .tool-section{display:flex;flex-wrap:wrap;gap:1.2rem;justify-content:center;margin-top:10px}
-  .mini-tool{background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:1.2rem 1.5rem;flex:1 1 300px}
+  .mini-tool{background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:1.2rem 1.5rem;flex:1 1 300px;transition:background .35s,border-color .35s}
   .mini-tool h3{color:#ffb000;font-size:1rem;display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem;border-left:4px solid #ff9000;padding-left:.7rem}
   .tool-content{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem}
   .mini-tool button{background:#ff9000;border:none;border-bottom:4px solid #b36600;padding:.4rem 1.1rem;border-radius:30px;color:#000;font-weight:600;cursor:pointer;transition:all .05s;font-size:.85rem}
@@ -57,7 +57,7 @@
   .hunt-advice-row .tag.yes{background:#1a3a1a;color:#6cf06c;border:1px solid #2a5a2a}
   .hunt-advice-row .tag.no{background:#3a1a1a;color:#f66;border:1px solid #5a2a2a}
   .hunt-advice-row .tag.maybe{background:#3a3a1a;color:#ffb000;border:1px solid #5a5a2a}
-  .s-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px}
+  .s-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px;transition:background .35s,border-color .35s}
   .s-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
   .s-tab{background:#252525;border:1px solid #444;color:#ccc;padding:.35rem 1rem;border-radius:30px;cursor:pointer;font-size:.82rem;transition:all .2s}
   .s-tab.active{background:#ff9000;border-color:#ff9000;color:#000;font-weight:700}
@@ -114,6 +114,12 @@
   .try-stat-row span strong{color:#ffb000;font-weight:800}
   .try-stat-row span.cool strong{color:#f66}
   .try-stat-row span.vco strong{color:#c66}
+  .try-rate-tag{font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#aaa}
+  .try-rate-tag.ice{color:#8cc8ff;border-color:#2a4a6a;background:#0f1a2a}
+  .try-rate-tag.fog{color:#aaa;border-color:#3a3a3a;background:#1a1a1a}
+  .try-rate-tag.seed{color:#9cdc9c;border-color:#2a5a2a;background:#162a16}
+  .try-rate-tag.sun{color:#fc0;border-color:#5a4a1a;background:#2a2418}
+  .try-rate-tag.fire{color:#f88;border-color:#5a2a2a;background:#2a1616}
   .ss-try-btn{background:linear-gradient(135deg,#ff9000,#fc0);border:none;border-bottom:5px solid #b36600;color:#000;font-weight:800;font-size:1rem;padding:.7rem 1.8rem;border-radius:40px;letter-spacing:1px;cursor:pointer;box-shadow:0 8px 20px -6px #00000099,0 0 0 2px #ffb000 inset;transition:all .1s;display:inline-block;width:100%;text-align:center}
   .ss-try-btn:hover{transform:translateY(-2px)}
   .ss-try-btn:active{transform:translateY(4px);border-bottom-width:2px}
@@ -196,7 +202,7 @@
   .ss-range-btns button{background:#252525;border:1px solid #444;color:#aaa;font-size:.68rem;padding:2px 8px;border-radius:20px;cursor:pointer;transition:all .2s}
   .ss-range-btns button:hover{border-color:#ff9000;color:#ffb000}
   .ss-range-btns button.active{background:#ff9000;border-color:#ff9000;color:#000;font-weight:700}
-  .lottery-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px}
+  .lottery-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px;transition:background .35s,border-color .35s}
   .lottery-machine{display:flex;flex-direction:column;align-items:center;gap:1rem}
   .lottery-display{width:180px;height:180px;background:radial-gradient(circle at 40% 35%,#2a2a2a,#111);border:3px solid #ff9000;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:4rem;box-shadow:0 0 30px #ff900033,inset 0 0 40px #000;transition:all .3s}
   .lottery-display.spinning{animation:shake .15s infinite}
@@ -213,7 +219,7 @@
   .lottery-history .lh-entry{padding:3px 0;border-bottom:1px solid #222;display:flex;justify-content:space-between}
   .lottery-stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:.8rem;font-size:.8rem;color:#aaa}
   .lottery-stats span{background:#252525;padding:3px 10px;border-radius:20px}
-  .scratch-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px}
+  .scratch-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px;transition:background .35s,border-color .35s}
   .scratch-info{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1rem;font-size:.85rem;color:#bbb;justify-content:center}
   .scratch-info span{background:#252525;padding:4px 12px;border-radius:20px}
   .scratch-info strong{color:#ffb000}
@@ -252,7 +258,7 @@
   .x10-card .x10-card-info{text-align:center;font-size:.6rem;color:#ffb000;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .x10-card.lose .x10-card-info{color:#888}
   .x10-card .pity-badge{position:absolute;top:-6px;right:-4px;background:#fc0;color:#000;font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:8px;z-index:1}
-  .race-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px}
+  .race-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px;transition:background .35s,border-color .35s}
   .race-track{margin-top:1rem}
   .race-lane{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed #2a2a2a;border-radius:8px;transition:background .2s}
   .race-lane:hover{background:#1f1f1f}
@@ -268,7 +274,7 @@
   .race-result.lose{color:#f66}
   .race-bank{font-size:.85rem;color:#bbb}
   .race-bank strong{color:#ffb000}
-  .tarot-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px}
+  .tarot-panel{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:1.5rem;margin-bottom:30px;transition:background .35s,border-color .35s}
   .tarot-machine{display:flex;flex-direction:column;align-items:center;gap:1rem}
   .tarot-deck{width:130px;height:190px;background:linear-gradient(145deg,#2a1f0d,#14100a);border:2px solid #b58a3a;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;cursor:pointer;transition:all .3s;box-shadow:0 8px 20px rgba(0,0,0,.7);position:relative}
   .tarot-deck::before{content:'';position:absolute;inset:6px;border:1px solid #b58a3a44;border-radius:8px}
@@ -309,19 +315,27 @@
   .egg-record-item .egg-del{background:transparent;border:none;color:#f66;cursor:pointer;font-size:.8rem;padding:0 4px;border-radius:4px}
   .farm-record-item{display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid #222;font-size:.75rem}
   .farm-record-item .farm-del{background:transparent;border:none;color:#f66;cursor:pointer;font-size:.8rem;padding:0 4px;border-radius:4px}
-  .footer{background:#000;border-top:2px solid #ff9000;padding:30px 0 20px;margin-top:40px}
+  .footer{background:#000;border-top:2px solid #ff9000;padding:30px 0 20px;margin-top:40px;transition:background .35s,border-color .35s}
   .footer-content{display:flex;flex-wrap:wrap;gap:30px;justify-content:space-between}
   .footer-section h3{color:#ffb000;font-size:.95rem;margin-bottom:8px}
   .footer-section p{color:#888;font-size:.82rem}
   .footer-bottom{margin-top:24px;padding-top:16px;border-top:1px solid #222;text-align:center;font-size:.78rem;color:#555}
   .footer-warning{display:block;max-width:560px;margin:16px auto 0;padding:11px 20px;text-align:center;font-size:.85rem;font-weight:700;color:#f66;background:#1a0d0d;border:1px solid #5a2a2a;border-radius:12px;letter-spacing:1px}
-  #themeToggle{border:none;background:transparent;cursor:pointer;font-size:1rem;padding:8px 14px;border-radius:20px;color:#fff;font-weight:500;transition:all .3s}
-  #themeToggle:hover{background:#ff9000;color:#000}
+
+  /* ========== 主题选择器 ========== */
+  .theme-picker{display:flex;gap:3px;background:#1f1f1f;border:1px solid #444;border-radius:22px;padding:3px;align-items:center;transition:all .35s}
+  .theme-picker button{border:none;background:transparent;cursor:pointer;font-size:1rem;padding:5px 10px;border-radius:16px;transition:all .2s;line-height:1;color:#fff;position:relative}
+  .theme-picker button:hover{background:#333}
+  .theme-picker button.active{background:#ff9000;color:#000;font-weight:700}
+  .theme-picker button[data-theme="light"].active{background:#ffc107;color:#000}
+  .theme-picker button[data-theme="pink"].active{background:#ff7eb3;color:#fff}
+  .theme-picker button[data-theme="blue"].active{background:#00a8ff;color:#fff}
+
+  /* ========== 白色主题（原有 light-theme 增强） ========== */
   body.light-theme{background:#f2f2f2;color:#1a1a1a}
-  body.light-theme .header{background:#fff}
+  body.light-theme .header{background:#fff;border-bottom-color:#ff9000}
   body.light-theme .logo-text{color:#1a1a1a}
   body.light-theme .nav-link{color:#333}
-  body.light-theme #themeToggle{color:#333}
   body.light-theme .card,body.light-theme .s-panel,body.light-theme .lottery-panel,body.light-theme .scratch-panel,body.light-theme .race-panel,body.light-theme .tarot-panel,body.light-theme .mini-tool{background:#fff;border-color:#e0e0e0}
   body.light-theme .section-title{color:#1a1a1a}
   body.light-theme .s-item{background:#f9f9f9;border-color:#e0e0e0}
@@ -339,6 +353,248 @@
   body.light-theme .modal{background:#fff}
   body.light-theme .modal-item .value{background:#f5f5f5;color:#333}
   body.light-theme .footer{background:#fff}
+  body.light-theme .theme-picker{background:#f0f0f0;border-color:#ddd}
+  body.light-theme .theme-picker button{color:#333}
+  body.light-theme .theme-picker button:hover{background:#e0e0e0}
+  body.light-theme .hunt-advice-box{background:#f5f5f5;border-color:#e0e0e0}
+  body.light-theme .counter-value{background:#f0f0f0;border-color:#ddd}
+  body.light-theme .server-select{background:#f5f5f5;border-color:#ddd;color:#333}
+  body.light-theme .s-tab{background:#f0f0f0;border-color:#ddd;color:#666}
+  body.light-theme .s-tab.active{background:#ff9000;border-color:#ff9000;color:#000}
+  body.light-theme .s-detail .s-meta span{background:#eee}
+  body.light-theme .try-progress-head .label{color:#1a1a1a}
+  body.light-theme .trigger-result-inline .tr-stat{border-color:#e0e0e0;color:#666}
+  body.light-theme .ss-history-panel{background:#f5f5f5;border-color:#e0e0e0}
+  body.light-theme .ss-history-stats span{background:#fff;border-color:#e0e0e0;color:#666}
+  body.light-theme .race-lane .lane-track{background:linear-gradient(90deg,#f0f0f0,#e6e6e6);border-color:#ddd}
+  body.light-theme .race-controls select{background:#f5f5f5;border-color:#ddd;color:#c25a00}
+  body.light-theme .scratch-10x-result{background:#f5f5f5;border-color:#e0e0e0}
+  body.light-theme .x10-card{background:#fff;border-color:#e0e0e0}
+  body.light-theme .x10-card .x10-mini-cell{background:#eee}
+  body.light-theme .lottery-display{background:radial-gradient(circle at 40% 35%,#fafafa,#e6e6e6);box-shadow:0 0 30px #ff900033,inset 0 0 40px #fff}
+  body.light-theme .scratch-card{background:linear-gradient(135deg,#fff6e0,#f5ead0);border-color:#c8a860}
+  body.light-theme .scratch-cell{background:linear-gradient(135deg,#c8c8c8,#a8a8a8)}
+  body.light-theme .scratch-cell.revealed{background:#f0f0f0;border-color:#ccc}
+  body.light-theme .scratch-cell.win{background:#fff4d6;border-color:#fc0}
+  body.light-theme .tarot-deck,body.light-theme .tarot-card{background:linear-gradient(145deg,#fff6e0,#f5ead0);border-color:#c8a860}
+  body.light-theme .tarot-card .t-meaning{color:#5a4a2a;border-color:#d8c8a0}
+  body.light-theme .tarot-card .t-name{color:#a87820}
+  body.light-theme .tarot-stats{color:#888}
+  body.light-theme .tool-log{color:#888}
+  body.light-theme .small-note{color:#888}
+  body.light-theme .lottery-history .lh-entry{border-color:#eee}
+  body.light-theme .egg-record-item,body.light-theme .farm-record-item{border-color:#eee}
+  body.light-theme .ss-history-chart{border-color:#ddd}
+  body.light-theme .stats-ver-block .ver-head{background:#f0f0fa;border-color:#d0d0e8}
+  body.light-theme .x10-card.win{background:#fff4d6;border-color:#fc0}
+  body.light-theme .trigger-result-inline.success{background:#fff8e0;border-color:#e8c860}
+  body.light-theme .trigger-result-inline.partial{background:#efffef;border-color:#a0d8a0}
+  body.light-theme .trigger-result-inline.fail{background:#f7f7f7}
+  body.light-theme .trigger-result-inline.cool{background:#fff0f0;border-color:#e0a8a8}
+
+  /* ========== 粉色主题 ========== */
+  body.pink-theme{background:#fff5f8;color:#4a2a35}
+  body.pink-theme .header{background:#ffe0ec;border-bottom-color:#ff7eb3}
+  body.pink-theme .logo-text{color:#4a2a35}
+  body.pink-theme .logo-hub{color:#ff5599}
+  body.pink-theme .nav-link{color:#7a4a5c}
+  body.pink-theme .nav-link:hover,body.pink-theme .nav-link.active{background:#ff7eb3;color:#fff}
+  body.pink-theme .card,body.pink-theme .s-panel,body.pink-theme .lottery-panel,body.pink-theme .scratch-panel,body.pink-theme .race-panel,body.pink-theme .tarot-panel,body.pink-theme .mini-tool{background:#fff;border-color:#ffd6e5;box-shadow:0 8px 30px rgba(255,150,180,.16)}
+  body.pink-theme .section-title{color:#4a2a35}
+  body.pink-theme .section-title::after{background:linear-gradient(90deg,#ff7eb3,#ffa8c8)}
+  body.pink-theme .s-tab{background:#fff0f5;border-color:#ffd6e5;color:#7a4a5c}
+  body.pink-theme .s-tab.active{background:#ff7eb3;border-color:#ff7eb3;color:#fff}
+  body.pink-theme .s-tab.ss-tab.active{background:#d8a8f0;border-color:#d8a8f0;color:#fff}
+  body.pink-theme .s-item{background:#fff8fb;border-color:#ffdce8}
+  body.pink-theme .s-item:hover{border-color:#ff7eb3}
+  body.pink-theme .s-item.is-selected{border-color:#ff7eb3;background:#ffeaf2}
+  body.pink-theme .s-item.is-ss{background:#fff0f5;border-color:#f0c0d8}
+  body.pink-theme .s-item .s-name{color:#c74a80}
+  body.pink-theme .s-item.is-ss .s-name{color:#c74a80}
+  body.pink-theme .s-item .s-desc{color:#8a5a70}
+  body.pink-theme .s-item .s-stat-line{color:#a87a90}
+  body.pink-theme .s-detail{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .s-detail h4{color:#c74a80}
+  body.pink-theme .s-detail .s-trigger strong{color:#ff7eb3}
+  body.pink-theme .s-history-line{background:#fff0f5;border-color:#ffd6e5;color:#7a4a5c}
+  body.pink-theme .s-history-line strong{color:#c74a80}
+  body.pink-theme .s-history-line .ver{color:#a878d8}
+  body.pink-theme .ss-rate.high{color:#3a9a3a;background:#eafaea;border-left-color:#7ac87a}
+  body.pink-theme .ss-rate.low{color:#c74a80;background:#ffeef4;border-left-color:#ff9ec0}
+  body.pink-theme .ss-rate.self{color:#c74a80;background:#fff0f5;border-left-color:#ff7eb3}
+  body.pink-theme .ss-try-wrap{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .ss-fortune-banner{background:#fff5f9;border-color:#ffd6e5;color:#7a4a5c}
+  body.pink-theme .ss-fortune-banner.up{border-color:#7ac87a;background:#eafaea;color:#3a7a3a}
+  body.pink-theme .ss-fortune-banner.down{border-color:#ff9ec0;background:#ffeef4;color:#c74a80}
+  body.pink-theme .try-progress-track{background:#ffeaf2;border-color:#ffd6e5}
+  body.pink-theme .try-progress-head .label{color:#4a2a35}
+  body.pink-theme .trigger-result-inline{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .trigger-result-inline.success{background:#fff8e8;border-color:#f0d070}
+  body.pink-theme .trigger-result-inline.partial{background:#efffef;border-color:#a0d8a0}
+  body.pink-theme .trigger-result-inline.fail{background:#fff5f9;border-color:#ffdce8}
+  body.pink-theme .trigger-result-inline.cool{background:#ffeef4;border-color:#ff9ec0}
+  body.pink-theme .trigger-result-inline .tr-sub{color:#5a3a48}
+  body.pink-theme .trigger-result-inline .tr-stat{border-color:#ffdce8;color:#8a5a70}
+  body.pink-theme .stats-panel{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .stats-panel h4{color:#c74a80}
+  body.pink-theme .stats-panel .stat-summary span{background:#fff;border-color:#ffd6e5}
+  body.pink-theme .stats-list .stat-row{background:#fff;border-color:#ffeaf2}
+  body.pink-theme .stats-list .stat-row .stat-name{color:#5a3a48}
+  body.pink-theme .stats-list .stat-row .stat-val{color:#8a5a70}
+  body.pink-theme .stats-list .stat-row .stat-pts{color:#a87a90}
+  body.pink-theme .stats-ver-block .ver-head{background:#fff0f5;border-color:#ffd6e5;color:#c74a80}
+  body.pink-theme .ss-history-panel{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .ss-history-head .hist-title{color:#c74a80}
+  body.pink-theme .ss-history-chart{border-color:#ffd6e5}
+  body.pink-theme .ss-history-stats span{background:#fff;border-color:#ffd6e5;color:#8a5a70}
+  body.pink-theme .ss-range-btns button{background:#fff0f5;border-color:#ffd6e5;color:#8a5a70}
+  body.pink-theme .ss-range-btns button.active{background:#ff7eb3;border-color:#ff7eb3;color:#fff}
+  body.pink-theme .modal{background:#fff;border-color:#ff7eb3}
+  body.pink-theme .modal-title-block h2{color:#c74a80}
+  body.pink-theme .modal-item .label{color:#c74a80}
+  body.pink-theme .modal-item .value{background:#fff0f5;color:#4a2a35;border-left-color:#ff7eb3}
+  body.pink-theme .modal-augury{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .modal-augury .star{color:#c74a80}
+  body.pink-theme .modal-header{border-bottom-color:#ffd6e5}
+  body.pink-theme .footer{background:#ffe0ec;border-top-color:#ff7eb3}
+  body.pink-theme .footer-section h3{color:#c74a80}
+  body.pink-theme .footer-section p{color:#8a5a70}
+  body.pink-theme .footer-bottom{color:#a87a90;border-top-color:#ffd6e5}
+  body.pink-theme .hunt-advice-box{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .hunt-advice-box h4{color:#c74a80}
+  body.pink-theme .mini-tool h3{color:#c74a80;border-left-color:#ff7eb3}
+  body.pink-theme .counter-value{background:#fff0f5;border-color:#ffd6e5;color:#c74a80}
+  body.pink-theme .tool-log{color:#8a5a70}
+  body.pink-theme .small-note{color:#a87a90}
+  body.pink-theme .server-select{background:#fff0f5;border-color:#ffd6e5;color:#4a2a35}
+  body.pink-theme .theme-picker{background:#fff0f5;border-color:#ffd6e5}
+  body.pink-theme .theme-picker button{color:#7a4a5c}
+  body.pink-theme .theme-picker button:hover{background:#ffe0ec}
+  body.pink-theme .lottery-display{background:radial-gradient(circle at 40% 35%,#fff0f5,#ffe0ec);box-shadow:0 0 30px #ff7eb333,inset 0 0 40px #fff}
+  body.pink-theme .scratch-card{background:linear-gradient(135deg,#fff0f5,#ffe0ec);border-color:#ff9ec0}
+  body.pink-theme .scratch-cell{background:linear-gradient(135deg,#ffb8d0,#ff90b8)}
+  body.pink-theme .scratch-cell.revealed{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .scratch-cell.win{background:#fff0f5;border-color:#ff7eb3}
+  body.pink-theme .scratch-10x-result{background:#fff5f9;border-color:#ffd6e5}
+  body.pink-theme .x10-card{background:#fff;border-color:#ffd6e5}
+  body.pink-theme .x10-card .x10-mini-cell{background:#fff0f5}
+  body.pink-theme .x10-card.win{background:#ffeaf2;border-color:#ff7eb3}
+  body.pink-theme .tarot-deck,body.pink-theme .tarot-card{background:linear-gradient(145deg,#fff0f5,#ffe0ec);border-color:#ff9ec0}
+  body.pink-theme .tarot-card .t-name{color:#c74a80}
+  body.pink-theme .tarot-card .t-meaning{color:#7a4a5c;border-color:#ffd6e5}
+  body.pink-theme .tarot-deck::before{border-color:#ff9ec044}
+  body.pink-theme .race-lane .lane-track{background:linear-gradient(90deg,#fff0f5,#ffe0ec);border-color:#ffd6e5}
+  body.pink-theme .race-lane:hover{background:#fff5f9}
+  body.pink-theme .race-controls select{background:#fff0f5;border-color:#ffd6e5;color:#c74a80}
+  body.pink-theme .race-bank{color:#7a4a5c}
+  body.pink-theme .race-bank strong{color:#c74a80}
+  body.pink-theme .lottery-history .lh-entry{border-color:#ffeaf2}
+  body.pink-theme .egg-record-item,body.pink-theme .farm-record-item{border-color:#ffeaf2}
+  body.pink-theme .lottery-stats span,body.pink-theme .scratch-info span{background:#fff0f5;color:#7a4a5c}
+  body.pink-theme .s-detail .s-meta span{background:#fff0f5}
+
+  /* ========== 蓝色主题 ========== */
+  body.blue-theme{background:#0a1628;color:#d6e8ff}
+  body.blue-theme .header{background:#040c1a;border-bottom-color:#00a8ff}
+  body.blue-theme .logo-text{color:#d6e8ff}
+  body.blue-theme .logo-hub{color:#00a8ff}
+  body.blue-theme .nav-link{color:#b0d4ff}
+  body.blue-theme .nav-link:hover,body.blue-theme .nav-link.active{background:#00a8ff;color:#001a33}
+  body.blue-theme .card,body.blue-theme .s-panel,body.blue-theme .lottery-panel,body.blue-theme .scratch-panel,body.blue-theme .race-panel,body.blue-theme .tarot-panel,body.blue-theme .mini-tool{background:#0f1f38;border-color:#1e3a5f;box-shadow:0 8px 30px rgba(0,40,90,.4)}
+  body.blue-theme .section-title{color:#e0f0ff}
+  body.blue-theme .section-title::after{background:linear-gradient(90deg,#00a8ff,#4dd0ff)}
+  body.blue-theme .s-tab{background:#122440;border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .s-tab.active{background:#00a8ff;border-color:#00a8ff;color:#001a33}
+  body.blue-theme .s-tab.ss-tab.active{background:#a88cff;border-color:#a88cff;color:#fff}
+  body.blue-theme .s-item{background:#122440;border-color:#1e3a5f}
+  body.blue-theme .s-item:hover{border-color:#00a8ff}
+  body.blue-theme .s-item.is-selected{border-color:#00a8ff;background:#1a3050}
+  body.blue-theme .s-item.is-ss{background:#1a2440;border-color:#3a4a6a}
+  body.blue-theme .s-item .s-name{color:#88c8ff}
+  body.blue-theme .s-item.is-ss .s-name{color:#ffd060}
+  body.blue-theme .s-item .s-desc{color:#9ab4d4}
+  body.blue-theme .s-detail{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .s-detail h4{color:#4dd0ff}
+  body.blue-theme .s-detail .s-trigger strong{color:#00a8ff}
+  body.blue-theme .s-history-line{background:#0a1628;border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .s-history-line strong{color:#4dd0ff}
+  body.blue-theme .s-history-line .ver{color:#a88cff}
+  body.blue-theme .ss-rate.high{color:#6cf06c;background:#0f2a1f;border-left-color:#2a7a4a}
+  body.blue-theme .ss-rate.low{color:#f88;background:#2a1628;border-left-color:#7a2a4a}
+  body.blue-theme .ss-rate.self{color:#ffd060;background:#2a2418;border-left-color:#ffd060}
+  body.blue-theme .ss-try-wrap{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .ss-fortune-banner{background:#0f1f38;border-color:#1e3a5f;color:#c8dff4}
+  body.blue-theme .ss-fortune-banner.up{border-color:#2a7a4a;background:#0f2a1f;color:#6cf06c}
+  body.blue-theme .ss-fortune-banner.down{border-color:#7a2a4a;background:#2a1628;color:#f88}
+  body.blue-theme .try-progress-track{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .try-progress-head .label{color:#e0f0ff}
+  body.blue-theme .trigger-result-inline{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .trigger-result-inline.success{background:#1a1f0a;border-color:#5a5a1a}
+  body.blue-theme .trigger-result-inline.partial{background:#0f1f18;border-color:#2a5a4a}
+  body.blue-theme .trigger-result-inline.fail{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .trigger-result-inline.cool{background:#1a0f1f;border-color:#5a2a5a}
+  body.blue-theme .trigger-result-inline .tr-sub{color:#b4cce4}
+  body.blue-theme .trigger-result-inline .tr-stat{border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .stats-panel{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .stats-panel h4{color:#4dd0ff}
+  body.blue-theme .stats-panel .stat-summary span{background:#0f1f38;border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .stats-list .stat-row{background:#0f1f38;border-color:#16304f}
+  body.blue-theme .stats-list .stat-row .stat-name{color:#c8dff4}
+  body.blue-theme .stats-list .stat-row .stat-val{color:#9ab4d4}
+  body.blue-theme .stats-list .stat-row .stat-pts{color:#8aa4c4}
+  body.blue-theme .stats-ver-block .ver-head{background:#12244a;border-color:#2a3a6a;color:#a88cff}
+  body.blue-theme .ss-history-panel{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .ss-history-head .hist-title{color:#4dd0ff}
+  body.blue-theme .ss-history-chart{border-color:#1e3a5f}
+  body.blue-theme .ss-history-stats span{background:#0f1f38;border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .ss-range-btns button{background:#122440;border-color:#1e3a5f;color:#9ab4d4}
+  body.blue-theme .ss-range-btns button.active{background:#00a8ff;border-color:#00a8ff;color:#001a33}
+  body.blue-theme .modal{background:#0f1f38;border-color:#00a8ff}
+  body.blue-theme .modal-title-block h2{color:#4dd0ff}
+  body.blue-theme .modal-item .label{color:#4dd0ff}
+  body.blue-theme .modal-item .value{background:#122440;color:#d6e8ff;border-left-color:#00a8ff}
+  body.blue-theme .modal-augury{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .modal-augury .star{color:#4dd0ff}
+  body.blue-theme .modal-header{border-bottom-color:#1e3a5f}
+  body.blue-theme .footer{background:#040c1a;border-top-color:#00a8ff}
+  body.blue-theme .footer-section h3{color:#4dd0ff}
+  body.blue-theme .footer-section p{color:#9ab4d4}
+  body.blue-theme .footer-bottom{color:#7a9ac0;border-top-color:#1e3a5f}
+  body.blue-theme .hunt-advice-box{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .hunt-advice-box h4{color:#4dd0ff}
+  body.blue-theme .mini-tool h3{color:#4dd0ff;border-left-color:#00a8ff}
+  body.blue-theme .counter-value{background:#0a1628;border-color:#1e3a5f;color:#4dd0ff}
+  body.blue-theme .tool-log{color:#9ab4d4}
+  body.blue-theme .small-note{color:#7a9ac0}
+  body.blue-theme .server-select{background:#0a1628;border-color:#1e3a5f;color:#d6e8ff}
+  body.blue-theme .theme-picker{background:#0f1f38;border-color:#1e3a5f}
+  body.blue-theme .theme-picker button{color:#b0d4ff}
+  body.blue-theme .theme-picker button:hover{background:#1a3050}
+  body.blue-theme .lottery-display{background:radial-gradient(circle at 40% 35%,#122440,#05101f);box-shadow:0 0 30px #00a8ff33,inset 0 0 40px #000}
+  body.blue-theme .scratch-card{background:linear-gradient(135deg,#122440,#05101f);border-color:#1e5a8f}
+  body.blue-theme .scratch-cell{background:linear-gradient(135deg,#2a3a5a,#1a2a4a)}
+  body.blue-theme .scratch-cell.revealed{background:#0f1f38;border-color:#1e3a5f}
+  body.blue-theme .scratch-cell.win{background:#1a2440;border-color:#ffd060}
+  body.blue-theme .scratch-10x-result{background:#0a1628;border-color:#1e3a5f}
+  body.blue-theme .x10-card{background:#0f1f38;border-color:#1e3a5f}
+  body.blue-theme .x10-card .x10-mini-cell{background:#122440}
+  body.blue-theme .x10-card.win{background:#1a2440;border-color:#ffd060}
+  body.blue-theme .tarot-deck,body.blue-theme .tarot-card{background:linear-gradient(145deg,#122440,#05101f);border-color:#1e5a8f}
+  body.blue-theme .tarot-card .t-name{color:#4dd0ff}
+  body.blue-theme .tarot-card .t-meaning{color:#b4cce4;border-color:#1e3a5f}
+  body.blue-theme .tarot-deck::before{border-color:#1e5a8f44}
+  body.blue-theme .race-lane .lane-track{background:linear-gradient(90deg,#05101f,#122440);border-color:#1e3a5f}
+  body.blue-theme .race-lane:hover{background:#122440}
+  body.blue-theme .race-controls select{background:#0a1628;border-color:#1e3a5f;color:#4dd0ff}
+  body.blue-theme .race-bank{color:#9ab4d4}
+  body.blue-theme .race-bank strong{color:#4dd0ff}
+  body.blue-theme .lottery-history .lh-entry{border-color:#1e3a5f}
+  body.blue-theme .egg-record-item,body.blue-theme .farm-record-item{border-color:#1e3a5f}
+  body.blue-theme .lottery-stats span,body.blue-theme .scratch-info span{background:#122440;color:#9ab4d4}
+  body.blue-theme .s-detail .s-meta span{background:#122440}
+  body.blue-theme .try-progress-fill{background:linear-gradient(90deg,#005a8a,#00a8ff,#4dd0ff);box-shadow:0 0 10px #00a8ff44}
+  body.blue-theme .try-progress-fill.cool{background:linear-gradient(90deg,#5a0f2a,#a82a4a,#f88);box-shadow:0 0 10px #ff666644}
+
   @media (max-width:600px){
     .nav-wrapper{flex-direction:column;align-items:stretch}
     .nav-menu{justify-content:center}
@@ -825,15 +1081,15 @@
 
   /* ========== DynamicRate ========== */
   const DynamicRate=(()=>{
-    const VOLATILITY=8,JITTER=2,REFRESH_MS=10000,HISTORY_MINUTES=30;
-    const SESSION_FORTUNE=(Math.random()-0.5)*6;
+    const VOLATILITY=3,JITTER=1,REFRESH_MS=10000,HISTORY_MINUTES=30;
+    const SESSION_FORTUNE=(Math.random()-0.5)*3;
     function hash(str){
       let h=2166136261;
       for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}
       return h>>>0;
     }
     function phaseOf(key){return (hash(key)%3600)/3600*Math.PI*2;}
-    function clampRound(v){return Math.max(5,Math.min(95,Math.round(v)));}
+    function clampRound(v){return Math.max(1,Math.min(95,Math.round(v)));}
     function detJitter(key,ts){
       const bucket=Math.floor(ts/60000);
       const h=hash(key+'#'+bucket);
@@ -854,14 +1110,14 @@
     }
     function trend(rate,baseRate){
       const diff=rate-baseRate;
-      if(diff>=4)return{cls:'up',icon:'📈',text:'上升'};
-      if(diff<=-4)return{cls:'down',icon:'📉',text:'回落'};
+      if(diff>=1.5)return{cls:'up',icon:'📈',text:'上升'};
+      if(diff<=-1.5)return{cls:'down',icon:'📉',text:'回落'};
       return{cls:'flat',icon:'➖',text:'平稳'};
     }
     function fortuneLabel(){
       const v=SESSION_FORTUNE;
-      if(v>1.8)return{cls:'up',text:`今日SS运势 +${v.toFixed(1)}，小猪觉得很有戏！`};
-      if(v<-1.8)return{cls:'down',text:`今日SS运势 ${v.toFixed(1)}，小猪表示要谨慎……`};
+      if(v>1.2)return{cls:'up',text:`今日SS运势 +${v.toFixed(1)}，小猪觉得很有戏！`};
+      if(v<-1.2)return{cls:'down',text:`今日SS运势 ${v.toFixed(1)}，小猪表示要谨慎……`};
       return{cls:'flat',text:`今日SS运势 ${v>=0?'+':''}${v.toFixed(1)}，中规中矩`};
     }
     return{getRateAt,getHistory,trend,fortuneLabel,REFRESH_MS,HISTORY_MINUTES};
@@ -875,7 +1131,7 @@
     valid.forEach(item => {
       const w = 40 + (item.name.length % 20);
       sumW += w;
-      sumWV += w * 40;
+      sumWV += w * 4;
     });
     return sumWV / sumW;
   }
@@ -885,7 +1141,7 @@
   }
   function getIndividualBase(item, versionKey){
     if(!item || !item.ssName) return null;
-    const ownBase = 40 + (item.name.length % 25);
+    const ownBase = 3 + (item.name.length % 4);
     const versionBase = getVersionBaseRate(versionKey) ?? ownBase;
     return ownBase * 0.7 + versionBase * 0.3;
   }
@@ -1014,6 +1270,41 @@
     return Math.max(PENALTY_FLOOR, Math.round(p * 100) / 100);
   }
 
+  /* ============================================================
+     ★ 新机制：进度条驱动的渐进式触发概率
+     ------------------------------------------------------------
+     · 概率随进度条逐渐爬升，进度 0% 时几乎不可能出
+     · 前 10 次尝试有硬性上限，防止一次就出 S
+     · 进度接近满时额外加成，给玩家保底希望
+     ============================================================ */
+  function computeHiddenRate(att, progPct){
+    const progNorm = Math.max(0, Math.min(1, (progPct || 0) / 100));
+    // 进度曲线（幂 2.5）：0% → 0.3% ；50% → 2.4% ；100% → 12.3%
+    const progressBase = 0.3 + Math.pow(progNorm, 2.5) * 12;
+    // 尝试次数加成（收益递减，封顶 +8%）
+    let attBonus = 0;
+    if(att > 5) attBonus = Math.min(8, (att - 5) * 0.22);
+    let hidden = progressBase + attBonus;
+    // 硬性防护层：防止一次就出
+    if(att === 1) hidden = Math.min(hidden, 0.6);
+    else if(att <= 3) hidden = Math.min(hidden, 2);
+    else if(att <= 6) hidden = Math.min(hidden, 5);
+    else if(att <= 10) hidden = Math.min(hidden, 9);
+    // 进度接近满时的保底爬升
+    if(progNorm >= 0.85) hidden += 3;
+    if(progNorm >= 0.95) hidden += 5;
+    return Math.max(0.15, Math.min(30, hidden));
+  }
+
+  function formatRateTier(est){
+    if(est < 1) return {tier:'ice', text:'❄ 微乎其微'};
+    if(est < 3) return {tier:'fog', text:'🌫 渺茫'};
+    if(est < 7) return {tier:'seed', text:'🌱 有点希望'};
+    if(est < 14) return {tier:'sun', text:'🌤 值得一试'};
+    if(est < 22) return {tier:'sun', text:'☀ 很有戏'};
+    return {tier:'fire', text:'🔥 运势旺盛'};
+  }
+
   function rollSTrigger(item, versionKey){
     const now = Date.now();
     const state = getItemState(item);
@@ -1039,24 +1330,23 @@
     stats[item.name].attempts++;
     stats[item.name].version = versionKey;
 
-    let hidden = 0;
-    if(att <= 3) hidden = 4 + att * 1.5;
-    else if(att <= 10) hidden = 9 + (att - 3) * 2.2;
-    else if(att <= 25) hidden = 24 + (att - 10) * 1.6;
-    else if(att <= 50) hidden = 48 + (att - 25) * 1.2;
-    else hidden = Math.min(92, 78 + (att - 50) * 0.5);
-
-    hidden += (Math.random() - 0.5) * 60;
-    hidden = Math.max(0.5, Math.min(96, hidden));
+    // ===== 新机制核心：概率由进度条驱动 =====
+    const prog = getTriggerProgress(item);
+    let hidden = computeHiddenRate(att, prog.pct);
+    // 小幅随机抖动
+    hidden += (Math.random() - 0.5) * 5;
+    hidden = Math.max(0.1, Math.min(32, hidden));
 
     const roll = Math.random() * 100;
 
-    if(roll < 1){
+    // 早产彩蛋：极低概率，且至少尝试 3 次后才可能（0.3%）
+    if(att >= 3 && Math.random() * 100 < 0.3){
       state.progressStart = now + S_COOLDOWN_MS;
       state.cooldownUntil = now + S_COOLDOWN_MS;
       saveAll();
       return { success: true, early: true, attempts: att, roll: Math.round(roll*10)/10 };
     }
+    // 阴间机制保留：5% 概率“摸到了但被水晶吞掉”
     if(Math.random() < 0.05){
       return { success: false, suppressed: true, attempts: att };
     }
@@ -1069,25 +1359,36 @@
     return { success: false, attempts: att, roll: Math.round(roll*10)/10 };
   }
 
+  /* ============================================================
+     ★ 新机制：SS 概率大幅降低 + 首次保护
+     ------------------------------------------------------------
+     · 基础概率从 35% 降至 8%，随触发次数递减
+     · 前 2 次触发 S 时，出 SS 概率被硬性压低
+     ============================================================ */
   function rollSS(item){
     const state = getItemState(item);
     const now = Date.now();
     if(state.ssCooldownUntil > now){
       return { locked: true, remain: state.ssCooldownUntil - now };
     }
-    let base = 35;
-    if(state.triggers >= 3) base = 28;
-    if(state.triggers >= 8) base = 22;
-    if(state.triggers >= 15) base = 15;
-    base += (Math.random() - 0.5) * 50;
-    base = Math.max(2, Math.min(70, base));
+    let base = 8;
+    if(state.triggers >= 3) base = 6.5;
+    if(state.triggers >= 8) base = 5;
+    if(state.triggers >= 15) base = 3.5;
+    if(state.triggers >= 25) base = 2.5;
+    if(state.triggers >= 40) base = 1.8;
+    base += (Math.random() - 0.5) * 5;
+    // 硬性防护：刚开始触发 S 的时候 SS 几乎不可能出
+    if(state.triggers <= 2) base = Math.min(base, 2.5);
+    if(state.triggers <= 1) base = Math.min(base, 1);
+    base = Math.max(0.3, Math.min(15, base));
     const roll = Math.random() * 100;
     if(roll < base){
       state.ssCooldownUntil = now + SS_COOLDOWN_MS;
       saveAll();
-      return { success: true, roll: Math.round(roll*10)/10 };
+      return { success: true, roll: Math.round(roll*10)/10, rate: Math.round(base*10)/10 };
     }
-    return { success: false, roll: Math.round(roll*10)/10 };
+    return { success: false, roll: Math.round(roll*10)/10, rate: Math.round(base*10)/10 };
   }
 
   function checkVersionComplete(versionKey){
@@ -1151,7 +1452,7 @@
       if(item.ssName){
         const r = computeIndividualRate(item, currentSTab) ?? 0;
         const tr2 = computeIndividualTrend(item, currentSTab);
-        ssLine = `<div class="s-stat-line" style="color:#888;"><span>SS概率: <strong style="color:${r >= 50 ? '#6cf06c' : '#f88'};">${r}%</strong></span><span>${tr2.icon} ${tr2.text}</span></div>`;
+        ssLine = `<div class="s-stat-line" style="color:#888;"><span>SS概率: <strong style="color:${r >= 8 ? '#6cf06c' : '#f88'};">${r}%</strong></span><span>${tr2.icon} ${tr2.text}</span></div>`;
       }
 
       let statLine = `<div class="s-stat-line">
@@ -1248,9 +1549,9 @@
       const tr = computeIndividualTrend(item, tab);
       const count = getVersionSSCount(tab);
       ssRateEl.style.display = 'block';
-      ssRateEl.className = 'ss-rate ' + (liveRate >= 50 ? 'high' : 'low');
-      const comment = liveRate >= 50 ? '小猪觉得很有戏哦！' : '小猪很遗憾哦，概率有点低……';
-      ssRateEl.innerHTML = `🐗 触发此 S 怪后，出SS【${item.ssName}】的概率约 <strong>${liveRate}%</strong><span style="opacity:.7;font-size:.8em;">（自身基准 ${ownBase.toFixed(0)}% × 版本加权 ${Math.round(versionBase)}% · ${tr.icon} ${tr.text}）</span> — ${comment}<div style="font-size:.72em;opacity:.65;margin-top:4px;">该数值基于自身基准 70% + ${tab} 共 ${count} 只 S 怪加权值 30% 动态计算 · 每 10 秒波动一次</div>`;
+      ssRateEl.className = 'ss-rate ' + (liveRate >= 8 ? 'high' : 'low');
+      const comment = liveRate >= 8 ? '小猪觉得很有戏哦！' : '小猪很遗憾哦，概率有点低……';
+      ssRateEl.innerHTML = `🐗 触发此 S 怪后，出SS【${item.ssName}】的概率约 <strong>${liveRate}%</strong><span style="opacity:.7;font-size:.8em;">（自身基准 ${ownBase.toFixed(1)}% × 版本加权 ${versionBase.toFixed(1)}% · ${tr.icon} ${tr.text}）</span> — ${comment}<div style="font-size:.72em;opacity:.65;margin-top:4px;">该数值基于自身基准 70% + ${tab} 共 ${count} 只 S 怪加权值 30% 动态计算 · 每 10 秒波动一次</div>`;
     } else {
       ssRateEl.style.display = 'block';
       ssRateEl.className = 'ss-rate self';
@@ -1274,7 +1575,7 @@
     }
 
     document.getElementById('triggerResultInline').classList.remove('active');
-    document.getElementById('sDetailTip').textContent = '※ 触发为动态阴间机制：可能 1% 早产，也可能点满还不回家；每只 S 怪独立进度 1 小时走满，触发成功后清零并进入 20 分钟冷却；SS 判定冷却 50 分钟；版本全触发后整版冷却 86 分钟；1 分钟最多 10 次。';
+    document.getElementById('sDetailTip').textContent = '※ 新机制：概率随进度条逐渐爬升（前期极低，进度越高越有希望）；前 3 次尝试概率被硬性压低，避免一次出货；触发成功后清零并进入 20 分钟冷却；SS 判定冷却 50 分钟；版本全触发后整版冷却 86 分钟；1 分钟最多 10 次。';
     renderGrid();
   }
 
@@ -1304,9 +1605,14 @@
     if(eta){
       const bits = [];
       if(prog.cooling) bits.push(`冷却剩余 ${formatCooldown(prog.cooldownRemain)}`);
-      else bits.push(`进度满还需 ${formatCooldown(prog.remainMs)}`);
+      else {
+        bits.push(`进度满还需 ${formatCooldown(prog.remainMs)}`);
+        const est = computeHiddenRate(s.attempts + 1, prog.pct);
+        const tier = formatRateTier(est);
+        bits.push(`下次预估 <span class="try-rate-tag ${tier.tier}">${tier.text}</span>`);
+      }
       if(recent > PENALTY_FREE_CLICKS) bits.push(`连点惩罚 ×${getClickPenalty(recent).toFixed(2)}`);
-      eta.textContent = bits.join(' · ');
+      eta.innerHTML = bits.join(' · ');
     }
 
     let parts = [];
@@ -2256,7 +2562,7 @@
     const banner=`<div style="text-align:center;padding:1.2rem 1rem;background:linear-gradient(135deg,#1a1a1a,#2a2418);border-radius:14px;border:2px solid ${best.color};margin-bottom:1rem;"><div style="font-size:.8rem;color:#aaa;letter-spacing:3px;margin-bottom:4px;">🐗 猪猪掐指一算 🐗</div><div style="font-size:1.6rem;font-weight:900;color:${best.color};letter-spacing:2px;">今日最适合触发 <span style="font-size:2rem;">${best.label}</span></div><div style="font-size:.85rem;color:#ccc;margin-top:6px;font-style:italic;">因为 ${best.bless}！</div></div>`;
     const cards=picked.map(item=>{
       const rate=computeIndividualRate(item, best.key) ?? 0;
-      const rateText=rate>=50?'小猪觉得很有戏哦！':'小猪很遗憾哦，概率有点低……';
+      const rateText=rate>=8?'小猪觉得很有戏哦！':'小猪很遗憾哦，概率有点低……';
       return`<div style="background:#111;border:1px solid #333;border-left:4px solid ${best.color};border-radius:12px;padding:.9rem 1rem;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;"><div style="font-weight:800;color:${best.color};font-size:1.05rem;">🐗 ${item.name}</div><div style="font-size:.72rem;color:#000;background:${best.color};padding:2px 10px;border-radius:10px;font-weight:700;">${best.label}</div></div><div style="font-size:.8rem;color:#bbb;margin-top:6px;"><span style="color:#888;">区域：</span>${item.zone}</div><div style="font-size:.8rem;color:#bbb;margin-top:2px;"><span style="color:#888;">触发：</span>${item.desc}</div><div style="font-size:.82rem;color:#ffb000;margin-top:8px;">SS概率约 <strong>${rate}%</strong> — ${rateText}</div></div>`;
     }).join('');
     const footer=`<div style="margin-top:.6rem;padding:.8rem 1rem;background:#1a1a1a;border-radius:10px;font-size:.82rem;color:#aaa;text-align:center;border:1px dashed #333;">💡 次选版本：<span style="color:${second.color};font-weight:800;">${second.label} S怪</span> — 如果上面的怪被别人蹲了，去这里碰碰运气也不错</div>`;
@@ -2385,22 +2691,43 @@
 
 })();
 
-/* 主题切换 */
+/* ========== 主题切换（黑 / 白 / 粉 / 蓝） ========== */
 (function(){
-  const btn=document.createElement('button');
-  btn.id='themeToggle';
-  const saved=localStorage.getItem('piggy-theme');
-  const isLight=saved==='light';
-  if(isLight) document.body.classList.add('light-theme');
-  btn.textContent=isLight?'☀️ 亮':'🌙 暗';
-  btn.addEventListener('click',()=>{
-    document.body.classList.toggle('light-theme');
-    const nowLight=document.body.classList.contains('light-theme');
-    btn.textContent=nowLight?'☀️ 亮':'🌙 暗';
-    localStorage.setItem('piggy-theme', nowLight?'light':'dark');
+  const THEMES = [
+    {id:'dark',  icon:'🌙', title:'暗黑主题（默认）'},
+    {id:'light', icon:'☀️', title:'白色主题'},
+    {id:'pink',  icon:'🌸', title:'粉色主题'},
+    {id:'blue',  icon:'💙', title:'蓝色主题'}
+  ];
+  const picker = document.createElement('div');
+  picker.className = 'theme-picker';
+  picker.setAttribute('aria-label', '主题切换');
+  picker.innerHTML = THEMES.map(t =>
+    `<button data-theme="${t.id}" title="${t.title}" aria-label="${t.title}">${t.icon}</button>`
+  ).join('');
+
+  const savedRaw = localStorage.getItem('piggy-theme');
+  let current = (savedRaw === 'light') ? 'light' : (savedRaw || 'dark');
+  if(!THEMES.some(t=>t.id===current)) current = 'dark';
+
+  function applyTheme(id){
+    document.body.classList.remove('light-theme','pink-theme','blue-theme');
+    if(id === 'light') document.body.classList.add('light-theme');
+    else if(id === 'pink') document.body.classList.add('pink-theme');
+    else if(id === 'blue') document.body.classList.add('blue-theme');
+    picker.querySelectorAll('button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.theme === id);
+    });
+    try{ localStorage.setItem('piggy-theme', id); }catch(e){}
+  }
+
+  picker.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=> applyTheme(b.dataset.theme));
   });
-  const nav=document.querySelector('.nav-menu');
-  if(nav) nav.appendChild(btn);
+
+  const nav = document.querySelector('.nav-menu');
+  if(nav) nav.appendChild(picker);
+  applyTheme(current);
 })();
 
 /* 自定义猪 */
