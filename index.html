@@ -727,7 +727,7 @@
     </div>
 
     <div class="scratch-panel" id="scratch">
-      <div class="section-title">🎫 金碟刮刮乐 · 单抽保底 + 十连硬保底</div>
+      <div class="section-title">🎫 金碟刮刮乐/单抽保底/十连硬保底</div>
       <div class="scratch-info">
         <span>单抽爆率: <strong id="scratchOdds">--%</strong></span>
         <span>保底进度: <strong id="scratchPity">--</strong></span>
@@ -745,11 +745,11 @@
         <button id="scratchAllBtn" class="secondary" disabled>🔍 全部刮开</button>
         <button id="scratchResetBtn" class="secondary">重置余额</button>
       </div>
-      <div class="small-note">单抽保底：连续 5 次未中后大幅提升爆率 · 十连保底：每 20 张必出 1 张中奖 · 单抽爆率恒定低于十连</div>
+      <div class="small-note">单抽保底</div>
     </div>
 
     <div class="race-panel" id="race">
-      <div class="section-title">🏁 猪猪赛跑 · 押注你的幸运猪</div>
+      <div class="section-title">🏁猪猪赛跑</div>
       <div class="race-track" id="raceTrack"></div>
       <div class="race-controls">
         <span class="race-bank">猪猪币: <strong id="raceBank">1000</strong></span>
@@ -1030,12 +1030,12 @@
   /* ========== S怪数据（4.0 无 SS） ========== */
   const sData={
     '7.0 S怪':[
-      {name:'厌忌之人 奇里格',zone:'奥阔帕恰山',desc:'地图站岗触发',ssName:'水晶化身之王'},
+      {name:'厌忌之人 奇里格',zone:'奥阔帕恰山',desc:'符合天气时，地图站岗触发',ssName:'水晶化身之王'},
       {name:'伊努索奇',zone:'克扎玛乌卡湿地',desc:'地图站岗触发',ssName:'水晶化身之王'},
       {name:'内尤佐缇',zone:'亚克特尔树海',desc:'扔鱼粉随机触发',ssName:'水晶化身之王'},
-      {name:'山谢亚',zone:'夏劳尼荒野',desc:'化身Fate大人触发',ssName:'水晶化身之王'},
+      {name:'山谢亚',zone:'夏劳尼荒野',desc:'化身Fate大人触发，你不会也是蓝山吧！',ssName:'水晶化身之王'},
       {name:'先驱勇士 阿提卡斯',zone:'遗产之地',desc:'制作HQ犎牛牛排',ssName:'水晶化身之王'},
-      {name:'天气预报机器人',zone:'活着的记忆',desc:'青魔大人！',ssName:'水晶化身之王'}
+      {name:'天气预报机器人',zone:'活着的记忆',desc:'我的天，这是青魔大人！',ssName:'水晶化身之王'}
     ],
     '6.0 S怪':[
       {name:'布弗鲁',zone:'迷津',desc:'召唤小巨魔站岗吧！',ssName:'克尔'},
@@ -1505,14 +1505,14 @@
 
     // SS 怪：只显示说明
     if(item.isSS){
-      document.getElementById('sHistoryLine').innerHTML = `👑 这是 SS 隐藏 Boss，只能通过触发对应版本的 S 怪来随机判定出现。<br>它没有独立进度条，也不会自己累积。`;
+      document.getElementById('sHistoryLine').innerHTML = `👑 这是SS`;
       document.getElementById('ssRate').style.display = 'none';
       document.getElementById('ssTryWrap').classList.remove('active');
       document.getElementById('ssHistoryToggle').style.display='none';
       document.getElementById('ssHistoryPanel').classList.remove('active');
       historyOpen=false;
       document.getElementById('triggerResultInline').classList.remove('active');
-      document.getElementById('sDetailTip').textContent = '※ 此隐藏 Boss 没有独立触发按钮，请在对应版本的 S 怪详情里点击「试试触发」来判定。';
+      document.getElementById('sDetailTip').textContent = '※请在对应版本的 S 怪详情里点击「试试触发」来判定。';
       renderGrid();
       return;
     }
