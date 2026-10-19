@@ -1,7 +1,7 @@
 S 时间计算小能手！
 
 ## 🌐 在线体验，无需下载！
-https://2077-sa.github.io/FF14.Pig-oracle/
+[https://2077-sa.github.io/FF14.Pig-oracle/](https://2077-sa.github.io/FF14-account-time/)
 
 ## 📝 数据来源
 - S怪名单参考 [FF14 Wiki 恶名精英一览](https://ff14.huijiwiki.com/wiki/怪物狩猎)
