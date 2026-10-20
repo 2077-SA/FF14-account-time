@@ -122,8 +122,33 @@
         
         .region-details { border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); overflow: hidden; transition: 0.2s; }
         .region-details[open] { border-color: var(--accent); box-shadow: 0 0 8px rgba(0,0,0,0.1); }
-        .region-details summary { padding: 10px 15px; cursor: pointer; font-weight: bold; background: var(--panel-light); color: var(--accent); user-select: none; outline: none; display: flex; justify-content: space-between; align-items: center; }
+        
+        .region-details summary { 
+            padding: 10px 15px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            background: var(--panel-light); 
+            color: var(--accent); 
+            user-select: none; 
+            outline: none; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            list-style: none;
+        }
+        .region-details summary::-webkit-details-marker { 
+            display: none;
+        }
+        .region-details summary::after { 
+            content: '▼'; 
+            font-size: 12px; 
+            transition: transform 0.2s; 
+        }
+        .region-details[open] summary::after { 
+            transform: rotate(180deg); 
+        }
         .region-details summary:hover { filter: brightness(1.1); }
+
         .server-checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; }
         .server-checkbox-group label { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: normal; background: var(--panel); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s;}
         .server-checkbox-group label:hover { border-color: var(--accent); }
@@ -205,7 +230,6 @@
         .btn-confirm.ready:hover { filter: brightness(0.9); }
         canvas { display: none; }
 
-        /* 关闭按钮通用样式 */
         .btn-close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: var(--text-muted); font-size: 24px; line-height: 1; cursor: pointer; transition: 0.2s; padding: 0; }
         .btn-close-modal:hover { color: var(--red); transform: scale(1.1); }
 
@@ -1521,41 +1545,17 @@
                 img.onload = () => {
                     const canvas = document.getElementById('canvas');
                     const ctx = canvas.getContext('2d');
-                    canvas.width = img.width; canvas.height = img.height;
-                    
-                    ctx.drawImage(img, 0, 0);
-                    let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    let data = imgData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i], g = data[i+1], b = data[i+2];
-                        if (g > 80 && g > r * 1.2 && g > b * 1.2) { data[i]=255; data[i+1]=255; data[i+2]=255; } else { data[i]=0; data[i+1]=0; data[i+2]=0; }
-                    }
-                    ctx.putImageData(imgData, 0, 0);
-                    const greenImgUrl = canvas.toDataURL();
+                    // 跟排车一样：直接放大 1.5 倍，不做任何复杂的二值化，大幅提升识别率
+                    const scale = 1.5; 
+                    canvas.width = img.width * scale; 
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const imgUrl = canvas.toDataURL();
 
-                    ctx.drawImage(img, 0, 0);
-                    imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    data = imgData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i], g = data[i+1], b = data[i+2];
-                        if ((r > 120 && r > g * 1.5 && r > b * 1.5) || (r > 100 && b > 100 && g < 80)) { data[i]=255; data[i+1]=255; data[i+2]=255; } else { data[i]=0; data[i+1]=0; data[i+2]=0; }
-                    }
-                    ctx.putImageData(imgData, 0, 0);
-                    const redImgUrl = canvas.toDataURL();
-
-                    ctx.drawImage(img, 0, 0);
-                    const originImgUrl = canvas.toDataURL();
-
-                    document.getElementById('progress-text').innerText = "解析绿色数据...";
-                    Tesseract.recognize(greenImgUrl, 'eng').then(({data: greenData}) => {
-                        document.getElementById('progress-text').innerText = "解析天气条件...";
-                        return Tesseract.recognize(redImgUrl, 'eng').then(({data: redData}) => {
-                            document.getElementById('progress-text').innerText = "提取文字信息...";
-                            return Tesseract.recognize(originImgUrl, 'chi_sim+eng').then(({data: originData}) => {
-                                document.getElementById('loading').style.display = 'none';
-                                parseOCRResults(greenData, redData, originData);
-                            });
-                        });
+                    document.getElementById('progress-text').innerText = "提取文字信息...";
+                    Tesseract.recognize(imgUrl, 'chi_sim+eng').then(({data}) => {
+                        document.getElementById('loading').style.display = 'none';
+                        parseOCRResults(data.text);
                     }).catch(err => { document.getElementById('loading').style.display = 'none'; alert("识别失败：" + err); });
                 };
                 img.src = e.target.result;
@@ -1563,63 +1563,110 @@
             reader.readAsDataURL(file);
         }
 
-        function parseOCRResults(greenData, redData, originData) {
+        function parseOCRResults(text) {
             const tbody = document.getElementById('tableBody');
             document.getElementById('results-container').style.display = 'block';
             document.getElementById('copyBtn').style.display = 'block';
 
-            const extractTimes = (text) => {
-                const set = new Set();
-                const matches = text.match(/(\d{1,2})[:：](\d{2})/g);
-                if (matches) matches.forEach(m => {
-                    const clean = m.replace('：', ':');
-                    const [h, min] = clean.split(':');
-                    if (parseInt(h) <= 99 && parseInt(min) < 60) set.add(`${parseInt(h)}:${min}`);
-                });
-                return set;
-            };
+            // 清理标点和全角字符
+            text = text.replace(/[＜《]/g, '<').replace(/[＞》]/g, '>')
+                       .replace(/[（【\[［]/g, '(').replace(/[）】\]］]/g, ')')
+                       .replace(/[：]/g, ':').replace(/[，、]/g, ',')
+                       .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+                       .replace(/．/g, '.');
 
-            const greenTimes = extractTimes(greenData.text);
-            const redTimes = extractTimes(redData.text);
-            const lines = originData.text.split('\n');
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            
             let rowCount = 0;
             const processed = new Set();
             
             const checkedOcrServers = document.querySelectorAll('#ocrServerMultiContainer input:checked');
             const defaultOcrServers = Array.from(checkedOcrServers).map(cb => cb.value);
-            let fallbackServer = defaultOcrServers.length > 0 ? defaultOcrServers[0] : "";
+            let currentServer = defaultOcrServers.length > 0 ? defaultOcrServers[0] : "未知";
+            
+            let pendingServer = currentServer;
+            let pendingMonster = null;
 
-            lines.forEach(line => {
-                let server = "";
-                for (const srv of ALL_SERVERS) { if (line.includes(srv)) { server = srv; break; } }
-                if (!server && fallbackServer) server = fallbackServer;
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
 
-                let matchedName = "未知", matchedArea = "未知";
-                const cleanLine = line.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); 
-                S_MONSTERS.forEach(sm => {
-                    if (cleanLine.includes(sm.name.replace(/\s/g, ''))) { matchedName = sm.name; matchedArea = sm.area; }
-                });
-
-                const timeMatch = line.match(/(\d{1,2})[:：](\d{2})/);
-                let fogSeconds = 0;
-                const fogMatch = line.match(/Fog\s*in\s*(\d+)[:：](\d+)(?:[:：](\d+))?/i);
-                if (fogMatch) fogSeconds = parseInt(fogMatch[1]) * 3600 + parseInt(fogMatch[2]) * 60 + (parseInt(fogMatch[3]) || 0);
-
-                if (timeMatch && matchedName !== "未知") {
-                    const h = parseInt(timeMatch[1]), m = parseInt(timeMatch[2]);
-                    const timeKey = `${h}:${m}`;
-                    if (processed.has(matchedName + timeKey)) return;
-                    processed.add(matchedName + timeKey);
-
-                    let isGreen = false;
-                    if (greenTimes.has(timeKey) || line.includes('%') || line.includes('0%')) isGreen = true;
-                    else if (redTimes.has(timeKey)) isGreen = false;
-                    else isGreen = line.includes('%');
-
-                    createResultRow(tbody, server, matchedName, matchedArea, h, m, isGreen, fogSeconds);
-                    rowCount++;
+                // 1. 识别服务器（容错匹配）
+                for (const srv of ALL_SERVERS) {
+                    if (line.includes(srv)) {
+                        pendingServer = srv;
+                        break;
+                    }
+                    if (srv.length >= 4) {
+                        let p1 = srv.substring(0, 2);
+                        let p2 = srv.substring(2, 4);
+                        if (line.includes(p1) && line.includes(p2)) {
+                            pendingServer = srv;
+                            break;
+                        }
+                    }
                 }
-            });
+
+                // 2. 识别怪物名（强词库校准）
+                let matchedSm = null;
+                const cleanLine = line.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+                
+                for (let sm of S_MONSTERS) {
+                    let nameNoSpace = sm.name.replace(/\s/g, '');
+                    if (cleanLine.includes(nameNoSpace)) { matchedSm = sm; break; }
+                    if (cleanLine.includes(sm.area.replace(/\s/g, ''))) { matchedSm = sm; break; }
+                    if (sm.alias && sm.alias.some(al => cleanLine.includes(al))) { matchedSm = sm; break; }
+                    
+                    // 前后缀模糊匹配（必须有时间格式才允许）
+                    if (nameNoSpace.length > 2) {
+                        let prefix = nameNoSpace.substring(0, 2);
+                        let suffix = nameNoSpace.substring(nameNoSpace.length - 2);
+                        if (cleanLine.includes(prefix) || cleanLine.includes(suffix)) { 
+                            if (/\d{1,2}\s*[:：;.]\s*\d{2}/.test(line)) {
+                                matchedSm = sm; 
+                                break; 
+                            }
+                        }
+                    }
+                }
+
+                if (matchedSm) {
+                    pendingMonster = matchedSm;
+                }
+
+                // 3. 提取时间并组装
+                if (pendingMonster) {
+                    // 精确匹配 xx:xx，防止匹配到 256:12:53
+                    let timeMatches = [...line.matchAll(/(?<![0-9])(\d{1,2})\s*[:：;.]\s*(\d{2})(?![\s]*[:：;.]\s*\d{2})/g)];
+                    
+                    for (let tm of timeMatches) {
+                        let matchIndex = tm.index;
+                        let prefix = line.substring(Math.max(0, matchIndex - 20), matchIndex);
+                        
+                        // 过滤天气和时间预测
+                        if (/fog|f0g|fate|开始|in/i.test(prefix)) continue;
+
+                        let h = parseInt(tm[1]);
+                        let m = parseInt(tm[2]);
+                        if (h > 99 || m > 59) continue;
+
+                        // 状态判断：如果有 % 就是存活，否则是CD
+                        let isGreen = line.includes('%');
+                        if (!isGreen) {
+                            let suffixText = line.substring(tm.index, tm.index + 20);
+                            if (suffixText.includes('%')) isGreen = true;
+                        }
+
+                        const uniqueKey = `${pendingMonster.name}_${h}:${m}`;
+                        if (processed.has(uniqueKey)) continue;
+                        processed.add(uniqueKey);
+
+                        createResultRow(tbody, pendingServer, pendingMonster.name, pendingMonster.area, h, m, isGreen, 0);
+                        rowCount++;
+                        pendingMonster = null; 
+                        break; 
+                    }
+                }
+            }
 
             if (rowCount > 0) {
                 try { addHistory('截图', `批量导入识别了 ${rowCount} 只 S 怪数据`); } catch(e) {}
