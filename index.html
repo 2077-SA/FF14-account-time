@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FF14 S怪 精确时间计算器 & 智能排车</title>
+    <title>FF14 S怪 精确时间计算器 + 智能排车</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         /* =========================================
@@ -513,7 +513,6 @@
     <!-- 智能排车弹窗 (支持OCR) -->
     <div class="modal-overlay" id="routeModal">
         <div class="modal-content" style="max-width: 700px; text-align: left;">
-            <!-- 右上角新增的显眼关闭按钮 -->
             <button class="btn-close-modal" style="font-size: 30px; top: 15px; right: 20px;" onclick="document.getElementById('routeModal').style.display='none'">×</button>
             
             <div class="modal-title" style="color: var(--blue); text-align: center;">🚗 S怪智能排车助手</div>
@@ -524,13 +523,13 @@
             <div class="modal-upload-area" id="routeUploadArea" onclick="document.getElementById('routeFileInput').click()">
                 <div style="color:var(--text-muted); font-size:13px; text-align:center;">
                     📸 点击此处上传 / 直接按 Ctrl+V 粘贴排车截图
-                    <div style="font-size: 11px; color: var(--blue); margin-top:5px;">(智能2-3字模糊匹配，自动补全地区与版本)</div>
+                    <div style="font-size: 11px; color: var(--blue); margin-top:5px;">(智能2-3字模糊匹配 + 内置黑话自动纠错)</div>
                 </div>
                 <input type="file" id="routeFileInput" accept="image/*" style="display:none;" onchange="handleRouteImage(event)">
                 <div id="routeOcrLoading" style="display:none; text-align:center; color:var(--gold); font-weight:bold; margin-top:10px;">正在识别并智能纠错，请稍候...</div>
             </div>
 
-            <textarea id="routeInput" class="route-textarea" placeholder="可直接粘贴，也支持乱码文本。只要包含『怪物名字部分字眼』『服务器』『坐标』即可。&#10;例如：顾尼图 100.00% 黑风海 (36,11) 白金幻象"></textarea>
+            <textarea id="routeInput" class="route-textarea" placeholder="可直接粘贴，也支持乱码文本。只要包含『怪物名字部分字眼/黑话』『服务器』『坐标』即可。&#10;例如：少爷 100.00% 迷津 (36,11) 白金幻象"></textarea>
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <button class="btn btn-accent" onclick="generateRoute()" style="flex:1;">🚀 开始解析并排车</button>
@@ -540,16 +539,16 @@
             <div id="routeResultBox" class="route-result-box">
                 <div class="section-title" style="color: var(--gold);">📋 最终发车顺序 (已按优先级与同服数量优化排列)</div>
                 <textarea id="routeOutput" class="route-textarea route-output" readonly></textarea>
-                <button class="btn btn-accent" onclick="copyRoute()" style="width: 100%; margin-bottom: 10px;">📋 复制排车文本</button>
+                
+                <!-- 横向快捷操作按钮组 -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <button class="btn btn-accent" onclick="copyRoute()" style="flex: 1; padding: 10px 0;">📋 复制排车文本</button>
+                    <button class="btn" style="background: var(--blue); color: #fff; flex: 1; padding: 10px 0;" onclick="downloadRouteText()">💾 保存为 TXT</button>
+                    <button class="btn btn-outline" style="flex: 1; padding: 10px 0;" onclick="document.getElementById('routeModal').style.display='none'">❌ 关闭</button>
+                </div>
                 
                 <div class="section-title" style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;">🔍 识别解析与发车排布明细</div>
                 <div class="route-log-list" id="routeLogList"></div>
-            </div>
-
-            <!-- 底部按钮区新增保存和关闭 -->
-            <div class="modal-btns" style="margin-top: 20px; flex-wrap: nowrap;">
-                <button class="btn-modal" style="background: var(--blue); color: #fff; flex: 1;" onclick="downloadRouteText()">💾 保存为 TXT 文件</button>
-                <button class="btn-modal btn-cancel" style="flex: 1;" onclick="document.getElementById('routeModal').style.display='none'">关闭界面</button>
             </div>
         </div>
     </div>
@@ -567,7 +566,7 @@
 
     <script>
         // ==========================================
-        // 基础数据
+        // 基础数据 (已融入黑话词库 + 莫古力强纠错)
         // ==========================================
         const SERVER_GROUPS = {
             "豆豆柴": ["水晶塔", "银泪湖", "太阳海岸", "伊修加德", "红茶川"],
@@ -578,24 +577,27 @@
         const ALL_SERVERS = Object.values(SERVER_GROUPS).flat();
         
         const S_MONSTERS = [
-            { name: "戾虫", area: "雷克兰德", version: "5.0" }, 
-            { name: "得到宽恕的炫学", area: "珂露西亚岛", version: "5.0" }, 
-            { name: "多智兽", area: "安穆·艾兰", version: "5.0" }, 
-            { name: "阿格拉俄珀", area: "伊尔美格", version: "5.0" }, 
-            { name: "伊休妲", area: "拉凯提卡大森林", version: "5.0" }, 
-            { name: "顾尼图", area: "黑风海", version: "5.0" },
-            { name: "布弗鲁", area: "迷津", version: "6.0" }, 
-            { name: "颇胝迦", area: "萨维奈岛", version: "6.0" }, 
-            { name: "阿姆斯特朗", area: "加雷马", version: "6.0" },
-            { name: "沉思之物", area: "叹息海", version: "6.0" }, 
-            { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0" }, 
-            { name: "狭缝", area: "天外天垓", version: "6.0" },
-            { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0" }, 
-            { name: "伊努索奇", area: "克扎玛乌卡湿地", version: "7.0" }, 
-            { name: "内尤佐缇", area: "亚克特尔树海", version: "7.0" },
-            { name: "山谢亚", area: "夏劳尼荒野", version: "7.0" }, 
-            { name: "先驱勇士 阿提卡斯", area: "遗产之地", version: "7.0" }, 
-            { name: "天气预报机器人", area: "活着的记忆", version: "7.0" }
+            // 5.0
+            { name: "戾虫", area: "雷克兰德", version: "5.0", alias: ["李冲"] }, 
+            { name: "得到宽恕的炫学", area: "珂露西亚岛", version: "5.0", alias: ["棉花", "嫂子"] }, 
+            { name: "多智兽", area: "安穆·艾兰", version: "5.0", alias: ["多汁"] }, 
+            { name: "阿格拉俄珀", area: "伊尔美格", version: "5.0", alias: ["蛾子", "孔雀"] }, 
+            { name: "伊休妲", area: "拉凯提卡大森林", version: "5.0", alias: ["大森", "yxd"] }, 
+            { name: "顾尼图", area: "黑风海", version: "5.0", alias: ["图图", "船长"] },
+            // 6.0
+            { name: "布弗鲁", area: "迷津", version: "6.0", alias: ["少爷", "bfl"] }, 
+            { name: "颇胝迦", area: "萨维奈岛", version: "6.0", alias: ["腰子", "pzj"] }, 
+            { name: "阿姆斯特朗", area: "加雷马", version: "6.0", alias: ["壮壮", "胳膊壮", "gbz"] },
+            { name: "沉思之物", area: "叹息海", version: "6.0", alias: ["路由器", "蘑菇"] }, 
+            { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0", alias: ["鸟蛋", "蛋仔"] }, 
+            { name: "狭缝", area: "天外天垓", version: "6.0", alias: ["芒果"] },
+            // 7.0
+            { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥"] }, 
+            { name: "伊努索奇", area: "克扎玛乌卡湿地", version: "7.0", alias: ["螳螂"] }, 
+            { name: "内尤佐缇", area: "亚克特尔树海", version: "7.0", alias: ["鱼粉"] },
+            { name: "山谢亚", area: "夏劳尼荒野", version: "7.0", alias: ["山火"] }, 
+            { name: "先驱勇士 阿提卡斯", area: "遗产之地", version: "7.0", alias: ["烤肉", "牛排"] }, 
+            { name: "天气预报机器人", area: "活着的记忆", version: "7.0", alias: ["天气", "机器人", "预言家"] }
         ];
 
         const LT_HOURS = 48; 
@@ -692,12 +694,11 @@
         }
 
         // ==========================================
-        // 🚗 智能排车功能逻辑 (7.0绝对优先 + 10分钟缓存)
+        // 🚗 智能排车功能逻辑 (支持黑话 + 重合字数模糊匹配)
         // ==========================================
         function openRouteModal() {
             document.getElementById('routeModal').style.display = 'flex';
             
-            // 读取本地 10 分钟内的排车缓存
             const cache = localStorage.getItem('ff14_route_cache');
             if (cache) {
                 try {
@@ -768,6 +769,7 @@
             reader.readAsDataURL(file);
         }
 
+        // 核心：服务器纠错与模糊匹配
         function fuzzyServer(str) {
             if (!str) return "未知";
             str = str.replace(/[\s<>＜＞]/g, ''); 
@@ -775,12 +777,39 @@
             for (let srv of ALL_SERVERS) {
                 if (str.includes(srv) || srv.includes(str)) return srv;
             }
-            if (str.includes("白金") || str.includes("幻象") || str.includes("幻家")) return "白金幻象";
-            if (str.includes("龙巢") || str.includes("神殿") || str.includes("龙果")) return "龙巢神殿";
-            if (str.includes("旅人") || str.includes("栈桥")) return "旅人栈桥";
-            if (str.includes("拂晓")) return "拂晓之间";
-            if (str.includes("梦羽")) return "梦羽宝境";
-            if (str.includes("白银")) return "白银乡";
+            
+            // 1. 字符重合度匹配 (暴力校准4字服务器的错别字)
+            let bestMatch = str;
+            let maxMatchCount = 0;
+            for (let srv of ALL_SERVERS) {
+                let matchCount = 0;
+                let tempStr = str;
+                for (let char of srv) {
+                    if (tempStr.includes(char)) {
+                        matchCount++;
+                        tempStr = tempStr.replace(char, ''); // 删掉匹配过的字防重复
+                    }
+                }
+                if (matchCount >= 2 && matchCount > maxMatchCount) {
+                    maxMatchCount = matchCount;
+                    bestMatch = srv;
+                }
+            }
+            if (maxMatchCount >= 2) {
+                // 如果匹配字数 ≥ 2，比如“龙昌神服”匹配到“龙”、“神”2个字，直接返回标准名
+                return bestMatch;
+            }
+
+            // 2. 莫古力大区硬编码兜底纠错（针对1个字重合的极端情况）
+            if (str.includes("白金") || str.includes("幻象") || str.includes("幻家") || str.includes("白象") || str.includes("白幻")) return "白金幻象";
+            if (str.includes("龙巢") || str.includes("神殿") || str.includes("龙果") || str.includes("神用") || str.includes("龙殿") || str.includes("巢神") || str.includes("龙昌")) return "龙巢神殿";
+            if (str.includes("神拳") || str.includes("拳痕") || str.includes("神卷") || str.includes("拳狠") || str.includes("拳浪")) return "神拳痕";
+            if (str.includes("旅人") || str.includes("栈桥") || str.includes("旅桥") || str.includes("人栈")) return "旅人栈桥";
+            if (str.includes("拂晓") || str.includes("晓之") || str.includes("拂间")) return "拂晓之间";
+            if (str.includes("梦羽") || str.includes("宝境") || str.includes("梦宝") || str.includes("羽宝")) return "梦羽宝境";
+            if (str.includes("白银") || str.includes("银乡") || str.includes("白乡")) return "白银乡";
+            if (str.includes("潮风") || str.includes("风亭") || str.includes("潮亭")) return "潮风亭";
+            
             return str;
         }
 
@@ -841,17 +870,34 @@
                     let nameStr = sm.name.replace(/\s/g, '');
                     let areaStr = sm.area.replace(/\s/g, '');
                     
+                    // 1. 完整地区匹配
                     if (cleanLine.includes(areaStr)) {
                         matchedMonster = sm;
                         break;
                     }
                     
+                    // 2. 模糊名称或地区匹配
                     let coreName1 = nameStr.substring(0, 2);
                     let coreName2 = nameStr.length > 2 ? nameStr.substring(nameStr.length - 2) : '';
                     let coreArea1 = areaStr.substring(0, 2);
 
                     if (cleanLine.includes(coreName1) || (coreName2 && cleanLine.includes(coreName2)) || cleanLine.includes(coreArea1)) {
                         if (cleanLine.includes('%') || cleanLine.includes('100')) {
+                            matchedMonster = sm;
+                            break;
+                        }
+                    }
+
+                    // 3. 黑话词库匹配 (最高优先级直接匹配)
+                    if (sm.alias) {
+                        let aliasMatched = false;
+                        for (let al of sm.alias) {
+                            if (cleanLine.includes(al)) {
+                                aliasMatched = true;
+                                break;
+                            }
+                        }
+                        if (aliasMatched) {
                             matchedMonster = sm;
                             break;
                         }
@@ -957,7 +1003,7 @@
             });
         }
 
-        // 新增：保存为 TXT 文件
+        // 保存为 TXT 文件
         function downloadRouteText() {
             const text = document.getElementById('routeOutput').value;
             if (!text) {
@@ -1082,7 +1128,6 @@
 
         function markManualKilled() {
             document.querySelector('input[name="mStatus"][value="red"]').checked = true;
-            // 修正 Bug：刚击杀时，已进入CD的时长应该是 0！
             mHour.value = 0; mMin.value = 0;
             updateSpecialCounterUI();
             autoCorrect();
@@ -1145,7 +1190,6 @@
                 if (fogSec === 0) { targetGateTime = null; isDynamicGate = true; } 
                 else { targetGateTime = new Date(now.getTime() + fogSec * 1000); }
             } else {
-                // 若是 CD 状态，timeSec 代表已经进入 CD 的时长
                 const remainCdSec = Math.max(0, CD_HOURS * 3600 - timeSec);
                 const waitSec = Math.max(remainCdSec, fogSec);
                 targetGateTime = new Date(now.getTime() + waitSec * 1000);
