@@ -99,6 +99,9 @@
         .res-item { display: flex; flex-direction: column; }
         .res-label { font-size: 12px; color: var(--text-muted); }
         .res-val { font-family: monospace; font-size: 18px; font-weight: bold; }
+        .btn-copy-manual { background: var(--input-border); color: var(--accent); border: 1px solid var(--accent); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-left: auto;}
+        .btn-copy-manual:hover { background: var(--accent); color: var(--panel); }
+        .manual-warn { color: var(--gold); font-size: 12px; width: 100%; margin-top: 5px;}
 
         /* 额外专属区 */
         .extra-area { margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px; display: none; }
@@ -290,6 +293,7 @@
         <div class="manual-header">
             <h2>⌨️ 快速手动输入与计算</h2>
             <div class="manual-header-btns">
+                <button class="btn btn-outline" onclick="summonFloatingCountdown()" style="color:var(--accent); border-color:var(--accent);">⏱️ 召唤倒计时浮窗</button>
                 <button class="btn btn-outline" onclick="clearManualInputs()">🗑️ 清空输入</button>
                 <button class="btn btn-outline" onclick="toggleManualSelect()">↕️ 折叠/展开服务器</button>
             </div>
@@ -371,6 +375,11 @@
             </div>
             <div class="fate-records-list" id="fateRecordsList"></div>
             <div id="fateWarningBox"></div>
+        </div>
+
+        <!-- 实时计算结果显示 -->
+        <div class="manual-result-box" id="manualResultBox">
+            <!-- 动态注入 -->
         </div>
 
         <div class="row-flex" style="justify-content: center; margin-top: 15px;">
@@ -540,6 +549,7 @@
 
         let recentRecords = []; 
         let specialCounters = { "伊休妲": 0, "颇胝迦": 0, "沉思之物": 0 };
+        let currentManualCalcData = null; // 缓存当前手动计算结果
 
         const mServerSelect = document.getElementById('mServer');
         ALL_SERVERS.forEach(s => { mServerSelect.innerHTML += `<option value="${s}">${s}</option>`; });
@@ -630,7 +640,8 @@
         // ==========================================
         function updateSpecialCounterUI() {
             const monsterName = mMonsterSelect.value.split('|')[0];
-            const isKilled = document.querySelector('input[name="mStatus"]:checked').value === 'red';
+            const statusRadio = document.querySelector('input[name="mStatus"]:checked');
+            const isKilled = statusRadio ? statusRadio.value === 'red' : false;
             const panel = document.getElementById('specialCounterPanel');
             
             if (["伊休妲", "颇胝迦", "沉思之物"].includes(monsterName)) {
@@ -655,7 +666,8 @@
 
         function addCounter() {
             const monsterName = mMonsterSelect.value.split('|')[0];
-            const isKilled = document.querySelector('input[name="mStatus"]:checked').value === 'red';
+            const statusRadio = document.querySelector('input[name="mStatus"]:checked');
+            const isKilled = statusRadio ? statusRadio.value === 'red' : false;
             if (isKilled) return;
             
             specialCounters[monsterName] = (specialCounters[monsterName] || 0) + 100;
@@ -734,7 +746,8 @@
             if (m > 59) { h += Math.floor(m / 60); m = m % 60; }
             if (h < 0) h = 0; if (h > 99) h = 99; if (m < 0) m = 0; if (p < 0) p = 0; if (p > 100) p = 100;
 
-            const isGreen = document.querySelector('input[name="mStatus"]:checked').value === 'green';
+            const statusRadio = document.querySelector('input[name="mStatus"]:checked');
+            const isGreen = statusRadio ? statusRadio.value === 'green' : true;
             const totalMin = isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
 
             if (h === 0 && m === 0 && p > 0) {
@@ -746,31 +759,37 @@
 
             mHour.value = h; mMin.value = m; mPercent.value = p;
             mSyncing = false;
+            calcManual(); 
             saveLocalState();
         }
 
         [mHour, mMin, mPercent].forEach(el => {
             el.addEventListener('blur', autoCorrect);
             el.addEventListener('keydown', (e) => { if(e.key === 'Enter') autoCorrect(); });
+            // 增加输入时的实时预览，不用非得等失焦
+            el.addEventListener('input', calcManual);
         });
         
         mFogHour.addEventListener('input', autoCorrect);
         mFogMin.addEventListener('input', autoCorrect);
         mFogSec.addEventListener('input', autoCorrect);
 
-        // 添加到计算列表
-        function addToRecentList() {
-            const isGreen = document.querySelector('input[name="mStatus"]:checked').value === 'green';
+        function calcManual() {
+            if (manualTimer) clearInterval(manualTimer);
+            const h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0, percentVal = parseInt(mPercent.value) || 0;
+            const statusRadio = document.querySelector('input[name="mStatus"]:checked');
+            const isGreen = statusRadio ? statusRadio.value === 'green' : true;
             const isQilige = mMonsterSelect.value.includes('奇里格');
-            
-            const h = parseInt(mHour.value) || 0;
-            const m = parseInt(mMin.value) || 0;
-            const fogSec = isQilige ? (parseInt(mFogHour.value) || 0) * 3600 + (parseInt(mFogMin.value) || 0) * 60 + (parseInt(mFogSec.value) || 0) : 0;
-            
+            const isShanxieya = mMonsterSelect.value.includes('山谢亚');
+
+            let fogSec = 0;
+            if (isQilige) fogSec = (parseInt(mFogHour.value) || 0) * 3600 + (parseInt(mFogMin.value) || 0) * 60 + (parseInt(mFogSec.value) || 0);
+
             const now = new Date();
             const timeSec = h * 3600 + m * 60;
             
-            let targetGateTime, targetForceTime, isDynamicGate = false;
+            let targetGateTime, targetForceTime;
+            let isDynamicGate = false;
 
             if (isGreen) {
                 const remainSec = Math.max(0, LT_HOURS * 3600 - timeSec);
@@ -783,8 +802,64 @@
                 targetGateTime = new Date(now.getTime() + waitSec * 1000);
                 targetForceTime = new Date(targetGateTime.getTime() + LT_HOURS * 3600 * 1000);
             }
+            
+            // 缓存数据供浮窗与添加列表使用
+            currentManualCalcData = { isGreen, isShanxieya, h, m, targetGateTime, targetForceTime, isDynamicGate };
 
             const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
+
+            const updateDisplay = () => {
+                const cNow = new Date();
+                let displayGate = targetGateTime;
+                if (isDynamicGate) displayGate = cNow;
+
+                let warnHtml = '';
+                if (!isGreen) warnHtml = `<div class="manual-warn">💡 已击杀状态请确保已上传击杀截图作为证据。</div>`;
+
+                if (manualBox) {
+                    manualBox.innerHTML = `
+                        <div class="res-item"><span class="res-label">绝对进闸时间</span><span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span></div>
+                        <div class="res-item"><span class="res-label">预计强制时间</span><span class="res-val" style="color:var(--gold)">${fmtDate(targetForceTime)}</span></div>
+                        <div class="res-item" style="flex:1;">
+                            <span class="res-label">状态提示</span>
+                            <span class="res-val countdown-big" style="color:${isGreen ? 'var(--blue)' : 'var(--red)'}">
+                                ${isGreen ? '存活中' : 'CD中'}
+                            </span>
+                        </div>
+                        <button class="btn-copy-manual" onclick="copyManualResult()">📋 复制手动结果</button>
+                        ${warnHtml}
+                    `;
+                }
+            };
+            updateDisplay();
+            manualTimer = setInterval(updateDisplay, 1000);
+
+            // 记录历史，加入容错防止数据异常导致页面渲染失败
+            try {
+                if (timeSec > 0 || percentVal > 0) {
+                    const sName = mMonsterSelect.value ? mMonsterSelect.value.split('|')[0] : '未知';
+                    const sServer = mServerSelect.value || '未知';
+                    const typeStr = isGreen ? '绿字存活' : '红字CD';
+                    const recordContent = `[${sServer}] ${sName} | ${typeStr} ${h}h${m}m (${percentVal}%)`;
+                    if (historyDB.length === 0 || historyDB[0].content !== recordContent) addHistory('手动', recordContent);
+                }
+            } catch(e) { console.warn("记录历史失败", e); }
+        }
+
+        function copyManualResult() {
+            const server = mServerSelect.value, name = mMonsterSelect.value.split('|')[0];
+            const box = document.getElementById('manualResultBox'), vals = box.querySelectorAll('.res-val');
+            navigator.clipboard.writeText(`[${server}] ${name}\n绝对进闸时间: ${vals[0].innerText}\n预计强制时间: ${vals[1].innerText}\n状态: ${vals[2].innerText}`).then(() => showToast("📋 手动结果已复制！"));
+        }
+
+        // ==========================================
+        // 3. 添加到最近列表 & 浮窗
+        // ==========================================
+        function addToRecentList() {
+            if (!currentManualCalcData) calcManual();
+            
+            const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
+            const { isGreen, h, m, targetGateTime, targetForceTime, isDynamicGate } = currentManualCalcData;
 
             const record = {
                 id: Date.now(),
@@ -807,7 +882,9 @@
             saveLocalState();
             showToast("✅ 已添加到计算记录");
             
-            addHistory('手动计算', `[${record.server}] ${record.name} | ${isGreen?'存活':'CD'} | 强制预计时间:${record.forceStr}`);
+            try {
+                addHistory('手动计算', `[${record.server}] ${record.name} | ${isGreen?'存活':'CD'} | 强制预计时间:${record.forceStr}`);
+            } catch(e) {}
         }
 
         function renderRecentList() {
@@ -933,6 +1010,17 @@
             document.getElementById('floatingCountdown').style.display = 'none';
             if (_fcHideTimer) { clearTimeout(_fcHideTimer); _fcHideTimer = null; }
             if (window._fcTickTimer) { clearInterval(window._fcTickTimer); window._fcTickTimer = null; }
+        }
+
+        // 手动输入面板的召唤按钮调用
+        function summonFloatingCountdown() {
+            if (!currentManualCalcData) { calcManual(); } 
+            if(currentManualCalcData) {
+                const { isGreen, isShanxieya, h, m, targetGateTime, targetForceTime } = currentManualCalcData;
+                let gTime = targetGateTime ? targetGateTime : new Date();
+                updateFloatingCountdown(gTime, targetForceTime, isGreen, isShanxieya, h, m);
+                showToast('⏱️ 倒计时浮窗已召唤（10秒后隐藏）');
+            }
         }
 
         // Fate 记录逻辑
@@ -1142,7 +1230,7 @@
             });
 
             if (rowCount > 0) {
-                addHistory('截图', `批量导入识别了 ${rowCount} 只 S 怪数据`);
+                try { addHistory('截图', `批量导入识别了 ${rowCount} 只 S 怪数据`); } catch(e) {}
                 showToast(`✅ 识别成功，截图已作为证据`);
                 saveLocalState();
             } else {
@@ -1480,7 +1568,7 @@
             
             const sName = currentKillRow.initialData.name;
             const sServer = currentKillRow.initialData.server;
-            addHistory('击杀', `[${sServer}] ${sName} 标记已击杀，CD重置为 ${CD_HOURS}h`);
+            try { addHistory('击杀', `[${sServer}] ${sName} 标记已击杀，CD重置为 ${CD_HOURS}h`); } catch(e) {}
             closeKillModal();
         }
 
@@ -1523,7 +1611,7 @@
         try {
             const rawHistory = localStorage.getItem('ff14_history_db');
             if (rawHistory && rawHistory !== 'undefined') { historyDB = JSON.parse(rawHistory); if (!Array.isArray(historyDB)) historyDB = []; }
-        } catch (e) { localStorage.removeItem('ff14_history_db'); }
+        } catch (e) { historyDB = []; localStorage.removeItem('ff14_history_db'); }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
@@ -1573,7 +1661,6 @@
                     document.querySelectorAll('#ocrServerMultiContainer input').forEach(cb => {
                         if (arr.includes(cb.value)) {
                             cb.checked = true;
-                            // 自动展开包含已勾选项的折叠大区
                             const details = cb.closest('details');
                             if (details) details.open = true;
                         }
@@ -1584,6 +1671,7 @@
             const dataStr = localStorage.getItem('ff14_fate_data');
             if (!dataStr || dataStr === 'undefined') {
                 renderRecentList();
+                calcManual(); // 确保页面打开就有初始结果
                 return;
             }
             try {
@@ -1626,10 +1714,15 @@
                     });
                 }
                 updateSpecialCounterUI();
-            } catch (e) { localStorage.removeItem('ff14_fate_data'); }
+                calcManual(); // 确保加载后数据实时渲染
+            } catch (e) { 
+                localStorage.removeItem('ff14_fate_data'); 
+                calcManual();
+            }
         }
 
         function addHistory(type, content) {
+            if (!Array.isArray(historyDB)) historyDB = [];
             const now = new Date();
             const timeStr = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             historyDB.unshift({ time: timeStr, type, content });
