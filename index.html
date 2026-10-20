@@ -7,127 +7,118 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         /* =========================================
-           1. 主题变量定义 (默认暗黑模式)
+           1. 主题变量定义
            ========================================= */
-        :root {
-            --bg: #0f0f1a; 
-            --panel: #1a1a2e; 
-            --accent: #00ff7f; 
-            --text: #e0e0e0;
-            --text-muted: #888;
-            --red: #ff4d4d; 
-            --gold: #f39c12; 
-            --blue: #00bfff; 
-            --border: #2a2a4a; 
-            --purple: #9b59b6;
-            --input-bg: #0b132b;
-            --input-border: #555;
+        :root { 
+            --bg: #0f0f1a; --panel: #1a1a2e; --panel-light: #22223b; --accent: #00ff7f; --text: #e0e0e0; --text-muted: #888;
+            --red: #ff4d4d; --gold: #f39c12; --blue: #00bfff; --border: #2a2a4a; --purple: #9b59b6;
+            --input-bg: #0b132b; --input-border: #555;
+        }
+        [data-theme="light"] { 
+            --bg: #f0f2f5; --panel: #ffffff; --panel-light: #f8f9fa; --accent: #00b359; --text: #333333; --text-muted: #666;
+            --red: #e74c3c; --gold: #d35400; --blue: #2980b9; --border: #e0e0e0; --purple: #8e44ad;
+            --input-bg: #f9f9f9; --input-border: #cccccc;
+        }
+        [data-theme="pink"] { 
+            --bg: #ffe6f2; --panel: #fff0f5; --panel-light: #ffe4ef; --accent: #ff69b4; --text: #5d2a42; --text-muted: #a8718a;
+            --red: #ff4757; --gold: #e67e22; --blue: #3498db; --border: #ffcce0; --purple: #9b59b6;
+            --input-bg: #ffffff; --input-border: #ffb6c1;
         }
 
-        /* 明亮模式 */
-        [data-theme="light"] {
-            --bg: #f0f2f5; 
-            --panel: #ffffff; 
-            --accent: #00b359; 
-            --text: #333333;
-            --text-muted: #666;
-            --red: #e74c3c; 
-            --gold: #d35400; 
-            --blue: #2980b9; 
-            --border: #e0e0e0; 
-            --purple: #8e44ad;
-            --input-bg: #f9f9f9;
-            --input-border: #cccccc;
-        }
-
-        /* 粉色模式 */
-        [data-theme="pink"] {
-            --bg: #ffe6f2; 
-            --panel: #fff0f5; 
-            --accent: #ff69b4; 
-            --text: #5d2a42;
-            --text-muted: #a8718a;
-            --red: #ff4757; 
-            --gold: #e67e22; 
-            --blue: #3498db; 
-            --border: #ffcce0; 
-            --purple: #9b59b6;
-            --input-bg: #ffffff;
-            --input-border: #ffb6c1;
-        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .blink-warning { animation: blink 1s infinite; }
 
         /* =========================================
-           2. 原有样式 (仅替换了颜色变量，结构未动)
+           2. 基础样式与 UI 美化
            ========================================= */
+        * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: background 0.3s, color 0.3s; }
-        h1 { color: var(--accent); margin-bottom: 5px; }
+        h1 { color: var(--accent); margin-bottom: 5px; text-align: center; }
         .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; text-align: center; min-height: 20px; }
 
-        /* 手动计算区 */
-        .manual-card { background: var(--panel); padding: 20px 30px; border-radius: 10px; width: 100%; max-width: 1250px; box-sizing: border-box; margin-bottom: 20px; border-left: 5px solid var(--accent); box-shadow: 0 0 15px rgba(0,0,0,0.1); position: relative; transition: background 0.3s; }
-        .manual-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
+        button { outline: none; font-family: inherit; }
+        .btn { padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; border: 1px solid transparent; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn-accent { background: var(--accent); color: var(--input-bg); }
+        .btn-red { background: var(--red); color: #fff; }
+        .btn-outline { background: transparent; border-color: var(--input-border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* =========================================
+           3. 手动计算区 (排版优化)
+           ========================================= */
+        .manual-card { background: var(--panel); padding: 20px 30px; border-radius: 12px; width: 100%; max-width: 1250px; box-sizing: border-box; margin-bottom: 20px; border-left: 5px solid var(--accent); box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; transition: background 0.3s; }
+        .manual-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .manual-header h2 { margin: 0; font-size: 18px; color: var(--text); }
+        .manual-header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
         
-        .input-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; transition: all 0.3s; }
+        .input-section { background: var(--panel-light); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .section-title { font-size: 13px; color: var(--accent); font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
         
-        select, input[type="number"], input[type="text"] { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 8px; border-radius: 6px; font-size: 15px; outline: none; transition: background 0.3s, border 0.3s; }
-        select { min-width: 150px; cursor: pointer; color: var(--accent); }
-        input[type="number"] { width: 60px; text-align: center; font-family: monospace; font-size: 16px; font-weight: bold; }
-        input[type="number"]:focus, input[type="text"]:focus { border-color: var(--accent); }
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 13px; color: var(--text-muted); font-weight: bold; }
+        
+        .row-flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        
+        select, input[type="number"] { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 10px; border-radius: 6px; font-size: 15px; outline: none; transition: border 0.2s; }
+        select:focus, input[type="number"]:focus { border-color: var(--accent); }
+        select { cursor: pointer; color: var(--accent); width: 100%; max-width: 250px; }
+        input[type="number"] { width: 70px; text-align: center; font-family: monospace; font-weight: bold; }
         
         .status-radio { display: flex; gap: 10px; }
-        .status-radio label { cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: bold; padding: 5px 10px; border-radius: 5px; background: var(--input-bg); border: 1px solid var(--input-border); }
+        .status-radio label { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-weight: bold; padding: 8px 15px; border-radius: 6px; background: var(--input-bg); border: 1px solid var(--input-border); transition: 0.2s; flex: 1; text-align: center; }
         .status-radio input[type="radio"] { display: none; }
         .status-radio input[type="radio"]:checked + span.green { color: var(--accent); }
         .status-radio input[type="radio"]:checked + span.red { color: var(--red); }
-        .status-radio label:has(input:checked) { border-color: currentColor; }
-        
-        .btn-check { background: var(--border); color: var(--text); border: 1px solid var(--input-border); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; margin-left: 10px; }
-        .btn-check:hover { filter: brightness(1.2); }
-        
-        .btn-kill-manual { background: var(--red); color: #fff; border: 1px solid transparent; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; }
-        .btn-kill-manual:hover { filter: brightness(0.9); }
+        .status-radio label:has(input:checked) { border-color: currentColor; background: var(--panel); }
 
-        .manual-result-box { background: var(--input-bg); padding: 15px; border-radius: 6px; font-size: 15px; line-height: 1.8; border: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 30px; min-height: 50px; }
+        .manual-result-box { background: var(--input-bg); padding: 15px; border-radius: 8px; font-size: 15px; line-height: 1.8; border: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 30px; min-height: 50px; margin-top: 15px; }
         .res-item { display: flex; flex-direction: column; }
         .res-label { font-size: 12px; color: var(--text-muted); }
         .res-val { font-family: monospace; font-size: 18px; font-weight: bold; }
         
         .btn-copy-manual { background: var(--input-border); color: var(--accent); border: 1px solid var(--accent); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-left: auto;}
         .btn-copy-manual:hover { background: var(--accent); color: var(--input-bg); }
-        
         .weather-tip { color: var(--purple); font-size: 13px; font-weight: bold; margin-top: 10px; padding-left: 5px; }
 
-        /* 操作栏 */
-        .top-bar { width: 100%; max-width: 1250px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-        .top-bar-left { display: flex; gap: 10px; }
-        
-        .toggle-btn { background: var(--input-bg); color: var(--text-muted); border: 1px solid var(--input-border); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 13px; }
-        .toggle-btn:hover { border-color: var(--accent); }
-        .toggle-btn.active { background: var(--accent); color: var(--input-bg); border-color: var(--accent); }
-        
-        .action-btn { background: var(--panel); color: var(--accent); border: 1px solid var(--accent); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none; font-size: 13px; transition: 0.2s; }
-        .action-btn:hover { background: var(--accent); color: var(--input-bg); }
+        /* 额外专属区 */
+        .extra-area { margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px; display: none; }
+        .fate-records-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .fate-record-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+        .fate-record-item .fate-time { font-family: monospace; font-weight: bold; color: var(--accent); }
+        .fate-record-item .fate-remove { background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 14px; font-weight: bold; padding: 0 5px; }
+        .fate-warning { color: var(--red); font-weight: bold; font-size: 13px; margin-top: 10px; padding: 10px; background: rgba(255,77,77,0.1); border: 1px dashed var(--red); border-radius: 6px; }
 
-        .upload-area { border: 2px dashed var(--input-border); border-radius: 10px; padding: 20px; text-align: center; width: 100%; max-width: 1250px; background: var(--panel); margin-bottom: 20px; cursor: pointer; transition: 0.3s; box-sizing: border-box; }
-        .upload-area:hover, .upload-area.paste-active { border-color: var(--accent); background: var(--input-bg); }
+        /* =========================================
+           4. 上传识别区
+           ========================================= */
+        .top-bar { width: 100%; max-width: 1250px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .top-bar-left { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .upload-area { border: 2px dashed var(--input-border); border-radius: 12px; padding: 20px; text-align: center; width: 100%; max-width: 1250px; background: var(--panel); margin-bottom: 20px; transition: 0.3s; box-sizing: border-box; }
+        .upload-area:hover, .upload-area.paste-active { border-color: var(--accent); background: var(--panel-light); }
+        .upload-btn-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
+        .upload-btn-group button { padding: 10px 20px; font-size: 14px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         input[type="file"] { display: none; }
         #loading { display: none; text-align: center; color: var(--gold); font-weight: bold; margin-bottom: 20px; }
         #progress-text { font-size: 12px; color: var(--text-muted); display: block; margin-top: 5px; }
 
-        /* 结果表格 */
+        /* =========================================
+           5. 表格样式
+           ========================================= */
         #results-container { width: 100%; max-width: 1250px; display: none; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); table-layout: auto; }
+        table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); table-layout: auto; }
         th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
         th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
         
         .hide-server .server-col { display: none; }
-        
         .server-tag { background: var(--accent); color: var(--input-bg); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; white-space: nowrap; }
-        
         .time-inputs input { width: 45px; text-align: center; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 5px; border-radius: 4px; font-family: monospace; }
         
-        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; white-space: nowrap; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; white-space: nowrap; cursor: pointer; user-select: none; transition: 0.2s; }
+        .status-badge:hover { filter: brightness(1.2); transform: scale(1.05); }
         .badge-gate-open { background: rgba(0, 255, 127, 0.15); color: var(--accent); border: 1px solid var(--accent); }
         .badge-cd { background: rgba(255, 77, 77, 0.15); color: var(--red); border: 1px solid var(--red); }
         .badge-wait-weather { background: rgba(155, 89, 182, 0.15); color: var(--purple); border: 1px solid var(--purple); }
@@ -141,11 +132,11 @@
         .time-display { font-family: monospace; font-weight: bold; font-size: 14px; }
         .time-gate { color: var(--accent); }
         .time-force { color: var(--gold); }
-        .countdown-text { font-family: monospace; font-weight: bold; font-size: 13px; }
+        .countdown-big { font-family: monospace; font-weight: bold; font-size: 16px; }
         .countdown-red { color: var(--red); }
-        .countdown-green { color: var(--blue); }
+        .countdown-blue { color: var(--blue); }
         .countdown-purple { color: var(--purple); }
-
+        .status-text-col { font-size: 13px; font-weight: bold; color: var(--text-muted); }
         .weather-info { font-size: 11px; color: var(--purple); margin-top: 4px; font-weight: bold; }
 
         .btn-row-action { display: flex; gap: 5px; }
@@ -154,35 +145,26 @@
         .btn-undo-row { background: var(--text-muted); color: var(--input-bg); border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
         .btn-undo-row:hover { filter: brightness(0.9); }
 
-        /* 弹窗样式 */
+        /* =========================================
+           6. 弹窗与浮窗
+           ========================================= */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--panel); padding: 25px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); border: 1px solid var(--border); text-align: center; }
+        .modal-content { background: var(--panel); padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); border: 1px solid var(--border); text-align: center; }
         .modal-title { font-size: 20px; color: var(--accent); margin-bottom: 10px; font-weight: bold; }
         .modal-desc { color: var(--text); font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
-        
         .modal-upload-area { border: 2px dashed var(--input-border); border-radius: 8px; padding: 20px; margin-bottom: 15px; background: var(--input-bg); cursor: pointer; transition: 0.2s; }
         .modal-upload-area:hover { border-color: var(--accent); }
         .modal-upload-area img { max-width: 100%; max-height: 200px; border-radius: 4px; display: none; margin-top: 10px; }
         .modal-upload-area.has-img { border-color: var(--accent); }
-        
-        .modal-btns { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-        .btn-modal { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .modal-btns { display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .btn-modal { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; flex: 1; min-width: 120px;}
         .btn-cancel { background: var(--text-muted); color: var(--input-bg); }
         .btn-cancel:hover { filter: brightness(0.9); }
         .btn-confirm { background: var(--red); color: #fff; opacity: 0.5; pointer-events: none; }
         .btn-confirm.ready { opacity: 1; pointer-events: auto; }
         .btn-confirm.ready:hover { filter: brightness(0.9); }
-
         canvas { display: none; }
 
-        /* =========================================
-           以下为追加的新功能样式，未改动上方任何源码
-           ========================================= */
-        /* 状态标签点击反馈 */
-        .status-badge { cursor: pointer; user-select: none; transition: 0.2s; }
-        .status-badge:hover { filter: brightness(1.2); transform: scale(1.05); }
-
-        /* 历史记录弹窗 */
         #historyModal .modal-content { max-width: 700px; text-align: left; }
         .history-search { width: 100%; padding: 10px; margin-bottom: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; box-sizing: border-box; }
         .history-list { max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); }
@@ -191,11 +173,9 @@
         .history-time { color: var(--text-muted); font-size: 11px; }
         .history-type { font-size: 11px; padding: 2px 5px; border-radius: 3px; background: var(--border); color: var(--text); margin-right: 5px;}
 
-        /* Toast 右下角提示 */
         #toast { position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: var(--input-bg); padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transform: translateY(20px); }
         #toast.show { opacity: 1; transform: translateY(0); }
 
-        /* 主题切换器 */
         .theme-switcher { position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 100; }
         .theme-btn { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
         .theme-btn:hover { transform: scale(1.1); }
@@ -204,36 +184,47 @@
         .theme-btn.light { background: #ffffff; }
         .theme-btn.pink { background: #ffcce0; }
 
-        /* 清除按钮 */
-        .btn-clear-manual { background: transparent; color: var(--text-muted); border: 1px dashed var(--text-muted); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; margin-right: 10px; }
-        .btn-clear-manual:hover { color: var(--red); border-color: var(--red); }
+        #floatingCountdown { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--panel); border: 1px solid var(--accent); border-radius: 10px; padding: 16px 18px; box-shadow: 0 6px 24px rgba(0,0,0,0.4); z-index: 999; min-width: 280px; max-width: 360px; }
+        #floatingCountdown .fc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        #floatingCountdown .fc-title { font-size: 13px; color: var(--text-muted); font-weight: bold; }
+        #floatingCountdown .fc-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px; }
+        #floatingCountdown .fc-close:hover { color: var(--red); }
+        #floatingCountdown .fc-body { font-size: 13px; line-height: 1.8; }
+        #floatingCountdown .fc-row { display: flex; justify-content: space-between; gap: 10px; }
+        #floatingCountdown .fc-label { color: var(--text-muted); }
+        #floatingCountdown .fc-val { font-family: monospace; font-weight: bold; }
+        #floatingCountdown .fc-countdown { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-family: monospace; font-size: 15px; font-weight: bold; text-align: center; }
+        #floatingCountdown .fc-tip { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 6px; }
 
-        /* 警告文字样式 */
-        .warning-text { color: var(--red) !important; font-weight: bold; font-size: 14px; width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
-
-        /* 📱 移动端卡片化适配 */
+        /* 移动端适配 */
         @media (max-width: 768px) {
+            body { padding: 10px; }
+            .theme-switcher { top: 10px; right: 10px; }
+            h1 { font-size: 20px; margin-top: 30px; }
+            .manual-card { padding: 15px; }
+            .input-grid { grid-template-columns: 1fr; }
+            .status-radio { flex-direction: column; }
+            .status-radio label { width: 100%; }
+            .row-flex { width: 100%; }
+            select { max-width: 100%; }
+            .manual-result-box { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .btn-copy-manual { margin-left: 0; width: 100%; }
+            .upload-btn-group { flex-direction: column; }
+            .upload-btn-group button { width: 100%; }
+            
             table, thead, tbody, th, td, tr { display: block; }
             thead tr { position: absolute; top: -9999px; left: -9999px; }
             tr { border: 1px solid var(--border); margin-bottom: 15px; border-radius: 8px; background: var(--panel); overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
             td { border: none; border-bottom: 1px solid var(--border); position: relative; padding-left: 50%; text-align: right; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; padding-bottom: 15px; padding-right: 15px; }
             td:last-child { border-bottom: none; }
-            td::before { 
-                content: attr(data-label); 
-                position: absolute; left: 15px; width: 45%; padding-right: 10px; 
-                white-space: nowrap; text-align: left; font-weight: bold; color: var(--accent); 
-            }
-            .hide-server .server-col { display: none; }
-            .input-row { flex-direction: column; align-items: flex-start; }
-            .manual-result-box { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .theme-switcher { top: 10px; right: 10px; }
-            h1 { font-size: 20px; margin-top: 30px; }
+            td::before { content: attr(data-label); position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; color: var(--accent); }
+            #floatingCountdown { left: 10px; right: 10px; max-width: none; }
+            .modal-btns { flex-direction: column; }
+            .btn-modal { width: 100%; }
         }
     </style>
 </head>
 <body>
-
-    <!-- 主题切换器 -->
     <div class="theme-switcher">
         <div class="theme-btn dark active" onclick="changeTheme('dark')" title="暗黑模式"></div>
         <div class="theme-btn light" onclick="changeTheme('light')" title="明亮模式"></div>
@@ -247,67 +238,99 @@
     <div class="manual-card">
         <div class="manual-header">
             <h2>⌨️ 快速手动输入</h2>
-            <div>
-                <!-- 追加：清除按钮 和 折叠按钮 -->
-                <button class="btn-clear-manual" onclick="clearManualInputs()">🗑️ 全部清除</button>
-                <button class="toggle-btn" onclick="toggleManualSelect()">↕️ 折叠/展开服务器</button>
+            <div class="manual-header-btns">
+                <button class="btn btn-outline" onclick="summonFloatingCountdown()" style="color: var(--accent); border-color: var(--accent);">⏱️ 召唤倒计时浮窗</button>
+                <button class="btn btn-outline" onclick="clearManualInputs()">🗑️ 全部清除</button>
+                <button class="btn btn-outline" onclick="toggleManualSelect()">↕️ 折叠/展开服务器</button>
             </div>
         </div>
         
-        <div class="input-row" id="manualSelectGroup">
-            <!-- 仅对服务器进行折叠 (原封不动) -->
-            <div id="mServerWrapper">
-                <select id="mServer">
-                    <!-- 服务器由JS动态注入 (原封不动) -->
-                </select>
+        <div class="input-section">
+            <div class="section-title">🎯 目标选择</div>
+            <div class="input-grid">
+                <div class="input-group" id="mServerWrapper">
+                    <label>服务器 / 大区</label>
+                    <select id="mServer"></select>
+                </div>
+                <div class="input-group">
+                    <label>S怪名称</label>
+                    <select id="mMonster"><option value="未知|未知">--- 选择S怪 ---</option></select>
+                </div>
             </div>
-            <select id="mMonster"><option value="未知|未知">--- 选择S怪 ---</option></select>
         </div>
 
-        <div class="input-row">
-            <div class="status-radio">
-                <label><input type="radio" name="mStatus" value="red" checked><span class="red">🔴 已击杀 (CD倒计时)</span></label>
-                <label><input type="radio" name="mStatus" value="green"><span class="green">🟢 未击杀 (存活正计时)</span></label>
+        <div class="input-section">
+            <div class="section-title">⏱️ 状态与时间记录</div>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label>当前状态</label>
+                    <div class="status-radio">
+                        <label><input type="radio" name="mStatus" value="green" checked><span class="green">🟢 未击杀 (存活)</span></label>
+                        <label><input type="radio" name="mStatus" value="red"><span class="red">🔴 已击杀 (CD)</span></label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>已存活 / CD 时长 (时 : 分)</label>
+                    <div class="row-flex">
+                        <input type="number" id="mHour" min="0" max="99" value="0"> : <input type="number" id="mMin" min="0" max="59" value="0">
+                        <button class="btn btn-red" style="margin-left:auto; padding:6px 10px;" onclick="markManualKilled()">🔪 一键标记已击杀</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>综合进度 (%)</label>
+                    <div class="row-flex">
+                        <input type="number" id="mPercent" min="0" max="100" value="0" step="1" style="width: 100px;"> %
+                        <button class="btn btn-outline" onclick="autoCorrect()">✅ 检查与自动补正</button>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <button class="btn-kill-manual" onclick="markManualKilled()">🔪 标记已击杀 (重置CD)</button>
-
-            <span style="margin-left: 10px;">计时器：</span>
-            <input type="number" id="mHour" min="0" max="99" value="0"> : <input type="number" id="mMin" min="0" max="59" value="0">
-            
-            <span style="margin-left: 10px; color:var(--text-muted);">|</span>
-            <span style="margin-left: 10px;">百分比：</span>
-            <input type="number" id="mPercent" min="0" max="100" value="0" step="1"> %
-            
-            <button class="btn-check" onclick="autoCorrect()">✅ 检查与自动补正</button>
-
-            <!-- 奇里格专属天气条件 -->
-            <div id="mFogGroup" style="display: none; align-items: center; gap: 5px; margin-left: 15px; padding-left: 15px; border-left: 1px solid var(--input-border);">
-                <span style="color: var(--purple); font-weight: bold;">🌫️ 大雾倒计时：</span>
-                <input type="number" id="mFogHour" min="0" max="99" value="0"> : <input type="number" id="mFogMin" min="0" max="59" value="0">
+        <!-- 奇里格专属 -->
+        <div class="input-section extra-area" id="mFogGroup">
+            <div class="section-title" style="color: var(--purple);">🌫️ 大雾天气倒计时 (时:分:秒)</div>
+            <div class="row-flex">
+                <input type="number" id="mFogHour" min="0" max="99" value="0"> : 
+                <input type="number" id="mFogMin" min="0" max="59" value="0"> : 
+                <input type="number" id="mFogSec" min="0" max="59" value="0">
             </div>
+        </div>
+
+        <!-- 山谢亚专属 -->
+        <div class="input-section extra-area" id="mFateGroup">
+            <div class="section-title" style="color: var(--gold);">🌾 山谢亚 Fate 完成记录</div>
+            <div class="row-flex" style="margin-bottom: 10px;">
+                <button class="btn btn-outline" onclick="recordFateAuto()">⏱️ 自动 +1（当前时间）</button>
+                <button class="btn btn-outline" onclick="openFateManualInput()">📝 手动输入时间</button>
+                <button class="btn btn-red" onclick="clearFateRecords()">🗑️ 清空记录</button>
+            </div>
+            <div class="fate-records-list" id="fateRecordsList"></div>
+            <div id="fateWarningBox"></div>
         </div>
 
         <div class="manual-result-box" id="manualResultBox">
             <!-- 动态注入 -->
         </div>
-        <div class="weather-tip">* 若需要计算“厌忌之人 奇里格”，请单独计算天气时间！</div>
+        <div class="weather-tip">* 若需要计算"厌忌之人 奇里格"，请单独计算天气时间！</div>
     </div>
 
     <!-- 截图识别模块 -->
     <div class="top-bar">
         <div class="top-bar-left">
-            <button class="toggle-btn" id="maintenanceToggle" onclick="toggleMaintenance()">🛠️ 服务器维护后模式 (CD 50h)</button>
-            <button class="toggle-btn" id="toggleServerBtn" onclick="toggleServerCol()">👁️ 隐藏表格服务器列</button>
-            <!-- 追加：历史记录按钮 -->
-            <button class="toggle-btn" onclick="openHistoryModal()" style="border-color: var(--gold); color: var(--gold);">📜 历史记录</button>
+            <button class="btn btn-outline" id="maintenanceToggle" onclick="toggleMaintenance()">🛠️ 服务器维护后模式 (CD 50h)</button>
+            <button class="btn btn-outline" id="toggleServerBtn" onclick="toggleServerCol()">👁️ 隐藏表格服务器列</button>
+            <button class="btn btn-outline" onclick="openHistoryModal()" style="border-color: var(--gold); color: var(--gold);">📜 历史记录</button>
         </div>
-        <button class="action-btn" id="copyBtn" onclick="copyResults()">📋 复制表格结果</button>
+        <button class="btn btn-accent" id="copyBtn" onclick="copyResults()" style="display:none;">📋 复制表格结果</button>
     </div>
 
-    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-        <div style="font-size: 24px; margin-bottom: 10px;">📋 点击上传 / 拖拽 / Ctrl+V 粘贴截图</div>
-        <div style="font-size: 12px; color: var(--text-muted);">双通道精准提取红绿文字，专项识别 Fog 等天气倒计时</div>
+    <div class="upload-area" id="uploadArea">
+        <div style="font-size: 24px; margin-bottom: 10px;">📋 截图识别</div>
+        <div style="font-size: 12px; color: var(--text-muted);">支持点击下方按钮选择文件、直接读取剪贴板，或将图片拖拽到此处 / 按 Ctrl+V 粘贴</div>
+        <div class="upload-btn-group">
+            <button class="btn btn-accent" onclick="triggerUpload()">📤 选择文件上传</button>
+            <button class="btn btn-outline" onclick="triggerPaste()" style="color:var(--blue); border-color:var(--blue);">📋 直接粘贴图片</button>
+        </div>
         <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
     </div>
 
@@ -322,10 +345,10 @@
                     <th>状态</th>
                     <th>操作</th>
                     <th>计时器 (时:分)</th>
-                    <th>综合进度 / 天气</th>
-                    <th>进闸时间</th>
-                    <th>预计强制消失 (LT 48h)</th>
-                    <th>实时倒计时</th>
+                    <th>综合进度</th>
+                    <th>绝对进闸时间</th>
+                    <th>实时倒计时 (同步进度)</th>
+                    <th>状态提示</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -336,15 +359,13 @@
     <div class="modal-overlay" id="killModal">
         <div class="modal-content">
             <div class="modal-title">确认击杀</div>
-            <div class="modal-desc" id="modalDesc">您正在标记 <strong id="modalMonsterName"></strong> 为已击杀。<br>若该怪当前为存活（绿字）状态，必须提供击杀证据截图。</div>
-            
+            <div class="modal-desc" id="modalDesc">您正在标记 <strong id="modalMonsterName"></strong> 为已击杀。<br>击杀操作需要提供截图证据（若该怪已强制消失则无需提供）。</div>
             <div class="modal-upload-area" id="modalUploadArea" onclick="document.getElementById('modalFileInput').click()">
                 <div style="color:var(--text-muted); font-size:13px;">点击此处上传 / 粘贴截图证据</div>
                 <div style="font-size: 11px; color: var(--gold); margin-top:5px;">(必须包含：服务器+地区+S怪名称+红色时间)</div>
                 <input type="file" id="modalFileInput" accept="image/*" style="display:none;" onchange="handleModalImage(event)">
                 <img id="modalPreviewImg" src="" alt="预览">
             </div>
-
             <div class="modal-btns">
                 <button class="btn-modal btn-cancel" onclick="closeKillModal()">取消</button>
                 <button class="btn-modal btn-confirm" id="btnConfirmKill" onclick="executeKill()">确认击杀并重置CD</button>
@@ -352,7 +373,7 @@
         </div>
     </div>
 
-    <!-- 追加：历史记录弹窗 -->
+    <!-- 历史记录弹窗 -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-content">
             <div class="modal-title" style="text-align: center; color: var(--gold);">📜 历史记录查询</div>
@@ -365,17 +386,39 @@
         </div>
     </div>
 
-    <!-- 追加：Toast 提示 -->
-    <div id="toast">✅ 数据已自动保存在本地</div>
+    <!-- Fate 手动输入弹窗 -->
+    <div class="modal-overlay" id="fateManualModal">
+        <div class="modal-content">
+            <div class="modal-title">🌾 手动记录 Fate 完成时间</div>
+            <div class="modal-desc">请输入 Fate 完成的时间（精确到秒）</div>
+            <div style="display: flex; gap: 10px; justify-content: center; align-items: center; margin: 20px 0;">
+                <input type="number" id="fateManualHour" min="0" max="23" value="0" style="width: 60px;"> :
+                <input type="number" id="fateManualMin" min="0" max="59" value="0" style="width: 60px;"> :
+                <input type="number" id="fateManualSec" min="0" max="59" value="0" style="width: 60px;">
+            </div>
+            <div class="modal-btns">
+                <button class="btn-modal btn-cancel" onclick="document.getElementById('fateManualModal').style.display='none'">取消</button>
+                <button class="btn-modal btn-confirm ready" onclick="confirmFateManualInput()" style="background: var(--accent); color: var(--input-bg);">确认记录</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- 右下角倒计时浮窗 -->
+    <div id="floatingCountdown">
+        <div class="fc-header">
+            <span class="fc-title">⏱️ 手动计算 · 倒计时</span>
+            <button class="fc-close" onclick="hideFloatingCountdown()">×</button>
+        </div>
+        <div class="fc-body" id="floatingCountdownBody"></div>
+    </div>
+
+    <div id="toast">✅ 数据已自动保存在本地</div>
     <canvas id="canvas"></canvas>
 
     <script>
         // ==========================================
-        // 【以下为您完全未动的原有代码】
+        // 基础数据
         // ==========================================
-        
-        // 全量服务器字典 (按大区分类)
         const SERVER_GROUPS = {
             "豆豆柴": ["水晶塔", "银泪湖", "太阳海岸", "伊修加德", "红茶川"],
             "陆行鸟": ["红玉海", "神意之地", "拉诺西亚", "幻影群岛", "萌芽池", "宇宙和音", "沃仙曦染", "晨曦王座"],
@@ -383,18 +426,13 @@
             "猫小胖": ["紫水栈桥", "延夏", "静语庄园", "摩杜纳", "海猫茶屋", "柔风海湾", "琥珀原"]
         };
         const ALL_SERVERS = Object.values(SERVER_GROUPS).flat();
-
-        // S怪字典
         const S_MONSTERS = [
-            { name: "戾虫", area: "雷克兰德" }, { name: "得到宽恕的炫学", area: "珂露西亚岛" },
-            { name: "多智兽", area: "安穆·艾兰" }, { name: "阿格拉俄珀", area: "伊尔美格" },
-            { name: "伊休妲", area: "拉凯提卡大森林" }, { name: "顾尼图", area: "黑风海" },
-            { name: "布弗鲁", area: "迷津" }, { name: "颇胝迦", area: "萨维奈岛" },
-            { name: "阿姆斯特朗", area: "加雷马" }, { name: "沉思之物", area: "叹息海" },
-            { name: "俄菲翁尼厄斯", area: "厄尔庇斯" }, { name: "狭缝", area: "天外天垓" },
-            { name: "厌忌之人 奇里格", area: "奥阔帕恰山" }, { name: "伊努索奇", area: "克扎玛乌卡湿地" },
-            { name: "内尤佐缇", area: "亚克特尔树海" }, { name: "山谢亚", area: "夏劳尼荒野" },
-            { name: "先驱勇士 阿提卡斯", area: "遗产之地" }, { name: "天气预报机器人", area: "活着的记忆" }
+            { name: "戾虫", area: "雷克兰德" }, { name: "得到宽恕的炫学", area: "珂露西亚岛" }, { name: "多智兽", area: "安穆·艾兰" }, 
+            { name: "阿格拉俄珀", area: "伊尔美格" }, { name: "伊休妲", area: "拉凯提卡大森林" }, { name: "顾尼图", area: "黑风海" },
+            { name: "布弗鲁", area: "迷津" }, { name: "颇胝迦", area: "萨维奈岛" }, { name: "阿姆斯特朗", area: "加雷马" },
+            { name: "沉思之物", area: "叹息海" }, { name: "俄菲翁尼厄斯", area: "厄尔庇斯" }, { name: "狭缝", area: "天外天垓" },
+            { name: "厌忌之人 奇里格", area: "奥阔帕恰山" }, { name: "伊努索奇", area: "克扎玛乌卡湿地" }, { name: "内尤佐缇", area: "亚克特尔树海" },
+            { name: "山谢亚", area: "夏劳尼荒野" }, { name: "先驱勇士 阿提卡斯", area: "遗产之地" }, { name: "天气预报机器人", area: "活着的记忆" }
         ];
 
         const LT_HOURS = 48; 
@@ -402,27 +440,30 @@
         let isMaintenanceMode = false;
         let globalTimers = [];
         let hasScreenshot = false;
-
         let currentKillRow = null;
         let modalHasEvidence = false;
 
-        // ==========================================
-        // 1. 全局基础设置
-        // ==========================================
         const mServerSelect = document.getElementById('mServer');
         ALL_SERVERS.forEach(s => { mServerSelect.innerHTML += `<option value="${s}">${s}</option>`; });
-
         const mMonsterSelect = document.getElementById('mMonster');
         S_MONSTERS.forEach(m => { mMonsterSelect.innerHTML += `<option value="${m.name}|${m.area}">${m.name} [${m.area}]</option>`; });
 
+        function formatDHMS(ms) {
+            if (ms <= 0) return '00:00:00';
+            const totalSec = Math.floor(ms / 1000);
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = totalSec % 60;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
         function toggleMaintenance() {
             isMaintenanceMode = !isMaintenanceMode;
-            const btn = document.getElementById('maintenanceToggle');
-            btn.classList.toggle('active', isMaintenanceMode);
+            document.getElementById('maintenanceToggle').classList.toggle('active', isMaintenanceMode);
             CD_HOURS = isMaintenanceMode ? 50 : 84; 
             autoCorrect();
             document.querySelectorAll('.calc-row').forEach(row => { if(row.recalculate) row.recalculate(); });
-            saveLocalState(); // 追加保存
+            saveLocalState();
         }
 
         function toggleServerCol() {
@@ -433,7 +474,6 @@
             btn.classList.toggle('active', table.classList.contains('hide-server'));
         }
 
-        // 只折叠服务器下拉框
         function toggleManualSelect() {
             const group = document.getElementById('mServerWrapper');
             group.style.display = group.style.display === 'none' ? 'block' : 'none';
@@ -448,13 +488,20 @@
         const mFogGroup = document.getElementById('mFogGroup');
         const mFogHour = document.getElementById('mFogHour');
         const mFogMin = document.getElementById('mFogMin');
+        const mFogSec = document.getElementById('mFogSec');
         const manualBox = document.getElementById('manualResultBox');
+        const mFateGroup = document.getElementById('mFateGroup');
         let manualTimer = null;
         let mSyncing = false;
+        let fateRecords = [];
 
         mMonsterSelect.addEventListener('change', () => {
-            if (mMonsterSelect.value.includes('奇里格')) mFogGroup.style.display = 'flex';
-            else { mFogGroup.style.display = 'none'; mFogHour.value = 0; mFogMin.value = 0; }
+            const isQilige = mMonsterSelect.value.includes('奇里格');
+            const isShanxieya = mMonsterSelect.value.includes('山谢亚');
+            if (isQilige) { mFogGroup.style.display = 'block'; } 
+            else { mFogGroup.style.display = 'none'; mFogHour.value = 0; mFogMin.value = 0; mFogSec.value = 0; }
+            if (isShanxieya) { mFateGroup.style.display = 'block'; renderFateRecords(); } 
+            else { mFateGroup.style.display = 'none'; }
             autoCorrect();
         });
 
@@ -467,15 +514,9 @@
         function autoCorrect() {
             if (mSyncing) return;
             mSyncing = true;
-
-            let h = parseInt(mHour.value) || 0;
-            let m = parseInt(mMin.value) || 0;
-            let p = parseInt(mPercent.value) || 0;
-
+            let h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0, p = parseInt(mPercent.value) || 0;
             if (m > 59) { h += Math.floor(m / 60); m = m % 60; }
-            if (h < 0) h = 0; if (h > 99) h = 99;
-            if (m < 0) m = 0;
-            if (p < 0) p = 0; if (p > 100) p = 100;
+            if (h < 0) h = 0; if (h > 99) h = 99; if (m < 0) m = 0; if (p < 0) p = 0; if (p > 100) p = 100;
 
             const isGreen = document.querySelector('input[name="mStatus"]:checked').value === 'green';
             const totalMin = isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
@@ -490,7 +531,7 @@
             mHour.value = h; mMin.value = m; mPercent.value = p;
             mSyncing = false;
             calcManual();
-            saveLocalState(); // 追加保存
+            saveLocalState();
         }
 
         [mHour, mMin, mPercent].forEach(el => {
@@ -501,90 +542,228 @@
 
         function calcManual() {
             if (manualTimer) clearInterval(manualTimer);
-            const h = parseInt(mHour.value) || 0;
-            const m = parseInt(mMin.value) || 0;
-            const timeVal = (h * 60) + m;
-            const percentVal = parseInt(mPercent.value) || 0;
-            
+            const h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0, percentVal = parseInt(mPercent.value) || 0;
             const isGreen = document.querySelector('input[name="mStatus"]:checked').value === 'green';
-
-            // 【修改点】移除了这里直接 return 覆盖整个框的逻辑，改为在底部提示
-
             const isQilige = mMonsterSelect.value.includes('奇里格');
-            let fogMin = 0;
-            if (isQilige) fogMin = (parseInt(mFogHour.value) || 0) * 60 + (parseInt(mFogMin.value) || 0);
+            const isShanxieya = mMonsterSelect.value.includes('山谢亚');
 
-            const fmt = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
+            let fogSec = 0;
+            if (isQilige) fogSec = (parseInt(mFogHour.value) || 0) * 3600 + (parseInt(mFogMin.value) || 0) * 60 + (parseInt(mFogSec.value) || 0);
+
             const now = new Date();
+            const timeSec = h * 3600 + m * 60;
             
-            let waitToGateMin = isGreen ? fogMin : Math.max(timeVal, fogMin);
-            const gateTime = new Date(now.getTime() + waitToGateMin * 60000);
-            const forceTime = new Date(gateTime.getTime() + LT_HOURS * 60 * 60000);
+            let targetGateTime, targetForceTime;
+            let isDynamicGate = false;
 
-            // 追加：历史记录保存
-            if (timeVal > 0 || percentVal > 0) {
+            if (isGreen) {
+                const remainSec = Math.max(0, LT_HOURS * 3600 - timeSec);
+                targetForceTime = new Date(now.getTime() + remainSec * 1000);
+                if (fogSec === 0) { targetGateTime = null; isDynamicGate = true; } 
+                else { targetGateTime = new Date(now.getTime() + fogSec * 1000); }
+            } else {
+                const waitSec = Math.max(timeSec, fogSec);
+                targetGateTime = new Date(now.getTime() + waitSec * 1000);
+                targetForceTime = new Date(targetGateTime.getTime() + LT_HOURS * 3600 * 1000);
+            }
+
+            if (timeSec > 0 || percentVal > 0) {
                 const sName = mMonsterSelect.value ? mMonsterSelect.value.split('|')[0] : '未知';
                 const sServer = mServerSelect.value || '未知';
                 const typeStr = isGreen ? '绿字存活' : '红字CD';
                 const recordContent = `[${sServer}] ${sName} | ${typeStr} ${h}h${m}m (${percentVal}%)`;
-                if (historyDB.length === 0 || historyDB[0].content !== recordContent) {
-                    addHistory('手动', recordContent);
-                }
+                if (historyDB.length === 0 || historyDB[0].content !== recordContent) addHistory('手动', recordContent);
             }
 
-            const updateDisplay = () => {
-                const diffGate = gateTime - new Date();
-                const diffForce = forceTime - new Date();
-                
-                let countdownText = "";
-                if (diffForce <= 0) countdownText = `<span style="color:var(--red)">已强制消失</span>`;
-                else if (diffGate > 0) countdownText = `<span style="color:var(--purple)">等待条件: ${Math.floor(diffGate/3600000)}h ${Math.floor((diffGate%3600000)/60000)}m ${Math.floor((diffGate%60000)/1000)}s</span>`;
-                else countdownText = `<span style="color:var(--blue)">距强制消失: ${Math.floor(diffForce/3600000)}h ${Math.floor((diffForce%3600000)/60000)}m ${Math.floor((diffForce%60000)/1000)}s</span>`;
+            const _gate = targetGateTime ? targetGateTime : new Date();
+            updateFloatingCountdown(_gate, targetForceTime, isGreen, isShanxieya, h, m);
 
-                // 【新增点】警告文字
-                let warningHtml = '';
-                if (isGreen && !hasScreenshot) {
-                    warningHtml = `<div class="warning-text">⚠️ 未提供截图证据，无法证实“未击杀”状态！请先上传或粘贴截图，或直接点击“标记已击杀”。</div>`;
-                }
+            const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
+
+            const updateDisplay = () => {
+                const cNow = new Date();
+                let displayGate = targetGateTime;
+                if (isDynamicGate) displayGate = cNow;
+
+                let warnHtml = '';
+                if (!isGreen) warnHtml = `<div class="manual-warn">💡 已击杀状态请确保已上传击杀截图作为证据。</div>`;
 
                 manualBox.innerHTML = `
-                    <div class="res-item"><span class="res-label">进闸时间</span><span class="res-val" style="color:var(--accent)">${fmt(gateTime)}</span></div>
-                    <div class="res-item"><span class="res-label">预计强制消失时间</span><span class="res-val" style="color:var(--gold)">${fmt(forceTime)}</span></div>
-                    <div class="res-item" style="flex:1;"><span class="res-label">状态 / 倒计时</span><span class="res-val">${countdownText}</span></div>
+                    <div class="res-item"><span class="res-label">绝对进闸时间</span><span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span></div>
+                    <div class="res-item"><span class="res-label">预计强制进闸</span><span class="res-val" style="color:var(--gold)">${fmtDate(targetForceTime)}</span></div>
+                    <div class="res-item" style="flex:1;">
+                        <span class="res-label">状态提示</span>
+                        <span class="res-val countdown-big" style="color:${isGreen ? 'var(--blue)' : 'var(--red)'}">
+                            ${isGreen ? '存活中' : 'CD中'}
+                        </span>
+                    </div>
                     <button class="btn-copy-manual" onclick="copyManualResult()">📋 复制手动结果</button>
-                    ${warningHtml}
+                    ${warnHtml}
                 `;
             };
             updateDisplay();
             manualTimer = setInterval(updateDisplay, 1000);
         }
 
-        mFogHour.addEventListener('input', calcManual);
-        mFogMin.addEventListener('input', calcManual);
-        mServerSelect.addEventListener('change', autoCorrect); // 追加：下拉框变动保存
+        let _currentFcData = null;
+        let _fcHideTimer = null;
 
-        function copyManualResult() {
-            const server = document.getElementById('mServer').value;
-            const name = mMonsterSelect.value.split('|')[0];
-            const box = document.getElementById('manualResultBox');
-            const gate = box.querySelectorAll('.res-val')[0].innerText;
-            const force = box.querySelectorAll('.res-val')[1].innerText;
-            const cd = box.querySelectorAll('.res-val')[2].innerText.replace(/\s+/g, ' ');
-            navigator.clipboard.writeText(`[${server}] ${name}\n进闸时间: ${gate}\n强制消失: ${force}\n状态: ${cd}`).then(() => showToast("📋 手动结果已复制！"));
+        function updateFloatingCountdown(gateTime, forceTime, isGreen, isShanxieya, h, m) {
+            _currentFcData = { gateTime, forceTime, isGreen, isShanxieya, h, m };
+            _showFloatingCountdown();
         }
 
-        // 初始化时直接调用一次，确保页面加载即显示数据
+        function _showFloatingCountdown() {
+            if (!_currentFcData) return;
+            const { gateTime, forceTime, isGreen, isShanxieya, h, m } = _currentFcData;
+            const fc = document.getElementById('floatingCountdown');
+            const body = document.getElementById('floatingCountdownBody');
+            
+            const tick = () => {
+                const now = new Date();
+                const diffGate = gateTime - now;
+                const diffForce = forceTime - now;
+                
+                let title = isGreen ? '🟢 存活倒计时' : '🔴 CD 倒计时';
+                let countdownHtml = '';
+                let color = isGreen ? 'var(--blue)' : 'var(--red)';
+
+                if (isGreen) {
+                    if (diffForce <= 0) {
+                        countdownHtml = `<span style="color:var(--red)">❌ 已强制消失</span>`;
+                    } else if (diffGate > 0) {
+                        countdownHtml = `<span style="color:var(--purple)">🌫️ 距大雾: ${formatDHMS(diffGate)}</span>`;
+                        color = 'var(--purple)';
+                    } else {
+                        if (diffForce < 7200000) color = 'var(--red)';
+                        countdownHtml = `<span style="color:${color}">距强制消失: ${formatDHMS(diffForce)}</span>`;
+                    }
+                } else {
+                    if (diffGate <= 0) {
+                        countdownHtml = `<span style="color:var(--accent)">⚡ 已进闸</span>`;
+                        color = 'var(--accent)';
+                    } else {
+                        countdownHtml = `<span style="color:${color}">距进闸: ${formatDHMS(diffGate)}</span>`;
+                    }
+                }
+                
+                let fateHtml = '';
+                if (isShanxieya) fateHtml = `<div class="fc-row" style="margin-top:6px;"><span class="fc-label">🌾 Fate 完成</span><span class="fc-val" style="color:var(--gold)">${fateRecords.length} / 5</span></div>`;
+                
+                body.innerHTML = `
+                    <div class="fc-row" style="margin-bottom:8px;"><span class="fc-label">${title}</span></div>
+                    <div class="fc-row"><span class="fc-label">基准时长</span><span class="fc-val">${h}h ${m}m</span></div>
+                    ${fateHtml}
+                    <div class="fc-countdown">${countdownHtml}</div>
+                    <div class="fc-tip">⏳ 10秒后自动隐藏（可再次召唤）</div>
+                `;
+            };
+            
+            fc.style.display = 'block';
+            if (window._fcTickTimer) clearInterval(window._fcTickTimer);
+            tick();
+            window._fcTickTimer = setInterval(tick, 1000);
+            
+            if (_fcHideTimer) clearTimeout(_fcHideTimer);
+            _fcHideTimer = setTimeout(() => { hideFloatingCountdown(); }, 10000);
+        }
+
+        function hideFloatingCountdown() {
+            document.getElementById('floatingCountdown').style.display = 'none';
+            if (_fcHideTimer) { clearTimeout(_fcHideTimer); _fcHideTimer = null; }
+            if (window._fcTickTimer) { clearInterval(window._fcTickTimer); window._fcTickTimer = null; }
+        }
+
+        function summonFloatingCountdown() {
+            if (!_currentFcData) { calcManual(); showToast('⏱️ 倒计时浮窗已召唤（10秒后自动隐藏）'); return; }
+            _showFloatingCountdown();
+            showToast('⏱️ 倒计时浮窗已召唤（10秒后自动隐藏）');
+        }
+
+        mFogHour.addEventListener('input', calcManual);
+        mFogMin.addEventListener('input', calcManual);
+        mFogSec.addEventListener('input', calcManual);
+        mServerSelect.addEventListener('change', autoCorrect);
+
+        function copyManualResult() {
+            const server = mServerSelect.value;
+            const name = mMonsterSelect.value.split('|')[0];
+            const box = document.getElementById('manualResultBox');
+            const vals = box.querySelectorAll('.res-val');
+            navigator.clipboard.writeText(`[${server}] ${name}\n绝对进闸时间: ${vals[0].innerText}\n预计强制进闸: ${vals[1].innerText}\n状态: ${vals[2].innerText}`).then(() => showToast("📋 手动结果已复制！"));
+        }
+
+        // Fate 记录逻辑
+        function formatFateTime(d) { return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; }
+        function renderFateRecords() {
+            const list = document.getElementById('fateRecordsList'), warnBox = document.getElementById('fateWarningBox');
+            if (fateRecords.length === 0) {
+                list.innerHTML = `<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:8px;">暂无记录，点击上方按钮开始记录 Fate 完成时间</div>`;
+                warnBox.innerHTML = ''; return;
+            }
+            list.innerHTML = fateRecords.map((r, i) => `
+                <div class="fate-record-item">
+                    <span><strong style="color:var(--gold);">#${i+1}</strong> <span class="fate-time">${r.timeStr}</span></span>
+                    <button class="fate-remove" onclick="removeFateRecord(${i})">✕</button>
+                </div>
+            `).join('');
+            
+            if (fateRecords.length >= 5) {
+                warnBox.innerHTML = `
+                    <div class="fate-warning">
+                        ⚠️ 已完成 5 次 Fate！若 S 怪未触发，请清空记录重新计数。
+                        <div style="margin-top:8px; display:flex; gap:8px;">
+                            <button class="btn btn-outline" onclick="onFateTriggered()" style="margin-left:0; background: var(--accent); color: var(--input-bg); border:none;">✅ S怪已触发</button>
+                            <button class="btn btn-red" onclick="clearFateRecords()">❌ 未触发，清空记录</button>
+                        </div>
+                    </div>
+                `;
+            } else warnBox.innerHTML = '';
+            
+            if (_currentFcData && _currentFcData.isShanxieya) _showFloatingCountdown();
+        }
+        function recordFateAuto() {
+            const now = new Date();
+            fateRecords.push({ timeStr: formatFateTime(now), timestamp: now.getTime() });
+            if (fateRecords.length > 5) fateRecords = fateRecords.slice(-5);
+            renderFateRecords(); saveLocalState(); showToast(`🌾 已记录 Fate 完成 (+1)`);
+        }
+        function openFateManualInput() {
+            const now = new Date();
+            document.getElementById('fateManualHour').value = now.getHours();
+            document.getElementById('fateManualMin').value = now.getMinutes();
+            document.getElementById('fateManualSec').value = now.getSeconds();
+            document.getElementById('fateManualModal').style.display = 'flex';
+        }
+        function confirmFateManualInput() {
+            const h = parseInt(document.getElementById('fateManualHour').value) || 0;
+            const m = parseInt(document.getElementById('fateManualMin').value) || 0;
+            const s = parseInt(document.getElementById('fateManualSec').value) || 0;
+            const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            fateRecords.push({ timeStr, timestamp: new Date().getTime() });
+            if (fateRecords.length > 5) fateRecords = fateRecords.slice(-5);
+            renderFateRecords(); saveLocalState();
+            document.getElementById('fateManualModal').style.display = 'none';
+            showToast(`🌾 已手动记录 Fate 完成`);
+        }
+        function removeFateRecord(idx) { fateRecords.splice(idx, 1); renderFateRecords(); saveLocalState(); }
+        function clearFateRecords() { fateRecords = []; renderFateRecords(); saveLocalState(); showToast(`🗑️ Fate 记录已清空`); }
+        function onFateTriggered() { fateRecords = []; renderFateRecords(); saveLocalState(); showToast(`✅ 已标记触发，Fate 记录已清空`); }
+
         autoCorrect();
 
         // ==========================================
-        // 3. 截图识别逻辑
+        // 4. 截图识别
         // ==========================================
         function handleFileSelect(e) { if (e.target.files[0]) processImage(e.target.files[0]); }
         const upArea = document.getElementById('uploadArea');
         upArea.addEventListener('dragover', e => { e.preventDefault(); upArea.classList.add('paste-active'); });
         upArea.addEventListener('dragleave', e => { e.preventDefault(); upArea.classList.remove('paste-active'); });
         upArea.addEventListener('drop', e => { e.preventDefault(); upArea.classList.remove('paste-active'); if(e.dataTransfer.files[0]) processImage(e.dataTransfer.files[0]); });
+        
+        // 【核心修复】加上 e.preventDefault() 防止原图贴在网页上遮挡
         document.addEventListener('paste', e => {
+            e.preventDefault();
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (let i in items) {
                 if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
@@ -594,10 +773,26 @@
             }
         });
 
+        function triggerUpload() { document.getElementById('fileInput').click(); }
+        async function triggerPaste() {
+            try {
+                const items = await navigator.clipboard.read();
+                for (const item of items) {
+                    for (const type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const file = new File([blob], 'paste.png', { type });
+                            processImage(file); return;
+                        }
+                    }
+                }
+                showToast('⚠️ 剪贴板中没有图片，请先复制截图');
+            } catch (err) { showToast('⚠️ 无法读取剪贴板，请直接按 Ctrl+V 粘贴'); }
+        }
+
         function processImage(file) {
             hasScreenshot = true;
             if(document.querySelector('input[name="mStatus"]:checked').value === 'green') calcManual();
-
             document.getElementById('loading').style.display = 'block';
             document.getElementById('results-container').style.display = 'none';
             document.getElementById('copyBtn').style.display = 'none';
@@ -617,8 +812,7 @@
                     let data = imgData.data;
                     for (let i = 0; i < data.length; i += 4) {
                         const r = data[i], g = data[i+1], b = data[i+2];
-                        if (g > 80 && g > r * 1.2 && g > b * 1.2) { data[i]=255; data[i+1]=255; data[i+2]=255; } 
-                        else { data[i]=0; data[i+1]=0; data[i+2]=0; }
+                        if (g > 80 && g > r * 1.2 && g > b * 1.2) { data[i]=255; data[i+1]=255; data[i+2]=255; } else { data[i]=0; data[i+1]=0; data[i+2]=0; }
                     }
                     ctx.putImageData(imgData, 0, 0);
                     const greenImgUrl = canvas.toDataURL();
@@ -628,8 +822,7 @@
                     data = imgData.data;
                     for (let i = 0; i < data.length; i += 4) {
                         const r = data[i], g = data[i+1], b = data[i+2];
-                        if ((r > 120 && r > g * 1.5 && r > b * 1.5) || (r > 100 && b > 100 && g < 80)) { data[i]=255; data[i+1]=255; data[i+2]=255; } 
-                        else { data[i]=0; data[i+1]=0; data[i+2]=0; }
+                        if ((r > 120 && r > g * 1.5 && r > b * 1.5) || (r > 100 && b > 100 && g < 80)) { data[i]=255; data[i+1]=255; data[i+2]=255; } else { data[i]=0; data[i+1]=0; data[i+2]=0; }
                     }
                     ctx.putImageData(imgData, 0, 0);
                     const redImgUrl = canvas.toDataURL();
@@ -647,10 +840,7 @@
                                 parseOCRResults(greenData, redData, originData);
                             });
                         });
-                    }).catch(err => {
-                        document.getElementById('loading').style.display = 'none';
-                        alert("识别失败：" + err);
-                    });
+                    }).catch(err => { document.getElementById('loading').style.display = 'none'; alert("识别失败：" + err); });
                 };
                 img.src = e.target.result;
             };
@@ -665,43 +855,36 @@
             const extractTimes = (text) => {
                 const set = new Set();
                 const matches = text.match(/(\d{1,2})[:：](\d{2})/g);
-                if (matches) {
-                    matches.forEach(m => {
-                        const clean = m.replace('：', ':');
-                        const [h, min] = clean.split(':');
-                        if (parseInt(h) <= 99 && parseInt(min) < 60) set.add(`${parseInt(h)}:${min}`);
-                    });
-                }
+                if (matches) matches.forEach(m => {
+                    const clean = m.replace('：', ':');
+                    const [h, min] = clean.split(':');
+                    if (parseInt(h) <= 99 && parseInt(min) < 60) set.add(`${parseInt(h)}:${min}`);
+                });
                 return set;
             };
 
             const greenTimes = extractTimes(greenData.text);
             const redTimes = extractTimes(redData.text);
-            
             const lines = originData.text.split('\n');
             let rowCount = 0;
             const processed = new Set();
+            const fallbackServer = mServerSelect.value || "";
 
             lines.forEach(line => {
                 let server = "";
-                for (const srv of ALL_SERVERS) {
-                    if (line.includes(srv)) { server = srv; break; }
-                }
+                for (const srv of ALL_SERVERS) { if (line.includes(srv)) { server = srv; break; } }
+                if (!server && fallbackServer) server = fallbackServer;
 
-                let matchedName = "未知";
-                let matchedArea = "未知";
+                let matchedName = "未知", matchedArea = "未知";
                 const cleanLine = line.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); 
                 S_MONSTERS.forEach(sm => {
-                    if (cleanLine.includes(sm.name.replace(/\s/g, ''))) {
-                        matchedName = sm.name;
-                        matchedArea = sm.area;
-                    }
+                    if (cleanLine.includes(sm.name.replace(/\s/g, ''))) { matchedName = sm.name; matchedArea = sm.area; }
                 });
 
                 const timeMatch = line.match(/(\d{1,2})[:：](\d{2})/);
-                let fogMinutes = 0;
+                let fogSeconds = 0;
                 const fogMatch = line.match(/Fog\s*in\s*(\d+)[:：](\d+)(?:[:：](\d+))?/i);
-                if (fogMatch) fogMinutes = parseInt(fogMatch[1]) * 60 + parseInt(fogMatch[2]);
+                if (fogMatch) fogSeconds = parseInt(fogMatch[1]) * 3600 + parseInt(fogMatch[2]) * 60 + (parseInt(fogMatch[3]) || 0);
 
                 if (timeMatch && matchedName !== "未知") {
                     const h = parseInt(timeMatch[1]), m = parseInt(timeMatch[2]);
@@ -714,15 +897,14 @@
                     else if (redTimes.has(timeKey)) isGreen = false;
                     else isGreen = line.includes('%');
 
-                    createResultRow(tbody, server, matchedName, matchedArea, h, m, isGreen, fogMinutes);
+                    createResultRow(tbody, server, matchedName, matchedArea, h, m, isGreen, fogSeconds);
                     rowCount++;
                 }
             });
 
             if (rowCount > 0) {
-                // 追加：历史记录
                 addHistory('截图', `批量导入识别了 ${rowCount} 只 S 怪数据`);
-                showToast(`✅ 识别成功，已存入历史！`);
+                showToast(`✅ 识别成功，截图已作为证据`);
                 saveLocalState();
             } else {
                 alert("未能解析出有效数据。");
@@ -732,16 +914,17 @@
         }
 
         // ==========================================
-        // 4. 表格渲染与交互逻辑
+        // 5. 表格渲染及交互
         // ==========================================
-        function createResultRow(tbody, server, name, area, h, m, isGreen, fogMinutes) {
+        function createResultRow(tbody, server, name, area, h, m, isGreen, fogSeconds) {
             const tr = document.createElement('tr');
             tr.className = 'calc-row';
-            
-            tr.initialData = { server, name, area, h, m, isGreen, fogMinutes };
+            tr.initialData = { server, name, area, h, m, isGreen, fogSeconds: fogSeconds || 0 };
             tr.isGreen = isGreen;
+            const localFogSec = fogSeconds || 0;
 
-            // 追加：data-label 属性（用于移动端显示） 和 onclick 点击事件
+            const fogDisplay = localFogSec > 0 ? `🌫️ 天气: ${Math.floor(localFogSec/3600)}h ${Math.floor((localFogSec%3600)/60)}m 后` : '';
+
             tr.innerHTML = `
                 <td class="server-col" data-label="服务器"><span class="server-tag">${server || '未知'}</span></td>
                 <td data-label="S怪/地区">
@@ -760,18 +943,17 @@
                         <input type="number" class="hour-input" value="${h}" min="0" max="99"> : 
                         <input type="number" class="min-input" value="${m}" min="0" max="59">
                     </div>
-                    ${fogMinutes > 0 ? `<div class="weather-info">🌫️ 天气: ${Math.floor(fogMinutes/60)}h ${fogMinutes%60}m 后</div>` : ''}
+                    ${fogDisplay ? `<div class="weather-info">${fogDisplay}</div>` : ''}
                 </td>
-                <td data-label="进度/天气">
+                <td data-label="综合进度">
                     <div class="progress-container"><div class="progress-fill"></div></div>
                     <div class="weather-info" style="display:block; color: var(--text-muted); font-size: 11px; margin-top: 5px;">
-                        当前进度: <span class="pct-text" style="font-weight:bold; color:var(--text);">0%</span>
-                        <span class="fog-pct-text" style="color: var(--purple);"></span>
+                        进度: <span class="pct-text" style="font-weight:bold; color:var(--text);">0%</span>
                     </div>
                 </td>
-                <td class="time-display time-gate gate-text" data-label="进闸时间">计算中...</td>
-                <td class="time-display time-force force-text" data-label="强制消失">计算中...</td>
-                <td class="countdown-text countdown-text-val" data-label="倒计时">计算中...</td>
+                <td class="time-display time-gate gate-text" data-label="绝对进闸时间">计算中...</td>
+                <td class="countdown-big countdown-text-val" data-label="实时倒计时">计算中...</td>
+                <td class="status-text-col status-hint" data-label="状态提示">计算中...</td>
             `;
             tbody.appendChild(tr);
 
@@ -779,11 +961,10 @@
             const minInput = tr.querySelector('.min-input');
             const progressFill = tr.querySelector('.progress-fill');
             const gateCell = tr.querySelector('.gate-text');
-            const forceCell = tr.querySelector('.force-text');
             const countdownCell = tr.querySelector('.countdown-text-val');
             const statusBadge = tr.querySelector('.status-badge');
             const pctText = tr.querySelector('.pct-text');
-            const fogPctText = tr.querySelector('.fog-pct-text');
+            const statusHint = tr.querySelector('.status-hint');
 
             const formatTimeStr = (d) => {
                 if (!d) return "-";
@@ -795,44 +976,55 @@
                 let currentM = parseInt(minInput.value) || 0;
                 if (currentM > 59) { currentH += Math.floor(currentM / 60); currentM = currentM % 60; hourInput.value = currentH; minInput.value = currentM; }
                 
-                const timeVal = (currentH * 60) + currentM;
+                const timeSec = (currentH * 3600) + (currentM * 60);
                 const now = new Date();
 
                 if (tr.dataset.timerId) clearInterval(tr.dataset.timerId);
 
-                let actualWaitToGate = 0;
-
                 if (tr.isGreen) {
-                    actualWaitToGate = fogMinutes; 
-                    const gateTime = new Date(now.getTime() + actualWaitToGate * 60000);
-                    const forceTime = new Date(gateTime.getTime() + LT_HOURS * 60 * 60000);
+                    const remainSec = Math.max(0, LT_HOURS * 3600 - timeSec);
+                    const gateTime = new Date(now.getTime() + localFogSec * 1000);
+                    const forceTime = new Date(now.getTime() + remainSec * 1000);
                     
-                    gateCell.innerText = formatTimeStr(gateTime);
-                    forceCell.innerText = formatTimeStr(forceTime);
+                    gateCell.innerText = localFogSec > 0 ? formatTimeStr(gateTime) : "立即可进闸";
                     
-                    const currentPct = (timeVal / (LT_HOURS * 60)) * 100;
+                    const currentPct = (timeSec / (LT_HOURS * 3600)) * 100;
                     pctText.innerText = `${currentPct.toFixed(1)}%`;
-
-                    const fogPct = ((timeVal + fogMinutes) / (LT_HOURS * 60)) * 100;
-                    if (fogMinutes > 0) fogPctText.innerText = `(大雾时进度: ${fogPct.toFixed(1)}%)`;
-
                     progressFill.className = 'progress-fill fill-green';
                     progressFill.style.width = `${Math.min(100, currentPct)}%`;
 
-                    if (fogMinutes > 0) {
+                    if (localFogSec > 0) {
                         statusBadge.className = 'status-badge badge-wait-weather';
-                        statusBadge.innerText = '🟣 等待天气 (点此切换)';
+                        statusBadge.innerText = '🟣 等待天气';
+                        statusHint.innerHTML = `<span style="color:var(--purple)">等待大雾</span>`;
                     } else {
                         statusBadge.className = 'status-badge badge-gate-open';
-                        statusBadge.innerText = '🟢 未击杀 (点此切换)';
+                        statusBadge.innerText = '🟢 存活中';
+                        statusHint.innerHTML = `<span style="color:var(--accent)">未击杀</span>`;
                     }
 
                     const updateCountdown = () => {
                         const diffForce = forceTime - new Date();
                         const diffGate = gateTime - new Date();
-                        if (diffForce <= 0) { countdownCell.innerText = "已强制消失！"; countdownCell.className = "countdown-text countdown-red"; clearInterval(timerId); return; }
-                        if (diffGate > 0) { countdownCell.innerText = `等待条件: ${Math.floor(diffGate/3600000)}h ${Math.floor((diffGate%3600000)/60000)}m`; countdownCell.className = "countdown-text countdown-purple"; }
-                        else { countdownCell.innerText = `距消失: ${Math.floor(diffForce/3600000)}h ${Math.floor((diffForce%3600000)/60000)}m`; countdownCell.className = "countdown-text countdown-green"; }
+                        
+                        if (diffForce <= 0) { 
+                            countdownCell.innerHTML = `<span style="color:var(--red)">❌ 已消失</span>`; 
+                            statusHint.innerHTML = `<span style="color:var(--red)">强制消失</span>`;
+                            clearInterval(timerId); 
+                            return; 
+                        }
+                        
+                        if (localFogSec > 0 && diffGate > 0) {
+                            countdownCell.innerHTML = `<span style="color:var(--purple)">距大雾 ${formatDHMS(diffGate)}</span>`;
+                        } else {
+                            if (diffForce < 7200000) {
+                                countdownCell.innerHTML = `<span class="countdown-red blink-warning">存活剩余 ${formatDHMS(diffForce)}</span>`;
+                                statusHint.innerHTML = `<span style="color:var(--red)" class="blink-warning">即将消失</span>`;
+                            } else {
+                                countdownCell.innerHTML = `<span style="color:var(--blue)">存活剩余 ${formatDHMS(diffForce)}</span>`;
+                                statusHint.innerHTML = `<span style="color:var(--accent)">存活中</span>`;
+                            }
+                        }
                     };
                     updateCountdown();
                     const timerId = setInterval(updateCountdown, 1000);
@@ -840,37 +1032,45 @@
                     globalTimers.push(timerId);
 
                 } else {
-                    actualWaitToGate = Math.max(timeVal, fogMinutes); 
-                    const gateTime = new Date(now.getTime() + actualWaitToGate * 60000);
-                    const forceTime = new Date(gateTime.getTime() + LT_HOURS * 60 * 60000);
+                    const cdSec = timeSec;
+                    const waitSec = Math.max(cdSec, localFogSec);
+                    const gateTime = new Date(now.getTime() + waitSec * 1000);
                     
                     gateCell.innerText = formatTimeStr(gateTime);
-                    forceCell.innerText = formatTimeStr(forceTime);
 
-                    const remainCD = CD_HOURS * 60 - actualWaitToGate;
-                    const percent = Math.min(100, Math.max(0, (remainCD / (CD_HOURS * 60)) * 100));
+                    const remainCDSec = CD_HOURS * 3600 - waitSec;
+                    const percent = Math.min(100, Math.max(0, (remainCDSec / (CD_HOURS * 3600)) * 100));
                     
                     pctText.innerText = `${percent.toFixed(1)}%`;
-                    if (fogMinutes > 0) fogPctText.innerText = `(受制于天气)`;
-
                     progressFill.className = 'progress-fill fill-red';
                     progressFill.style.width = `${percent}%`;
 
                     statusBadge.className = 'status-badge badge-cd';
-                    statusBadge.innerText = '🔴 已击杀 (点此切换)';
+                    statusBadge.innerText = '🔴 已击杀';
+                    statusHint.innerHTML = `<span style="color:var(--red)">CD 中</span>`;
 
                     const updateCountdown = () => {
-                        const diff = gateTime - new Date();
-                        if (diff <= 0) { countdownCell.innerText = "已进闸，可触发！"; countdownCell.className = "countdown-text countdown-green"; clearInterval(timerId); return; }
-                        countdownCell.innerText = `进闸还需: ${Math.floor(diff/3600000)}h ${Math.floor((diff%3600000)/60000)}m`;
-                        countdownCell.className = "countdown-text countdown-red";
+                        const diffGate = gateTime - new Date();
+                        
+                        if (diffGate <= 0) { 
+                            countdownCell.innerHTML = `<span style="color:var(--accent)">⚡ 已进闸</span>`; 
+                            statusHint.innerHTML = `<span style="color:var(--accent)">可触发</span>`;
+                            clearInterval(timerId); 
+                            return; 
+                        }
+                        
+                        if (diffGate < 3600000) {
+                            countdownCell.innerHTML = `<span class="countdown-red blink-warning">距进闸 ${formatDHMS(diffGate)}</span>`;
+                        } else {
+                            countdownCell.innerHTML = `<span style="color:var(--red)">距进闸 ${formatDHMS(diffGate)}</span>`;
+                        }
                     };
                     updateCountdown();
                     const timerId = setInterval(updateCountdown, 1000);
                     tr.dataset.timerId = timerId;
                     globalTimers.push(timerId);
                 }
-                saveLocalState(); // 追加保存
+                saveLocalState();
             };
 
             tr.recalculate = recalculate;
@@ -880,13 +1080,12 @@
         }
 
         // ==========================================
-        // 5. 击杀验证与撤销逻辑
+        // 6. 击杀验证与撤销逻辑
         // ==========================================
         function openKillModal(tr) {
             currentKillRow = tr;
             const name = tr.initialData.name;
             document.getElementById('modalMonsterName').innerText = name;
-            
             modalHasEvidence = false;
             document.getElementById('modalPreviewImg').src = "";
             document.getElementById('modalPreviewImg').style.display = 'none';
@@ -895,32 +1094,36 @@
             const btnConfirm = document.getElementById('btnConfirmKill');
             const desc = document.getElementById('modalDesc');
 
+            const currentH = parseInt(tr.querySelector('.hour-input').value) || 0;
+            const currentM = parseInt(tr.querySelector('.min-input').value) || 0;
+            const elapsedSec = currentH * 3600 + currentM * 60;
+            const forcedVanished = tr.isGreen && elapsedSec >= LT_HOURS * 3600;
+
             if (tr.isGreen) {
-                desc.innerHTML = `您正在将 <strong>${name}</strong> 标记为已击杀。<br><span style="color:var(--red)">当前为存活状态，必须提供带有“服务器+地区+怪名+红色时间”的截图证据！</span>`;
-                btnConfirm.classList.remove('ready');
+                if (forcedVanished) {
+                    desc.innerHTML = `您正在将 <strong>${name}</strong> 标记为已击杀。<br><span style="color:var(--accent)">该怪已超过 ${LT_HOURS}h 存活时间（强制消失），无需提供截图证据。</span>`;
+                    btnConfirm.classList.add('ready');
+                } else {
+                    desc.innerHTML = `您正在将 <strong>${name}</strong> 标记为已击杀。<br><span style="color:var(--red)">当前为存活状态，必须提供带有"服务器+地区+怪名+红色时间"的截图证据！</span>`;
+                    btnConfirm.classList.remove('ready');
+                }
             } else {
-                desc.innerHTML = `您正在将 <strong>${name}</strong> 重置 CD（重新开始 84h 倒计时）。<br><span style="color:var(--accent)">该操作针对已在 CD 中的怪进行时间修正，无需提供截图。</span>`;
+                desc.innerHTML = `您正在将 <strong>${name}</strong> 重置 CD（重新开始 ${CD_HOURS}h 倒计时）。<br><span style="color:var(--accent)">该操作针对已在 CD 中的怪进行时间修正，无需提供截图。</span>`;
                 btnConfirm.classList.add('ready');
             }
-
             document.getElementById('killModal').style.display = 'flex';
         }
 
-        function closeKillModal() {
-            document.getElementById('killModal').style.display = 'none';
-            currentKillRow = null;
-        }
+        function closeKillModal() { document.getElementById('killModal').style.display = 'none'; currentKillRow = null; }
 
         function handleModalImage(e) {
             const file = e.target.files[0];
             if (!file) return;
             modalHasEvidence = true;
-            
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = document.getElementById('modalPreviewImg');
-                img.src = event.target.result;
-                img.style.display = 'block';
+                img.src = event.target.result; img.style.display = 'block';
                 document.getElementById('modalUploadArea').classList.add('has-img');
                 document.getElementById('btnConfirmKill').classList.add('ready');
             };
@@ -928,30 +1131,32 @@
         }
         
         document.getElementById('killModal').addEventListener('paste', e => {
+            e.preventDefault();
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (let i in items) {
                 if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
-                    const file = items[i].getAsFile();
-                    handleModalImage({ target: { files: [file] } });
-                    break;
+                    handleModalImage({ target: { files: [items[i].getAsFile()] } }); break;
                 }
             }
         });
 
         function executeKill() {
             if (!currentKillRow) return;
-            if (currentKillRow.isGreen && !modalHasEvidence) return;
+            const currentH = parseInt(currentKillRow.querySelector('.hour-input').value) || 0;
+            const currentM = parseInt(currentKillRow.querySelector('.min-input').value) || 0;
+            const elapsedSec = currentH * 3600 + currentM * 60;
+            const forcedVanished = currentKillRow.isGreen && elapsedSec >= LT_HOURS * 3600;
+            
+            if (currentKillRow.isGreen && !forcedVanished && !modalHasEvidence) { alert("请先提供击杀截图证据！"); return; }
 
             currentKillRow.isGreen = false;
             currentKillRow.querySelector('.hour-input').value = CD_HOURS;
             currentKillRow.querySelector('.min-input').value = 0;
             currentKillRow.recalculate();
             
-            // 追加：历史记录
             const sName = currentKillRow.initialData.name;
             const sServer = currentKillRow.initialData.server;
             addHistory('击杀', `[${sServer}] ${sName} 标记已击杀，CD重置为 ${CD_HOURS}h`);
-            
             closeKillModal();
         }
 
@@ -961,7 +1166,7 @@
             tr.querySelector('.hour-input').value = init.h;
             tr.querySelector('.min-input').value = init.m;
             tr.recalculate();
-            showToast(`↩️ 已撤销操作，恢复到初始状态`); // 追加提示
+            showToast(`↩️ 已撤销操作，恢复到初始状态`);
         }
 
         function copyResults() {
@@ -970,32 +1175,23 @@
             document.querySelectorAll('.calc-row').forEach(tr => {
                 const server = isHideServer ? "" : `[${tr.querySelector('.server-tag').innerText}] `;
                 const name = tr.children[1].children[0].innerText;
-                // 修正复制时带出 (点此切换) 的问题
-                const status = tr.querySelector('.status-badge').innerText.replace(' (点此切换)', '');
+                const status = tr.querySelector('.status-hint').innerText;
                 const gate = tr.querySelector('.gate-text').innerText;
-                const force = tr.querySelector('.force-text').innerText;
                 const countdown = tr.querySelector('.countdown-text-val').innerText;
                 const pct = tr.querySelector('.pct-text').innerText;
-                text += `${server}${name} | ${status} | 进度:${pct} | 进闸:${gate} | 强制消失:${force} | ${countdown}\n`;
+                text += `${server}${name} | ${status} | 进度:${pct} | 绝对进闸:${gate} | ${countdown}\n`;
             });
-            navigator.clipboard.writeText(text).then(() => showToast("📋 表格结果已复制到剪贴板！")); // 修改为 Toast 提示
+            navigator.clipboard.writeText(text).then(() => showToast("📋 表格结果已复制到剪贴板！"));
         }
 
         // ==========================================
-        // 【以下为纯追加的新功能代码，与上方源码无冲突】
+        // 历史记录与本地缓存
         // ==========================================
-
-        // --- 1. 历史记录与本地缓存 ---
         let historyDB = [];
         try {
             const rawHistory = localStorage.getItem('ff14_history_db');
-            if (rawHistory && rawHistory !== 'undefined') {
-                historyDB = JSON.parse(rawHistory);
-                if (!Array.isArray(historyDB)) historyDB = []; 
-            }
-        } catch (e) {
-            localStorage.removeItem('ff14_history_db');
-        }
+            if (rawHistory && rawHistory !== 'undefined') { historyDB = JSON.parse(rawHistory); if (!Array.isArray(historyDB)) historyDB = []; }
+        } catch (e) { localStorage.removeItem('ff14_history_db'); }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
@@ -1011,64 +1207,48 @@
                 document.querySelectorAll('.calc-row').forEach(tr => {
                     if(tr.initialData) {
                         tableData.push({
-                            server: tr.initialData.server,
-                            name: tr.initialData.name,
-                            area: tr.initialData.area,
-                            h: tr.querySelector('.hour-input').value,
-                            m: tr.querySelector('.min-input').value,
-                            isGreen: tr.isGreen,
-                            fogMinutes: tr.initialData.fogMinutes || 0
+                            server: tr.initialData.server, name: tr.initialData.name, area: tr.initialData.area,
+                            h: tr.querySelector('.hour-input').value, m: tr.querySelector('.min-input').value,
+                            isGreen: tr.isGreen, fogSeconds: tr.initialData.fogSeconds || 0
                         });
                     }
                 });
                 const manualData = { 
-                    server: mServerSelect.value || '', 
-                    monster: mMonsterSelect.value || '未知|未知', 
+                    server: mServerSelect.value || '', monster: mMonsterSelect.value || '未知|未知', 
                     status: document.querySelector('input[name="mStatus"]:checked').value, 
-                    h: mHour.value, 
-                    m: mMin.value, 
-                    p: mPercent.value, 
-                    fogH: mFogHour.value, 
-                    fogM: mFogMin.value,
-                    isMaintenance: isMaintenanceMode // 保存维护模式状态
+                    h: mHour.value, m: mMin.value, p: mPercent.value, 
+                    fogH: mFogHour.value, fogM: mFogMin.value, fogS: mFogSec.value,
+                    isMaintenance: isMaintenanceMode, fateRecords: fateRecords
                 };
                 localStorage.setItem('ff14_fate_data', JSON.stringify({ table: tableData, manual: manualData }));
             } catch(e) {}
         }
 
         function loadLocalState() {
-            // 恢复主题
             const savedTheme = localStorage.getItem('ff14_theme') || 'dark';
             changeTheme(savedTheme);
-
             const dataStr = localStorage.getItem('ff14_fate_data');
             if (!dataStr || dataStr === 'undefined') return;
             try {
                 const data = JSON.parse(dataStr);
-                
-                // 恢复维护模式
                 if (data.manual && data.manual.isMaintenance) {
-                    isMaintenanceMode = true;
-                    CD_HOURS = 50;
+                    isMaintenanceMode = true; CD_HOURS = 50;
                     document.getElementById('maintenanceToggle').classList.add('active');
                 }
-                
                 if (data.manual) {
-                    if (data.manual.server && mServerSelect.querySelector(`option[value="${data.manual.server}"]`)) {
-                        mServerSelect.value = data.manual.server;
+                    if (data.manual.server && mServerSelect.querySelector(`option[value="${data.manual.server}"]`)) mServerSelect.value = data.manual.server;
+                    if (data.manual.monster && mMonsterSelect.querySelector(`option[value="${data.manual.monster}"]`)) mMonsterSelect.value = data.manual.monster;
+                    const savedStatus = data.manual.status || 'green';
+                    const targetRadio = document.querySelector(`input[name="mStatus"][value="${savedStatus}"]`);
+                    if (targetRadio) targetRadio.checked = true;
+                    mHour.value = data.manual.h || 0; mMin.value = data.manual.m || 0; mPercent.value = data.manual.p || 0;
+                    mFogHour.value = data.manual.fogH || 0; mFogMin.value = data.manual.fogM || 0; mFogSec.value = data.manual.fogS || 0;
+                    if(mMonsterSelect.value.includes('奇里格')) mFogGroup.style.display = 'block';
+                    if(mMonsterSelect.value.includes('山谢亚')) {
+                        mFateGroup.style.display = 'block';
+                        if (data.manual.fateRecords && Array.isArray(data.manual.fateRecords)) { fateRecords = data.manual.fateRecords; renderFateRecords(); }
                     }
-                    if (data.manual.monster && mMonsterSelect.querySelector(`option[value="${data.manual.monster}"]`)) {
-                        mMonsterSelect.value = data.manual.monster;
-                    }
-                    document.querySelector(`input[name="mStatus"][value="${data.manual.status || 'red'}"]`).checked = true;
-                    mHour.value = data.manual.h || 0;
-                    mMin.value = data.manual.m || 0;
-                    mPercent.value = data.manual.p || 0;
-                    mFogHour.value = data.manual.fogH || 0;
-                    mFogMin.value = data.manual.fogM || 0;
-                    if(mMonsterSelect.value && mMonsterSelect.value.includes('奇里格')) mFogGroup.style.display = 'flex';
                 }
-                
                 if (data.table && data.table.length > 0) {
                     hasScreenshot = true; 
                     const tbody = document.getElementById('tableBody');
@@ -1076,12 +1256,10 @@
                     document.getElementById('results-container').style.display = 'block';
                     document.getElementById('copyBtn').style.display = 'block';
                     data.table.forEach(row => {
-                        createResultRow(tbody, row.server || '未知', row.name || '未知', row.area || '未知', row.h || 0, row.m || 0, !!row.isGreen, row.fogMinutes || 0);
+                        createResultRow(tbody, row.server || '未知', row.name || '未知', row.area || '未知', row.h || 0, row.m || 0, !!row.isGreen, row.fogSeconds || 0);
                     });
                 }
-            } catch (e) {
-                localStorage.removeItem('ff14_fate_data');
-            }
+            } catch (e) { localStorage.removeItem('ff14_fate_data'); }
         }
 
         function addHistory(type, content) {
@@ -1102,23 +1280,13 @@
             const keyword = document.getElementById('historySearchInput').value.toLowerCase();
             const list = document.getElementById('historyList');
             list.innerHTML = '';
-            
             if (!historyDB || !Array.isArray(historyDB)) return;
-
             const filtered = historyDB.filter(item => item && item.content && item.content.toLowerCase().includes(keyword));
-            
-            if (filtered.length === 0) {
-                list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">没有找到匹配的记录</div>`;
-                return;
-            }
-
+            if (filtered.length === 0) { list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">没有找到匹配的记录</div>`; return; }
             filtered.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'history-item';
-                div.innerHTML = `
-                    <div><span class="history-type">${item.type||'记录'}</span> ${item.content}</div>
-                    <div class="history-time">${item.time||''}</div>
-                `;
+                div.innerHTML = `<div><span class="history-type">${item.type||'记录'}</span> ${item.content}</div><div class="history-time">${item.time||''}</div>`;
                 list.appendChild(div);
             });
         }
@@ -1131,7 +1299,6 @@
             }
         }
 
-        // --- 2. 主题切换与清除功能 ---
         function changeTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme === 'dark' ? '' : theme);
             document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
@@ -1141,25 +1308,14 @@
         }
 
         function clearManualInputs() {
-            mHour.value = 0;
-            mMin.value = 0;
-            mPercent.value = 0;
-            mFogHour.value = 0;
-            mFogMin.value = 0;
-            mServerSelect.selectedIndex = 0;
-            mMonsterSelect.selectedIndex = 0;
-            document.querySelector('input[name="mStatus"][value="red"]').checked = true;
-            mFogGroup.style.display = 'none';
-            autoCorrect();
-            showToast("🗑️ 手动输入已清空");
+            mHour.value = 0; mMin.value = 0; mPercent.value = 0; mFogHour.value = 0; mFogMin.value = 0; mFogSec.value = 0;
+            mServerSelect.selectedIndex = 0; mMonsterSelect.selectedIndex = 0;
+            document.querySelector('input[name="mStatus"][value="green"]').checked = true;
+            mFogGroup.style.display = 'none'; mFateGroup.style.display = 'none'; fateRecords = [];
+            hideFloatingCountdown(); autoCorrect(); showToast("🗑️ 手动输入已清空");
         }
 
-        // --- 3. 页面加载完成追加执行 ---
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                loadLocalState(); 
-            }, 100);
-        });
+        window.addEventListener('load', () => { setTimeout(() => { loadLocalState(); }, 100); });
     </script>
 </body>
 </html>
