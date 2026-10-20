@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FF14 S怪 精确时间计算器 + 智能排车</title>
+    <title>FF14 S怪 精确时间计算器 + 智能排车 ULTIMATE</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        /* =========================================
-           1. 主题变量定义
-           ========================================= */
         :root { 
             --bg: #0f0f1a; --panel: #1a1a2e; --panel-light: #22223b; --accent: #00ff7f; --text: #e0e0e0; --text-muted: #888;
             --red: #ff4d4d; --gold: #f39c12; --blue: #00bfff; --border: #2a2a4a; --purple: #9b59b6;
@@ -33,11 +30,9 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .blink-warning { animation: blink 1s infinite; }
 
-        /* =========================================
-           2. 基础样式与 UI 美化
-           ========================================= */
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: background 0.3s, color 0.3s; }
+        html, body { overflow-y: auto !important; height: auto; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: background 0.3s, color 0.3s; min-height: 100vh;}
         h1 { color: var(--accent); margin-bottom: 5px; text-align: center; }
         .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; text-align: center; min-height: 20px; }
 
@@ -50,9 +45,38 @@
         .btn-outline { background: transparent; border-color: var(--input-border); color: var(--text); }
         .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
-        /* =========================================
-           3. 手动计算区
-           ========================================= */
+        .top-bar { width: 100%; max-width: 1250px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; position: relative; z-index: 100;}
+        .top-bar-left { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        .toolbox-wrapper { position: relative; display: inline-block; }
+        .toolbox-menu { 
+            display: none; position: absolute; background: var(--panel); min-width: 220px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3); z-index: 1000; border-radius: 6px; 
+            border: 1px solid var(--border); top: 100%; left: 0; padding: 5px 0;
+        }
+        .toolbox-menu button { 
+            width: 100%; text-align: left; padding: 10px 15px; border: none; background: none; 
+            color: var(--text); cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px;
+        }
+        .toolbox-menu button:hover { background: var(--panel-light); color: var(--accent); }
+        .toolbox-wrapper:hover .toolbox-menu { display: block; }
+        
+        .btn-large-route { 
+            padding: 12px 30px; font-size: 18px; font-weight: bold; 
+            background: linear-gradient(90deg, var(--blue), var(--purple)); 
+            color: #fff; border-radius: 8px; border: none; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.2s; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-large-route:hover { transform: scale(1.05); filter: brightness(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+
+        body[data-layout="landscape"] .manual-card,
+        body[data-layout="landscape"] .upload-area,
+        body[data-layout="landscape"] #results-container,
+        body[data-layout="landscape"] .top-bar { max-width: 100% !important; }
+        body[data-layout="landscape"] .input-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; }
+        body[data-layout="landscape"] .status-radio { flex-direction: row !important; }
+
         .manual-card { background: var(--panel); padding: 20px 30px; border-radius: 12px; width: 100%; max-width: 1250px; box-sizing: border-box; margin-bottom: 20px; border-left: 5px solid var(--accent); box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; transition: background 0.3s; }
         .manual-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .manual-header h2 { margin: 0; font-size: 18px; color: var(--text); }
@@ -65,12 +89,14 @@
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         .input-group label { font-size: 13px; color: var(--text-muted); font-weight: bold; }
         
-        .row-flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .row-flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; }
         
-        select, input[type="number"] { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 10px; border-radius: 6px; font-size: 15px; outline: none; transition: border 0.2s; }
-        select:focus, input[type="number"]:focus { border-color: var(--accent); }
+        select, input[type="number"], input[type="text"] { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 10px; border-radius: 6px; font-size: 15px; outline: none; transition: border 0.2s; }
+        select:focus, input[type="number"]:focus, input[type="text"]:focus { border-color: var(--accent); }
         select { cursor: pointer; color: var(--accent); width: 100%; max-width: 250px; }
         input[type="number"] { width: 70px; text-align: center; font-family: monospace; font-weight: bold; }
+        
+        .custom-select-input { cursor: pointer; width: 100%; max-width: 250px; color: var(--accent); font-weight: bold; background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px; border-radius: 6px; font-size: 15px; outline: none; transition: border 0.2s; }
         
         .status-radio { display: flex; gap: 10px; }
         .status-radio label { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-weight: bold; padding: 8px 15px; border-radius: 6px; background: var(--input-bg); border: 1px solid var(--input-border); transition: 0.2s; flex: 1; text-align: center; }
@@ -107,46 +133,23 @@
         .fate-record-item .fate-remove { background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 14px; font-weight: bold; padding: 0 5px; }
         .fate-warning { color: var(--red); font-weight: bold; font-size: 13px; margin-top: 10px; padding: 10px; background: rgba(255,77,77,0.1); border: 1px dashed var(--red); border-radius: 6px; }
 
-        /* =========================================
-           4. 上传识别区
-           ========================================= */
-        .top-bar { width: 100%; max-width: 1250px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-        .top-bar-left { display: flex; gap: 10px; flex-wrap: wrap; }
-        
         .upload-area { border: 2px dashed var(--input-border); border-radius: 12px; padding: 20px; text-align: center; width: 100%; max-width: 1250px; background: var(--panel); margin-bottom: 20px; transition: 0.3s; box-sizing: border-box; position: relative; }
         .upload-area:hover, .upload-area.paste-active { border-color: var(--accent); background: var(--panel-light); }
         
         .ocr-server-bar { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed var(--border); }
         .ocr-server-bar label { font-size: 14px; color: var(--text); font-weight: bold; }
-        .server-groups-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+        .server-groups-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 8px; text-align: left; margin-top: 10px; }
         
         .region-details { border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); overflow: hidden; transition: 0.2s; }
         .region-details[open] { border-color: var(--accent); box-shadow: 0 0 8px rgba(0,0,0,0.1); }
         
         .region-details summary { 
-            padding: 10px 15px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            background: var(--panel-light); 
-            color: var(--accent); 
-            user-select: none; 
-            outline: none; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            list-style: none;
+            padding: 10px 15px; cursor: pointer; font-weight: bold; background: var(--panel-light); color: var(--accent); 
+            user-select: none; outline: none; display: flex; justify-content: space-between; align-items: center; list-style: none;
         }
-        .region-details summary::-webkit-details-marker { 
-            display: none;
-        }
-        .region-details summary::after { 
-            content: '▼'; 
-            font-size: 12px; 
-            transition: transform 0.2s; 
-        }
-        .region-details[open] summary::after { 
-            transform: rotate(180deg); 
-        }
+        .region-details summary::-webkit-details-marker { display: none; }
+        .region-details summary::after { content: '▼'; font-size: 12px; transition: transform 0.2s; }
+        .region-details[open] summary::after { transform: rotate(180deg); }
         .region-details summary:hover { filter: brightness(1.1); }
 
         .server-checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; }
@@ -156,12 +159,12 @@
         .upload-btn-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
         .upload-btn-group button { padding: 10px 20px; font-size: 14px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         input[type="file"] { display: none; }
+        
         #loading { display: none; text-align: center; color: var(--gold); font-weight: bold; margin-bottom: 20px; }
+        .progress-bar-container { width: 100%; max-width: 400px; height: 10px; background: var(--border); border-radius: 5px; margin: 10px auto; overflow: hidden; display: none;}
+        .progress-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
         #progress-text { font-size: 12px; color: var(--text-muted); display: block; margin-top: 5px; }
 
-        /* =========================================
-           5. 表格样式
-           ========================================= */
         #results-container { width: 100%; max-width: 1250px; display: none; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); table-layout: auto; }
         th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
@@ -170,6 +173,14 @@
         .hide-server .server-col { display: none; }
         .hide-action .action-col { display: none !important; }
         
+        .server-th-flex { display: flex; align-items: center; justify-content: space-between; gap: 10px;}
+        .quick-fix-server { position: relative; display: inline-block; }
+        .quick-fix-btn { background: var(--gold); color: var(--panel); border: none; border-radius: 4px; cursor: pointer; padding: 2px 6px; font-size: 12px; font-weight: bold; }
+        .quick-fix-menu { display: none; position: absolute; top: 100%; left: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 5px; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); max-height: 200px; overflow-y: auto; min-width: 150px; }
+        .quick-fix-menu button { display: block; width: 100%; text-align: left; padding: 5px 10px; background: none; border: none; color: var(--text); cursor: pointer; font-size: 12px; }
+        .quick-fix-menu button:hover { background: var(--panel-light); color: var(--accent); }
+        .quick-fix-server:hover .quick-fix-menu { display: block; }
+
         .server-tag { background: var(--accent); color: var(--panel); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; white-space: nowrap; }
         
         .time-text-display { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100px; }
@@ -210,11 +221,8 @@
         .btn-undo-row { background: var(--text-muted); color: var(--panel); border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
         .btn-undo-row:hover { filter: brightness(0.9); }
 
-        /* =========================================
-           6. 弹窗与浮窗
-           ========================================= */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--panel); padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); border: 1px solid var(--border); text-align: center; position: relative; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--panel); padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); border: 1px solid var(--border); text-align: center; position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-title { font-size: 20px; color: var(--accent); margin-bottom: 10px; font-weight: bold; }
         .modal-desc { color: var(--text); font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
         .modal-upload-area { border: 2px dashed var(--input-border); border-radius: 8px; padding: 20px; margin-bottom: 15px; background: var(--input-bg); cursor: pointer; transition: 0.2s; }
@@ -230,7 +238,7 @@
         .btn-confirm.ready:hover { filter: brightness(0.9); }
         canvas { display: none; }
 
-        .btn-close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: var(--text-muted); font-size: 24px; line-height: 1; cursor: pointer; transition: 0.2s; padding: 0; }
+        .btn-close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: var(--text-muted); font-size: 24px; line-height: 1; cursor: pointer; transition: 0.2s; padding: 0; z-index: 10;}
         .btn-close-modal:hover { color: var(--red); transform: scale(1.1); }
 
         #historyModal .modal-content { max-width: 700px; text-align: left; }
@@ -265,7 +273,6 @@
         #floatingCountdown .fc-countdown { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-family: monospace; font-size: 15px; font-weight: bold; text-align: center; }
         #floatingCountdown .fc-tip { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 6px; }
 
-        /* 排车工具专属样式 */
         .route-textarea { width: 100%; height: 140px; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; box-sizing: border-box; resize: vertical; margin-bottom: 10px; outline: none; font-size: 13px; line-height: 1.5; }
         .route-textarea:focus { border-color: var(--accent); }
         .route-output { color: var(--gold); border-style: dashed; height: 200px; font-size: 14px; }
@@ -277,7 +284,23 @@
         .v6 { color: var(--gold); font-weight: bold; background: rgba(243,156,18,0.1); padding: 2px 4px; border-radius: 3px;}
         .v5 { color: var(--blue); font-weight: bold; background: rgba(0,191,255,0.1); padding: 2px 4px; border-radius: 3px;}
 
-        /* 移动端适配 */
+        .btn-fix { background: var(--gold); color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
+        .btn-fix:hover { filter: brightness(0.9); }
+        .route-add-btn { background: var(--accent); color: var(--panel); border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; margin-left: 5px;}
+        .route-add-btn:hover { filter: brightness(0.9); }
+
+        /* 自定义下拉面板样式 */
+        .custom-dropdown-panel {
+            display: none; position: absolute; top: 100%; left: 0; z-index: 1000;
+            background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: 300px; max-height: 350px;
+            overflow-y: auto; padding: 10px; margin-top: 5px; text-align: left;
+        }
+        .dropdown-search { width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); }
+        .dropdown-region-title { font-size: 13px; color: var(--accent); font-weight: bold; margin: 8px 0 4px 0; padding-left: 5px; border-left: 3px solid var(--accent); }
+        .dropdown-item { padding: 6px 10px; cursor: pointer; border-radius: 4px; font-size: 14px; color: var(--text); transition: 0.1s; }
+        .dropdown-item:hover { background: var(--panel-light); color: var(--accent); }
+
         @media (max-width: 768px) {
             body { padding: 10px; }
             .theme-switcher { top: 10px; right: 10px; }
@@ -287,7 +310,7 @@
             .status-radio { flex-direction: column; }
             .status-radio label { width: 100%; }
             .row-flex { width: 100%; }
-            select { max-width: 100%; }
+            select, .custom-select-input { max-width: 100%; }
             .manual-result-box { flex-direction: column; align-items: flex-start; gap: 15px; }
             .btn-copy-manual { margin-left: 0; width: 100%; }
             .upload-btn-group { flex-direction: column; }
@@ -309,7 +332,7 @@
         }
     </style>
 </head>
-<body>
+<body data-layout="portrait">
     <div class="theme-switcher">
         <div class="theme-btn dark active" onclick="changeTheme('dark')" title="暗黑模式"></div>
         <div class="theme-btn light" onclick="changeTheme('light')" title="明亮模式"></div>
@@ -317,10 +340,9 @@
         <div class="theme-btn sky" onclick="changeTheme('sky')" title="天蓝模式"></div>
     </div>
 
-    <h1>FF14 S怪 精确时间计算器 & 智能排车</h1>
+    <h1>FF14 S怪 精确时间计算器 & 智能排车 ULTIMATE</h1>
     <div class="subtitle"></div>
 
-    <!-- 手动计算模块 -->
     <div class="manual-card">
         <div class="manual-header">
             <h2>⌨️ 快速手动输入与计算</h2>
@@ -337,7 +359,11 @@
                 <div class="input-group" id="mServerWrapper">
                     <label>服务器 / 大区</label>
                     <div class="row-flex">
-                        <select id="mServer"></select>
+                        <input type="text" id="mServer" class="custom-select-input" placeholder="点击选择或搜索服务器" readonly>
+                        <div id="serverDropdownPanel" class="custom-dropdown-panel">
+                            <input type="text" id="serverSearchInput" class="dropdown-search" placeholder="🔍 模糊搜索服务器..." oninput="filterDropdownServers()">
+                            <div id="serverDropdownList"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="input-group">
@@ -418,16 +444,22 @@
         </div>
     </div>
 
-    <!-- 截图识别模块 -->
     <div class="top-bar">
         <div class="top-bar-left">
-            <button class="btn btn-outline" id="maintenanceToggle" onclick="toggleMaintenance()">🛠️ 服务器维护后模式 (CD 50h)</button>
-            <button class="btn btn-outline" id="toggleServerBtn" onclick="toggleServerCol()">👁️ 显示表格服务器列</button>
-            <button class="btn btn-outline" id="toggleActionBtn" onclick="toggleActionCol()">👁️ 显示操作列</button>
-            <button class="btn btn-outline" onclick="openHistoryModal()" style="border-color: var(--gold); color: var(--gold);">📜 历史记录</button>
-            <button class="btn btn-outline" onclick="openBatchServerModal()" style="border-color: var(--purple); color: var(--purple);">🔧 批量修正服务器</button>
-            <!-- 新增：智能排车按钮 -->
-            <button class="btn btn-outline" onclick="openRouteModal()" style="border-color: var(--blue); color: var(--blue);">🚗 智能排车(OCR/文本)</button>
+            <div class="toolbox-wrapper">
+                <button class="btn btn-outline" style="border-color: var(--gold); color: var(--gold); font-size: 14px; padding: 10px 15px;">🛠️ 工具箱 ▼</button>
+                <div class="toolbox-menu">
+                    <button id="maintenanceToggle" onclick="toggleMaintenance()">🛠️ 服务器维护后模式 (CD 50h)</button>
+                    <button id="toggleServerBtn" onclick="toggleServerCol()">👁️ 显示表格服务器列</button>
+                    <button id="toggleActionBtn" onclick="toggleActionCol()">👁️ 显示操作列</button>
+                    <button onclick="openHistoryModal()" style="color: var(--gold);">📜 历史记录</button>
+                    <button onclick="openBatchServerModal()" style="color: var(--purple);">🔧 批量修正服务器</button>
+                    <button onclick="toggleLayout()" style="color: var(--blue);">🔄 切换 横板/竖板 布局</button>
+                </div>
+            </div>
+            
+            <button class="btn-large-route" onclick="openRouteModal()">🚗 排车帮助</button>
+            <button class="btn btn-accent" onclick="openManualAddModal()" style="background: var(--gold); color: #fff; font-size: 16px; padding: 10px 20px;">➕ 手动录入 S怪</button>
         </div>
         <button class="btn btn-accent" id="copyBtn" onclick="copyResults()" style="display:none;">📋 复制表格结果</button>
     </div>
@@ -435,6 +467,7 @@
     <div class="upload-area" id="uploadArea">
         <div class="ocr-server-bar">
             <label>📸 截图识别默认服务器 (可多选)：</label>
+            <input type="text" id="ocrSearch" class="dropdown-search" placeholder="🔍 输入大区或服务器名搜索..." oninput="filterOcrServers()" style="max-width: 800px; margin-bottom: 10px;">
             <div class="server-groups-container" id="ocrServerMultiContainer"></div>
             <button class="btn btn-accent" onclick="saveOcrDefaultServer()" style="padding: 8px 12px; margin-top: 5px;">⭐ 保存设置</button>
         </div>
@@ -445,16 +478,31 @@
             <button class="btn btn-accent" onclick="triggerUpload()">📤 选择文件上传</button>
             <button class="btn btn-outline" onclick="triggerPaste()" style="color:var(--blue); border-color:var(--blue);">📋 直接粘贴图片</button>
         </div>
+        <button class="btn btn-outline" id="viewOriginalBtn" onclick="openOriginalImageModal()" style="display:none; color:var(--gold); border-color:var(--gold); margin-top: 15px; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;">🖼️ 查看已上传原图</button>
         <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
     </div>
 
-    <div id="loading">正在解析图像...<span id="progress-text"></span></div>
+    <div id="loading">
+        正在解析图像...
+        <div class="progress-bar-container" id="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+        <span id="progress-text"></span>
+    </div>
 
     <div id="results-container">
         <table id="resultTable" class="hide-server hide-action">
             <thead>
                 <tr>
-                    <th class="server-col">服务器</th>
+                    <th class="server-col">
+                        <div class="server-th-flex">
+                            <span>服务器</span>
+                            <div class="quick-fix-server">
+                                <button class="quick-fix-btn">快捷修改</button>
+                                <div class="quick-fix-menu" id="quickFixServerMenu"></div>
+                            </div>
+                        </div>
+                    </th>
                     <th>S怪名称 / 地区</th>
                     <th>状态</th>
                     <th class="action-col">操作</th>
@@ -469,7 +517,14 @@
         </table>
     </div>
 
-    <!-- 击杀确认弹窗 -->
+    <!-- 新增：查看原图弹窗 -->
+    <div class="modal-overlay" id="imageViewerModal" onclick="closeImageViewer()">
+        <div class="modal-content" style="max-width: 95vw; max-height: 95vh; background: transparent; border: none; box-shadow: none; padding: 0; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+            <button class="btn-close-modal" style="top: -30px; right: 0; color: #fff; font-size: 30px;">×</button>
+            <img id="originalImageViewer" src="" style="max-width: 100%; max-height: 95vh; display: block; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8);">
+        </div>
+    </div>
+
     <div class="modal-overlay" id="killModal">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="closeKillModal()">×</button>
@@ -488,7 +543,6 @@
         </div>
     </div>
 
-    <!-- 批量修正服务器弹窗 -->
     <div class="modal-overlay" id="batchServerModal">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="document.getElementById('batchServerModal').style.display='none'">×</button>
@@ -502,7 +556,6 @@
         </div>
     </div>
 
-    <!-- 历史记录弹窗 -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="document.getElementById('historyModal').style.display='none'">×</button>
@@ -516,7 +569,6 @@
         </div>
     </div>
 
-    <!-- Fate 手动输入弹窗 -->
     <div class="modal-overlay" id="fateManualModal">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="document.getElementById('fateManualModal').style.display='none'">×</button>
@@ -534,45 +586,128 @@
         </div>
     </div>
 
-    <!-- 智能排车弹窗 (支持OCR) -->
     <div class="modal-overlay" id="routeModal">
-        <div class="modal-content" style="max-width: 700px; text-align: left;">
+        <div class="modal-content" style="max-width: 800px; text-align: left;">
             <button class="btn-close-modal" style="font-size: 30px; top: 15px; right: 20px;" onclick="document.getElementById('routeModal').style.display='none'">×</button>
             
-            <div class="modal-title" style="color: var(--blue); text-align: center;">🚗 S怪智能排车助手</div>
+            <div class="modal-title" style="color: var(--blue); text-align: center;">🚗 排车帮助</div>
             
-            <div class="modal-desc" style="font-size: 13px;">1. 支持直接粘贴聊天框文本，或 <strong>点击下方虚线框上传截图</strong>（只需包含怪物名字、服务器、坐标即可，支持模糊容错）。</div>
+            <div class="modal-desc" style="font-size: 13px;">1. 支持直接粘贴聊天框文本，或 <strong>点击下方虚线框上传截图</strong>（已启用渐进式OCR进度，大幅降低漏字）。</div>
             
-            <!-- OCR上传区 -->
             <div class="modal-upload-area" id="routeUploadArea" onclick="document.getElementById('routeFileInput').click()">
                 <div style="color:var(--text-muted); font-size:13px; text-align:center;">
                     📸 点击此处上传 / 直接按 Ctrl+V 粘贴排车截图
-                    <div style="font-size: 11px; color: var(--blue); margin-top:5px;">(智能2-3字模糊匹配 + 内置黑话自动纠错)</div>
+                    <div style="font-size: 11px; color:var(--blue); margin-top:5px;">(智能模糊匹配 + 内置黑话与错别字强纠错)</div>
                 </div>
                 <input type="file" id="routeFileInput" accept="image/*" style="display:none;" onchange="handleRouteImage(event)">
-                <div id="routeOcrLoading" style="display:none; text-align:center; color:var(--gold); font-weight:bold; margin-top:10px;">正在识别并智能纠错，请稍候...</div>
+                <div id="routeOcrLoading" style="display:none; text-align:center; color:var(--gold); font-weight:bold; margin-top:10px;">
+                    正在深度识别并智能纠错，请稍候...
+                    <div class="progress-bar-container" id="route-progress-bar-container" style="display: block;">
+                        <div class="progress-bar-fill" id="route-progress-bar-fill" style="background: var(--gold);"></div>
+                    </div>
+                    <span id="route-progress-text" style="font-size: 12px; color: var(--text-muted); display: block; margin-top: 5px;"></span>
+                </div>
             </div>
 
             <textarea id="routeInput" class="route-textarea" placeholder="可直接粘贴，也支持乱码文本。只要包含『怪物名字部分字眼/黑话』『服务器』『坐标』即可。&#10;例如：少爷 100.00% 迷津 (36,11) 白金幻象"></textarea>
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button class="btn btn-accent" onclick="generateRoute()" style="flex:1;">🚀 开始解析并排车</button>
+                <button class="btn btn-accent" onclick="generateRoute()" style="flex:1; font-size: 16px;">🚀 开始解析并排车</button>
                 <button class="btn btn-outline" onclick="document.getElementById('routeInput').value=''; document.getElementById('routeResultBox').style.display='none';" style="flex:1;">🗑️ 清空</button>
             </div>
 
             <div id="routeResultBox" class="route-result-box">
-                <div class="section-title" style="color: var(--gold);">📋 最终发车顺序 (已按优先级与同服数量优化排列)</div>
+                <div class="section-title" style="color: var(--gold); display: flex; justify-content: space-between; align-items: center;">
+                    <span>📋 最终发车顺序 (已按优先级与同服数量优化排列)</span>
+                    <button class="btn-fix" onclick="openCorrectionModal()">🛠️ 修正/手动添加</button>
+                </div>
                 <textarea id="routeOutput" class="route-textarea route-output" readonly></textarea>
                 
-                <!-- 横向快捷操作按钮组 -->
                 <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                     <button class="btn btn-accent" onclick="copyRoute()" style="flex: 1; padding: 10px 0;">📋 复制排车文本</button>
                     <button class="btn" style="background: var(--blue); color: #fff; flex: 1; padding: 10px 0;" onclick="downloadRouteText()">💾 保存为 TXT</button>
                     <button class="btn btn-outline" style="flex: 1; padding: 10px 0;" onclick="document.getElementById('routeModal').style.display='none'">❌ 关闭</button>
                 </div>
                 
-                <div class="section-title" style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;">🔍 识别解析与发车排布明细</div>
+                <div class="section-title" style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;">🔍 识别解析与发车排布明细 (可点击按钮修正)</div>
                 <div class="route-log-list" id="routeLogList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="correctionModal">
+        <div class="modal-content">
+            <button class="btn-close-modal" onclick="document.getElementById('correctionModal').style.display='none'">×</button>
+            <div class="modal-title" style="color: var(--gold);">🛠️ 修正 / 添加 S怪</div>
+            <div class="modal-desc">请选择漏掉的 S怪 并填写服务器。系统将通过词库强校准审核。</div>
+            
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>S怪名称</label>
+                <select id="fixMonsterSelect" style="max-width: 100%;"></select>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>服务器</label>
+                <select id="fixServerSelect" style="max-width: 100%;"></select>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>坐标 (可选)</label>
+                <input type="text" id="fixCoordInput" placeholder="例如: (12.3, 45.6)" style="width: 100%;">
+            </div>
+
+            <div class="modal-btns">
+                <button class="btn-modal btn-cancel" onclick="document.getElementById('correctionModal').style.display='none'">取消</button>
+                <button class="btn-modal btn-confirm ready" onclick="executeCorrection()" style="background: var(--accent); color: var(--panel);">✅ 审核通过并添加</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="manualAddModal">
+        <div class="modal-content" style="max-width: 600px; text-align: left;">
+            <button class="btn-close-modal" onclick="closeManualAddModal()">×</button>
+            <div class="modal-title" style="text-align: center; color: var(--gold);">➕ 手动录入 S怪 (强校准)</div>
+            <div class="modal-desc">当截图无法识别时，请手动录入。必须上传截图证据。</div>
+            
+            <div class="input-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div class="input-group">
+                    <label>服务器</label>
+                    <select id="addServerSelect"></select>
+                </div>
+                <div class="input-group">
+                    <label>S怪名称</label>
+                    <select id="addMonsterSelect"></select>
+                </div>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>状态</label>
+                <div class="status-radio">
+                    <label><input type="radio" name="addStatus" value="green" checked><span class="green">🟢 存活</span></label>
+                    <label><input type="radio" name="addStatus" value="red"><span class="red">🔴 CD</span></label>
+                </div>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>进度 (%) 或 时长 (时:分)</label>
+                <div class="row-flex">
+                    <input type="number" id="addPercent" min="0" max="100" value="0" step="0.1" style="width: 100px;" placeholder="%"> %
+                    <span style="color:var(--text-muted);">或</span>
+                    <input type="number" id="addHour" min="0" max="99" value="0" style="width: 60px;"> : 
+                    <input type="number" id="addMin" min="0" max="59" value="0" style="width: 60px;">
+                </div>
+            </div>
+
+            <div class="modal-upload-area" id="addEvidenceArea" onclick="document.getElementById('addEvidenceInput').click()">
+                <div style="color:var(--text-muted); font-size:13px; text-align:center;">
+                    点击此处上传 / 直接按 Ctrl+V 粘贴截图证据
+                    <div style="font-size: 11px; color: var(--gold); margin-top:5px;">(必须包含服务器+地区+红色时间)</div>
+                </div>
+                <input type="file" id="addEvidenceInput" accept="image/*" style="display:none;" onchange="handleAddEvidence(event)">
+                <img id="addEvidenceImg" src="" alt="预览">
+            </div>
+
+            <div class="modal-btns">
+                <button class="btn-modal btn-cancel" onclick="closeManualAddModal()">取消</button>
+                <button class="btn-modal btn-confirm" id="btnSubmitAdd" onclick="submitManualAdd()" style="background: var(--accent); color: var(--panel); opacity: 0.5; pointer-events: none;">✅ 确认并计算</button>
             </div>
         </div>
     </div>
@@ -589,9 +724,6 @@
     <canvas id="canvas"></canvas>
 
     <script>
-        // ==========================================
-        // 基础数据 (已融入黑话词库 + 莫古力强纠错)
-        // ==========================================
         const SERVER_GROUPS = {
             "豆豆柴": ["水晶塔", "银泪湖", "太阳海岸", "伊修加德", "红茶川"],
             "陆行鸟": ["红玉海", "神意之地", "拉诺西亚", "幻影群岛", "萌芽池", "宇宙和音", "沃仙曦染", "晨曦王座"],
@@ -601,25 +733,22 @@
         const ALL_SERVERS = Object.values(SERVER_GROUPS).flat();
         
         const S_MONSTERS = [
-            // 5.0
             { name: "戾虫", area: "雷克兰德", version: "5.0", alias: ["李冲"] }, 
             { name: "得到宽恕的炫学", area: "珂露西亚岛", version: "5.0", alias: ["棉花", "嫂子"] }, 
             { name: "多智兽", area: "安穆·艾兰", version: "5.0", alias: ["多汁"] }, 
             { name: "阿格拉俄珀", area: "伊尔美格", version: "5.0", alias: ["蛾子", "孔雀"] }, 
-            { name: "伊休妲", area: "拉凯提卡大森林", version: "5.0", alias: ["大森", "yxd"] }, 
+            { name: "伊休妲", area: "拉凯提卡大森林", version: "5.0", alias: ["大森", "yxd", "伊休但"] }, 
             { name: "顾尼图", area: "黑风海", version: "5.0", alias: ["图图", "船长"] },
-            // 6.0
             { name: "布弗鲁", area: "迷津", version: "6.0", alias: ["少爷", "bfl"] }, 
             { name: "颇胝迦", area: "萨维奈岛", version: "6.0", alias: ["腰子", "pzj"] }, 
             { name: "阿姆斯特朗", area: "加雷马", version: "6.0", alias: ["壮壮", "胳膊壮", "gbz"] },
             { name: "沉思之物", area: "叹息海", version: "6.0", alias: ["路由器", "蘑菇"] }, 
             { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0", alias: ["鸟蛋", "蛋仔"] }, 
             { name: "狭缝", area: "天外天垓", version: "6.0", alias: ["芒果"] },
-            // 7.0
             { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥"] }, 
             { name: "伊努索奇", area: "克扎玛乌卡湿地", version: "7.0", alias: ["螳螂"] }, 
             { name: "内尤佐缇", area: "亚克特尔树海", version: "7.0", alias: ["鱼粉"] },
-            { name: "山谢亚", area: "夏劳尼荒野", version: "7.0", alias: ["山火"] }, 
+            { name: "山谢亚", area: "夏劳尼荒野", version: "7.0", alias: ["山火", "山谢娅"] },
             { name: "先驱勇士 阿提卡斯", area: "遗产之地", version: "7.0", alias: ["烤肉", "牛排"] }, 
             { name: "天气预报机器人", area: "活着的记忆", version: "7.0", alias: ["天气", "机器人", "预言家"] }
         ];
@@ -631,16 +760,94 @@
         let hasScreenshot = false;
         let currentKillRow = null;
         let modalHasEvidence = false;
+        let hasAddEvidence = false;
+        let currentUploadedImageBase64 = null;
 
         let recentRecords = []; 
         let specialCounters = { "伊休妲": 0, "颇胝迦": 0, "沉思之物": 0 };
         let currentManualCalcData = null;
+        let parsedMonsters = []; 
 
+        // ==========================================
+        // 🚗 初始化自定义服务器选择组件
+        // ==========================================
         const mServerSelect = document.getElementById('mServer');
-        ALL_SERVERS.forEach(s => { mServerSelect.innerHTML += `<option value="${s}">${s}</option>`; });
-        
+        const serverDropdownPanel = document.getElementById('serverDropdownPanel');
+        const serverDropdownList = document.getElementById('serverDropdownList');
+
+        // 构建下拉列表
+        let dropdownHtml = '';
+        for (const [region, servers] of Object.entries(SERVER_GROUPS)) {
+            dropdownHtml += `<div class="dropdown-region-group" data-region="${region}"><div class="dropdown-region-title">${region}</div>`;
+            servers.forEach(s => {
+                dropdownHtml += `<div class="dropdown-item" onclick="selectServer('${s}')">${s}</div>`;
+            });
+            dropdownHtml += `</div>`;
+        }
+        serverDropdownList.innerHTML = dropdownHtml;
+
+        mServerSelect.addEventListener('click', (e) => {
+            e.stopPropagation();
+            serverDropdownPanel.style.display = serverDropdownPanel.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('serverSearchInput').value = '';
+            filterDropdownServers();
+            if (serverDropdownPanel.style.display === 'block') {
+                document.getElementById('serverSearchInput').focus();
+            }
+        });
+
+        // 点击外部关闭
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('mServerWrapper').contains(e.target)) {
+                serverDropdownPanel.style.display = 'none';
+            }
+        });
+
+        function filterDropdownServers() {
+            const val = document.getElementById('serverSearchInput').value.trim().toLowerCase();
+            const groups = serverDropdownList.querySelectorAll('.dropdown-region-group');
+            groups.forEach(g => {
+                let hasVisible = false;
+                const items = g.querySelectorAll('.dropdown-item');
+                items.forEach(item => {
+                    if (item.innerText.toLowerCase().includes(val)) {
+                        item.style.display = 'block';
+                        hasVisible = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                g.style.display = hasVisible ? 'block' : 'none';
+            });
+        }
+
+        function selectServer(server) {
+            mServerSelect.value = server;
+            serverDropdownPanel.style.display = 'none';
+            autoCorrect(); // 触发手动计算更新
+            saveLocalState();
+        }
+
+        // ==========================================
+        // 初始化截图识别多选服务器
+        // ==========================================
         const mMonsterSelect = document.getElementById('mMonster');
         S_MONSTERS.forEach(m => { mMonsterSelect.innerHTML += `<option value="${m.name}|${m.area}">${m.name} [${m.area}]</option>`; });
+
+        const fixMonsterSelect = document.getElementById('fixMonsterSelect');
+        S_MONSTERS.forEach(m => { fixMonsterSelect.innerHTML += `<option value="${m.name}|${m.area}">${m.name} [${m.area}]</option>`; });
+        const fixServerSelect = document.getElementById('fixServerSelect');
+        ALL_SERVERS.forEach(s => { fixServerSelect.innerHTML += `<option value="${s}">${s}</option>`; });
+
+        const addServerSelect = document.getElementById('addServerSelect');
+        ALL_SERVERS.forEach(s => { addServerSelect.innerHTML += `<option value="${s}">${s}</option>`; });
+        const addMonsterSelect = document.getElementById('addMonsterSelect');
+        S_MONSTERS.forEach(m => { addMonsterSelect.innerHTML += `<option value="${m.name}|${m.area}">${m.name} [${m.area}]</option>`; });
+
+        const quickFixMenu = document.getElementById('quickFixServerMenu');
+        ALL_SERVERS.forEach(s => {
+            quickFixMenu.innerHTML += `<button onclick="batchFixServerColumn('${s}')">${s}</button>`;
+        });
 
         function initMultiSelectContainers() {
             const ocrContainer = document.getElementById('ocrServerMultiContainer');
@@ -666,6 +873,31 @@
         }
         initMultiSelectContainers();
 
+        // 图一：过滤 OCR 默认服务器列表
+        function filterOcrServers() {
+            const val = document.getElementById('ocrSearch').value.trim().toLowerCase();
+            const details = document.querySelectorAll('#ocrServerMultiContainer details');
+            details.forEach(d => {
+                let hasVisible = false;
+                const labels = d.querySelectorAll('label');
+                labels.forEach(l => {
+                    if (l.innerText.toLowerCase().includes(val)) {
+                        l.style.display = 'flex';
+                        hasVisible = true;
+                    } else {
+                        l.style.display = 'none';
+                    }
+                });
+                if (hasVisible) {
+                    d.style.display = 'block';
+                    d.open = true; // 自动展开匹配的大区
+                } else {
+                    d.style.display = 'none';
+                    d.open = false;
+                }
+            });
+        }
+
         function formatDHMS(ms) {
             if (ms <= 0) return '00:00:00';
             const totalSec = Math.floor(ms / 1000);
@@ -673,6 +905,13 @@
             const m = Math.floor((totalSec % 3600) / 60);
             const s = totalSec % 60;
             return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        function toggleLayout() {
+            const current = document.body.getAttribute('data-layout') || 'portrait';
+            const newLayout = current === 'portrait' ? 'landscape' : 'portrait';
+            document.body.setAttribute('data-layout', newLayout);
+            showToast(`🔄 已切换至 ${newLayout === 'landscape' ? '横板' : '竖板'} 模式`);
         }
 
         function toggleMaintenance() {
@@ -717,8 +956,35 @@
             showToast(`⭐ 截图识别默认服务器已保存 (${selectedServers.length}个)`);
         }
 
+        function batchFixServerColumn(serverName) {
+            let fixCount = 0;
+            document.querySelectorAll('.calc-row').forEach(tr => {
+                const serverTag = tr.querySelector('.server-tag');
+                if (serverTag.innerText === '未知' || !serverTag.innerText) {
+                    serverTag.innerText = serverName;
+                    tr.initialData.server = serverName;
+                    fixCount++;
+                }
+            });
+            saveLocalState();
+            showToast(fixCount > 0 ? `✅ 已将 ${fixCount} 个“未知”替换为 ${serverName}` : `⚠️ 表格中没有“未知”的服务器`);
+        }
+
         // ==========================================
-        // 🚗 智能排车功能逻辑 (支持黑话 + 重合字数模糊匹配)
+        // 图片查看器逻辑
+        // ==========================================
+        function openOriginalImageModal() {
+            if (!currentUploadedImageBase64) return;
+            document.getElementById('originalImageViewer').src = currentUploadedImageBase64;
+            document.getElementById('imageViewerModal').style.display = 'flex';
+        }
+
+        function closeImageViewer() {
+            document.getElementById('imageViewerModal').style.display = 'none';
+        }
+
+        // ==========================================
+        // 🚗 智能排车功能逻辑
         // ==========================================
         function openRouteModal() {
             document.getElementById('routeModal').style.display = 'flex';
@@ -731,6 +997,7 @@
                         document.getElementById('routeOutput').value = data.text;
                         document.getElementById('routeLogList').innerHTML = data.log;
                         document.getElementById('routeResultBox').style.display = 'block';
+                        parsedMonsters = data.monsters || [];
                     } else {
                         localStorage.removeItem('ff14_route_cache');
                     }
@@ -755,24 +1022,44 @@
             if (e.target.files[0]) processRouteImageOCR(e.target.files[0]);
         }
 
-        function processRouteImageOCR(file) {
+        async function processRouteImageOCR(file) {
             document.getElementById('routeOcrLoading').style.display = 'block';
             document.getElementById('routeUploadArea').style.borderColor = 'var(--gold)';
             document.getElementById('routeResultBox').style.display = 'none';
             
             const reader = new FileReader();
-            reader.onload = e => {
+            reader.onload = async e => {
                 const img = new Image();
-                img.onload = () => {
+                img.onload = async () => {
                     const canvas = document.getElementById('canvas');
                     const ctx = canvas.getContext('2d');
-                    const scale = 1.5;
+                    const scale = 3; 
                     canvas.width = img.width * scale;
                     canvas.height = img.height * scale;
+                    
+                    ctx.filter = 'grayscale(100%) contrast(180%) brightness(110%)';
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     const imgUrl = canvas.toDataURL();
 
-                    Tesseract.recognize(imgUrl, 'chi_sim+eng').then(({data}) => {
+                    try {
+                        const worker = await Tesseract.createWorker('chi_sim+eng', 1, {
+                            logger: m => {
+                                if (m.status === 'recognizing text') {
+                                    const p = Math.round(m.progress * 100);
+                                    document.getElementById('route-progress-text').innerText = `深度识别中... ${p}%`;
+                                    document.getElementById('route-progress-bar-fill').style.width = `${p}%`;
+                                }
+                            }
+                        });
+                        
+                        await worker.setParameters({
+                            tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+                            preserve_interword_spaces: '1'
+                        });
+
+                        const { data } = await worker.recognize(imgUrl);
+                        await worker.terminate();
+
                         document.getElementById('routeOcrLoading').style.display = 'none';
                         document.getElementById('routeUploadArea').style.borderColor = 'var(--accent)';
                         
@@ -783,148 +1070,100 @@
 
                         document.getElementById('routeInput').value = text;
                         generateRoute(); 
-                    }).catch(err => {
+                    } catch (err) {
                         document.getElementById('routeOcrLoading').style.display = 'none';
-                        alert("识别失败，请重试。");
-                    });
+                        alert("识别失败，请重试。" + err);
+                    }
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        // 核心：服务器纠错与模糊匹配
-        function fuzzyServer(str) {
-            if (!str) return "未知";
-            str = str.replace(/[\s<>＜＞]/g, ''); 
-            if (ALL_SERVERS.includes(str)) return str;
-            for (let srv of ALL_SERVERS) {
-                if (str.includes(srv) || srv.includes(str)) return srv;
+        function strongCalibrate(text) {
+            let result = text;
+            const OCR_CORRECTION_MAP = {
+                "伊休但": "伊休妲", "伊体姐": "伊休妲", "伊休姐": "伊休妲",
+                "白金幻家": "白金幻象", "白金幻像": "白金幻象",
+                "龙昌神服": "龙巢神殿", "龙巢神服": "龙巢神殿",
+                "神卷痕": "神拳痕", "神拳浪": "神拳痕",
+                "旅人栈桥": "旅人栈桥", "旅人桥": "旅人栈桥",
+                "内尤佐提": "内尤佐缇", "内尤佐堤": "内尤佐缇",
+                "山谢亚": "山谢亚", "山谢娅": "山谢亚"
+            };
+            for (let err in OCR_CORRECTION_MAP) {
+                result = result.replace(new RegExp(err, 'g'), OCR_CORRECTION_MAP[err]);
             }
-            
-            // 1. 字符重合度匹配 (暴力校准4字服务器的错别字)
-            let bestMatch = str;
-            let maxMatchCount = 0;
-            for (let srv of ALL_SERVERS) {
-                let matchCount = 0;
-                let tempStr = str;
-                for (let char of srv) {
-                    if (tempStr.includes(char)) {
-                        matchCount++;
-                        tempStr = tempStr.replace(char, ''); // 删掉匹配过的字防重复
-                    }
-                }
-                if (matchCount >= 2 && matchCount > maxMatchCount) {
-                    maxMatchCount = matchCount;
-                    bestMatch = srv;
-                }
-            }
-            if (maxMatchCount >= 2) {
-                // 如果匹配字数 ≥ 2，比如“龙昌神服”匹配到“龙”、“神”2个字，直接返回标准名
-                return bestMatch;
-            }
-
-            // 2. 莫古力大区硬编码兜底纠错（针对1个字重合的极端情况）
-            if (str.includes("白金") || str.includes("幻象") || str.includes("幻家") || str.includes("白象") || str.includes("白幻")) return "白金幻象";
-            if (str.includes("龙巢") || str.includes("神殿") || str.includes("龙果") || str.includes("神用") || str.includes("龙殿") || str.includes("巢神") || str.includes("龙昌")) return "龙巢神殿";
-            if (str.includes("神拳") || str.includes("拳痕") || str.includes("神卷") || str.includes("拳狠") || str.includes("拳浪")) return "神拳痕";
-            if (str.includes("旅人") || str.includes("栈桥") || str.includes("旅桥") || str.includes("人栈")) return "旅人栈桥";
-            if (str.includes("拂晓") || str.includes("晓之") || str.includes("拂间")) return "拂晓之间";
-            if (str.includes("梦羽") || str.includes("宝境") || str.includes("梦宝") || str.includes("羽宝")) return "梦羽宝境";
-            if (str.includes("白银") || str.includes("银乡") || str.includes("白乡")) return "白银乡";
-            if (str.includes("潮风") || str.includes("风亭") || str.includes("潮亭")) return "潮风亭";
-            
-            return str;
+            return result;
         }
 
         function generateRoute() {
             let text = document.getElementById('routeInput').value;
             if (!text.trim()) { alert("请先粘贴或识别 S怪 信息！"); return; }
 
+            text = strongCalibrate(text);
             text = text.replace(/[＜《]/g, '<').replace(/[＞》]/g, '>')
                        .replace(/[（【\[［]/g, '(').replace(/[）】\]］]/g, ')')
                        .replace(/[：]/g, ':').replace(/[，、]/g, ',');
-            
-            text = text.replace(/[０-９]/g, function (s) {
-                return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-            }).replace(/．/g, '.');
+            text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/．/g, '.');
 
             const lines = text.split('\n');
-            const parsedMonsters = [];
+            parsedMonsters = []; 
             let lastServer = "未知";
             
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
                 if (!line) continue;
 
+                let serverFound = false;
                 let serverMatch = line.match(/<([^>]+)>/);
                 if (serverMatch) {
-                    lastServer = fuzzyServer(serverMatch[1]);
-                } else {
+                    let fs = fuzzyServer(serverMatch[1]);
+                    if (fs !== "未知") { lastServer = fs; serverFound = true; }
+                } 
+                if (!serverFound) {
                     for (let srv of ALL_SERVERS) {
-                        if (line.includes(srv)) { lastServer = srv; break; }
+                        if (line.includes(srv)) { lastServer = srv; serverFound = true; break; }
                     }
                 }
 
-                // 坐标识别精确优化 (xx.xx,xx.xx)
                 let coord = "(坐标未知)";
                 let lineWithoutCoord = line;
-                
                 let coordMatch = line.match(/[\(（]?\s*(\d{1,2}\.\d{1,2})\s*[,，\s]\s*(\d{1,2}\.\d{1,2})\s*[\)）]?/);
                 if (coordMatch) {
                     coord = `(${coordMatch[1]}, ${coordMatch[2]})`;
                     lineWithoutCoord = line.replace(coordMatch[0], '');
-                } else {
-                    let fallbackMatch = line.match(/[\(（]\s*(\d{1,2}\.\d{1,2})\D+(\d{1,2}\.\d{1,2})\s*[\)）]/);
-                    if (fallbackMatch) {
-                        coord = `(${fallbackMatch[1]}, ${fallbackMatch[2]})`;
-                        lineWithoutCoord = line.replace(fallbackMatch[0], '');
-                    }
                 }
-                // ==========================================
 
                 let hp = '100.00%';
                 let hpMatch = line.match(/(\d+\.\d+)%/);
                 if (hpMatch) hp = hpMatch[1] + '%';
 
-                let matchedMonster = null;
                 let cleanLine = lineWithoutCoord.replace(/[^\u4e00-\u9fa5a-zA-Z0-9%]/g, ''); 
                 
+                let matchedMonster = null;
                 for (let sm of S_MONSTERS) {
                     let nameStr = sm.name.replace(/\s/g, '');
                     let areaStr = sm.area.replace(/\s/g, '');
                     
-                    // 1. 完整地区匹配
-                    if (cleanLine.includes(areaStr)) {
-                        matchedMonster = sm;
-                        break;
-                    }
+                    if (cleanLine.includes(areaStr)) { matchedMonster = sm; break; }
                     
-                    // 2. 模糊名称或地区匹配
                     let coreName1 = nameStr.substring(0, 2);
                     let coreName2 = nameStr.length > 2 ? nameStr.substring(nameStr.length - 2) : '';
                     let coreArea1 = areaStr.substring(0, 2);
 
                     if (cleanLine.includes(coreName1) || (coreName2 && cleanLine.includes(coreName2)) || cleanLine.includes(coreArea1)) {
                         if (cleanLine.includes('%') || cleanLine.includes('100')) {
-                            matchedMonster = sm;
-                            break;
+                            matchedMonster = sm; break;
                         }
                     }
 
-                    // 3. 黑话词库匹配 (最高优先级直接匹配)
                     if (sm.alias) {
                         let aliasMatched = false;
                         for (let al of sm.alias) {
-                            if (cleanLine.includes(al)) {
-                                aliasMatched = true;
-                                break;
-                            }
+                            if (cleanLine.includes(al)) { aliasMatched = true; break; }
                         }
-                        if (aliasMatched) {
-                            matchedMonster = sm;
-                            break;
-                        }
+                        if (aliasMatched) { matchedMonster = sm; break; }
                     }
                 }
 
@@ -943,11 +1182,85 @@
                 }
             }
 
+            const checkedOcrServers = document.querySelectorAll('#ocrServerMultiContainer input:checked');
+            const defaultOcrServers = Array.from(checkedOcrServers).map(cb => cb.value);
+            let defaultServer = defaultOcrServers.length > 0 ? defaultOcrServers[0] : "未知";
+            parsedMonsters.forEach(m => { if (m.server === "未知" && defaultServer !== "未知") m.server = defaultServer; });
+
+            renderRouteResult();
+        }
+
+        function fuzzyServer(str) {
+            if (!str) return "未知";
+            str = str.replace(/[\s<>＜＞]/g, '');
+            if (ALL_SERVERS.includes(str)) return str;
+
+            for (let srv of ALL_SERVERS) {
+                if (str.includes(srv) || srv.includes(str)) return srv;
+            }
+
+            // 强特征字逻辑：按照词库补全 OCR 经常漏识别的服务器名
+            // 莫古力
+            if (str.includes("白金") || str.includes("幻象") || str.includes("幻家") || str.includes("白象") || str.includes("白幻")) return "白金幻象";
+            if (str.includes("龙巢") || str.includes("神殿") || str.includes("龙果") || str.includes("神用") || str.includes("龙殿") || str.includes("巢神") || str.includes("龙昌")) return "龙巢神殿";
+            if (str.includes("神拳") || str.includes("拳痕") || str.includes("神卷") || str.includes("拳狠") || str.includes("拳浪")) return "神拳痕";
+            if (str.includes("旅人") || str.includes("栈桥") || str.includes("旅桥") || str.includes("人栈")) return "旅人栈桥";
+            if (str.includes("拂晓") || str.includes("晓之") || str.includes("拂间")) return "拂晓之间";
+            if (str.includes("梦羽") || str.includes("宝境") || str.includes("梦宝") || str.includes("羽宝")) return "梦羽宝境";
+            if (str.includes("白银") || str.includes("银乡") || str.includes("白乡")) return "白银乡";
+            if (str.includes("潮风") || str.includes("风亭") || str.includes("潮亭")) return "潮风亭";
+            // 豆豆柴
+            if (str.includes("水晶") || str.includes("晶塔") || str.includes("水塔")) return "水晶塔";
+            if (str.includes("银泪") || str.includes("泪湖") || str.includes("银湖")) return "银泪湖";
+            if (str.includes("太阳") || str.includes("海岸") || str.includes("阳海")) return "太阳海岸";
+            if (str.includes("伊修") || str.includes("加德") || str.includes("修加")) return "伊修加德";
+            if (str.includes("红茶") || str.includes("茶川") || str.includes("红川")) return "红茶川";
+            // 陆行鸟
+            if (str.includes("红玉") || str.includes("玉海") || str.includes("红海")) return "红玉海";
+            if (str.includes("神意") || str.includes("意之") || str.includes("神地")) return "神意之地";
+            if (str.includes("拉诺") || str.includes("诺西") || str.includes("西亚")) return "拉诺西亚";
+            if (str.includes("幻影") || str.includes("影群") || str.includes("影岛")) return "幻影群岛";
+            if (str.includes("萌芽") || str.includes("芽池") || str.includes("萌池")) return "萌芽池";
+            if (str.includes("宇宙") || str.includes("和音") || str.includes("宇音")) return "宇宙和音";
+            if (str.includes("沃仙") || str.includes("曦染") || str.includes("沃染") || str.includes("仙曦")) return "沃仙曦染";
+            if (str.includes("晨曦") || str.includes("王座") || str.includes("晨座")) return "晨曦王座";
+            // 猫小胖
+            if (str.includes("紫水")) return "紫水栈桥";
+            if (str.includes("延夏") || str.includes("延下") || str.includes("延复")) return "延夏";
+            if (str.includes("静语") || str.includes("庄园") || str.includes("静庄")) return "静语庄园";
+            if (str.includes("摩杜") || str.includes("杜纳") || str.includes("摩纳")) return "摩杜纳";
+            if (str.includes("海猫") || str.includes("茶屋") || str.includes("猫屋")) return "海猫茶屋";
+            if (str.includes("柔风") || str.includes("海湾") || str.includes("柔湾")) return "柔风海湾";
+            if (str.includes("琥珀") || str.includes("珀原") || str.includes("琥原")) return "琥珀原";
+
+            // 兜底：暴力重合度匹配
+            let bestMatch = null;
+            let maxMatchCount = 0;
+            for (let srv of ALL_SERVERS) {
+                if (srv.length < 2) continue;
+                let matchCount = 0;
+                let tempStr = str;
+                for (let char of srv) {
+                    if (tempStr.includes(char)) {
+                        matchCount++;
+                        tempStr = tempStr.replace(char, '');
+                    }
+                }
+                if (matchCount >= 2 && matchCount > maxMatchCount) {
+                    maxMatchCount = matchCount;
+                    bestMatch = srv;
+                }
+            }
+            if (bestMatch) return bestMatch;
+            return "未知";
+        }
+
+        function renderRouteResult() {
             document.getElementById('routeResultBox').style.display = 'block';
 
             if (parsedMonsters.length === 0) {
                 document.getElementById('routeOutput').value = "";
-                document.getElementById('routeLogList').innerHTML = `<div style="color:var(--red); text-align:center; padding:10px; font-weight:bold;">⚠️ 未能解析出有效的 S怪 信息！<br><br>可能原因：<br>1. 截图太模糊，文字识别错乱。<br>2. 文本缺少关键信息（如 100.00%）。<br>请检查上方文本框的内容，或手动修改后再次点击。</div>`;
+                document.getElementById('routeLogList').innerHTML = `<div style="color:var(--red); text-align:center; padding:10px; font-weight:bold;">⚠️ 未能解析出有效的 S怪 信息！<br><br>可能原因：<br>1. 截图太模糊，文字识别错乱。<br>2. 文本缺少关键信息（如 100.00%）。<br>请点击上方【修正/手动添加】补录。</div>`;
                 return;
             }
 
@@ -973,7 +1286,6 @@
                 serverStats.push({ server, list, count, v7, v6, v5 });
             }
 
-            // 核心排序逻辑：7.0 绝对优先！
             serverStats.sort((a, b) => {
                 if (b.v7 !== a.v7) return b.v7 - a.v7;
                 if (b.count !== a.count) return b.count - a.count;
@@ -990,8 +1302,12 @@
                 
                 routeStr += `${stationPrefix}${stat.server}】\n`;
 
-                logHtml += `<div class="route-log-item" style="background:rgba(255,255,255,0.05); padding: 6px; font-weight:bold; margin-top:5px;">
+                logHtml += `<div class="route-log-item" style="background:rgba(255,255,255,0.05); padding: 6px; font-weight:bold; margin-top:5px; display:flex; justify-content:space-between; align-items:center;">
                     <span>${isFirst ? '⭐ 首站：' : `📍 第${index + 1}站：`} ${stat.server} (总计${stat.count}只)</span>
+                    <span>
+                        <button class="route-add-btn" onclick="addSManually('${stat.server}', 1)">+1只</button>
+                        <button class="route-add-btn" style="background:var(--purple);" onclick="addSManually('${stat.server}', 2)">+多只</button>
+                    </span>
                 </div>`;
 
                 stat.list.forEach(m => {
@@ -1009,12 +1325,70 @@
             document.getElementById('routeOutput').value = finalRouteStr;
             document.getElementById('routeLogList').innerHTML = logHtml;
 
-            // 保存到本地，有效期 10 分钟
             localStorage.setItem('ff14_route_cache', JSON.stringify({
                 text: finalRouteStr,
                 log: logHtml,
+                monsters: parsedMonsters,
                 expire: Date.now() + 10 * 60 * 1000
             }));
+        }
+
+        function addSManually(server, type) {
+            if (type === 1) {
+                openCorrectionModal(server);
+            } else {
+                alert("请在弹窗中连续添加，或直接粘贴多行文本进行解析。");
+                openCorrectionModal(server);
+            }
+        }
+
+        function openCorrectionModal(defaultServer) {
+            if (defaultServer) {
+                fixServerSelect.value = defaultServer;
+            } else {
+                fixServerSelect.selectedIndex = 0;
+            }
+            document.getElementById('correctionModal').style.display = 'flex';
+        }
+
+        function executeCorrection() {
+            const monsterVal = fixMonsterSelect.value;
+            const serverVal = fixServerSelect.value;
+            const coordVal = document.getElementById('fixCoordInput').value.trim() || "(坐标未知)";
+            
+            if (!monsterVal || !serverVal) {
+                alert("请选择S怪和服务器！");
+                return;
+            }
+
+            const [name, area] = monsterVal.split('|');
+            const dbMonster = S_MONSTERS.find(m => m.name === name);
+            
+            if (!dbMonster) {
+                alert("审核失败：词库中不存在该 S怪！");
+                return;
+            }
+
+            const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === serverVal);
+            if (isDuplicate) {
+                alert("审核提示：该服务器下已存在这只S怪，无需重复添加！");
+                return;
+            }
+
+            parsedMonsters.push({
+                name: dbMonster.name,
+                area: dbMonster.area,
+                version: dbMonster.version,
+                coord: coordVal,
+                server: serverVal,
+                hp: '100.00%'
+            });
+
+            document.getElementById('correctionModal').style.display = 'none';
+            document.getElementById('fixCoordInput').value = '';
+            
+            showToast("✅ 审核通过，已添加至排车列表！");
+            renderRouteResult(); 
         }
 
         function copyRoute() {
@@ -1022,98 +1396,24 @@
             if(!text) return;
             navigator.clipboard.writeText(text).then(() => {
                 showToast("📋 排车结果已复制到剪贴板！");
-            }).catch(err => {
-                alert("复制失败，请手动选择文本复制。");
             });
         }
 
-        // 保存为 TXT 文件
         function downloadRouteText() {
             const text = document.getElementById('routeOutput').value;
-            if (!text) {
-                alert("没有可保存的排车结果！请先解析排车。");
-                return;
-            }
+            if (!text) return;
             const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            
-            // 生成带时间的文件名
             const now = new Date();
             const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
             a.download = `FF14排车_${dateStr}.txt`;
-            
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
             showToast("💾 排车文件已保存到本地！");
-        }
-        // ==========================================
-
-        // ==========================================
-        // 特殊计数器逻辑
-        // ==========================================
-        function updateSpecialCounterUI() {
-            const monsterName = mMonsterSelect.value.split('|')[0];
-            const statusRadio = document.querySelector('input[name="mStatus"]:checked');
-            const isKilled = statusRadio ? statusRadio.value === 'red' : false;
-            const panel = document.getElementById('specialCounterPanel');
-            
-            if (["伊休妲", "颇胝迦", "沉思之物"].includes(monsterName)) {
-                panel.style.display = 'block';
-                document.getElementById('counterName').innerText = `${monsterName} 小怪击杀计数`;
-                document.getElementById('counterDisplay').innerText = specialCounters[monsterName] || 0;
-                
-                const btns = panel.querySelectorAll('button');
-                if (isKilled) {
-                    btns.forEach(b => { b.disabled = true; b.style.opacity = 0.5; });
-                    if (!document.getElementById('counterName').innerText.includes("不可用")) {
-                        document.getElementById('counterName').innerText += " (CD期间不可用)";
-                    }
-                } else {
-                    btns.forEach(b => { b.disabled = false; b.style.opacity = 1; });
-                    document.getElementById('counterName').innerText = `${monsterName} 小怪击杀计数`;
-                }
-            } else {
-                panel.style.display = 'none';
-            }
-        }
-
-        function addCounter() {
-            const monsterName = mMonsterSelect.value.split('|')[0];
-            const statusRadio = document.querySelector('input[name="mStatus"]:checked');
-            const isKilled = statusRadio ? statusRadio.value === 'red' : false;
-            if (isKilled) return;
-            
-            specialCounters[monsterName] = (specialCounters[monsterName] || 0) + 100;
-            document.getElementById('counterDisplay').innerText = specialCounters[monsterName];
-            saveLocalState();
-
-            const count = specialCounters[monsterName];
-            if (count >= 300 && count % 300 === 0) {
-                if (confirm(`【触发检查】已累计击杀 ${count} 只小怪，是否出S？\n点击“确定”表示出了S（保留计数并可继续加），\n点击“取消”表示没出（计数将清零）。`)) {
-                    document.querySelector('input[name="mStatus"][value="red"]').checked = true;
-                    mHour.value = 0; mMin.value = 0;
-                    updateSpecialCounterUI();
-                    autoCorrect();
-                    showToast("✅ 已确认出S，请补充击杀时间记录");
-                } else {
-                    specialCounters[monsterName] = 0;
-                    document.getElementById('counterDisplay').innerText = 0;
-                    saveLocalState();
-                    showToast("❌ 没出S，计数已归零");
-                }
-            }
-        }
-
-        function resetCounter() {
-            const monsterName = mMonsterSelect.value.split('|')[0];
-            specialCounters[monsterName] = 0;
-            document.getElementById('counterDisplay').innerText = 0;
-            saveLocalState();
         }
 
         // ==========================================
@@ -1249,16 +1549,6 @@
             };
             updateDisplay();
             manualTimer = setInterval(updateDisplay, 1000);
-
-            try {
-                if (timeSec > 0 || percentVal > 0) {
-                    const sName = mMonsterSelect.value ? mMonsterSelect.value.split('|')[0] : '未知';
-                    const sServer = mServerSelect.value || '未知';
-                    const typeStr = isGreen ? '绿字存活' : '红字CD';
-                    const recordContent = `[${sServer}] ${sName} | ${typeStr} ${h}h${m}m (${percentVal}%)`;
-                    if (historyDB.length === 0 || historyDB[0].content !== recordContent) addHistory('手动', recordContent);
-                }
-            } catch(e) { console.warn("记录历史失败", e); }
         }
 
         function copyManualResult() {
@@ -1296,10 +1586,6 @@
             renderRecentList();
             saveLocalState();
             showToast("✅ 已添加到计算记录");
-            
-            try {
-                addHistory('手动计算', `[${record.server}] ${record.name} | ${isGreen?'存活':'CD'} | 强制预计时间:${record.forceStr}`);
-            } catch(e) {}
         }
 
         function renderRecentList() {
@@ -1369,7 +1655,6 @@
                 
                 let title = isGreen ? '🟢 存活倒计时' : '🔴 CD 倒计时';
                 let countdownHtml = '';
-                let color = isGreen ? 'var(--blue)' : 'var(--red)';
 
                 if (isGreen) {
                     if (diffForce <= 0) {
@@ -1493,8 +1778,10 @@
         function onFateTriggered() { fateRecords = []; renderFateRecords(); saveLocalState(); showToast(`✅ 已标记触发，Fate 记录已清空`); }
 
         // ==========================================
-        // 4. 截图识别 (状态计算)
+        // 4. 截图识别 (全新单次极简 OCR)
         // ==========================================
+        let isProcessing = false;
+
         function handleFileSelect(e) { if (e.target.files[0]) processImage(e.target.files[0]); }
         const upArea = document.getElementById('uploadArea');
         upArea.addEventListener('dragover', e => { e.preventDefault(); upArea.classList.add('paste-active'); });
@@ -1502,7 +1789,7 @@
         upArea.addEventListener('drop', e => { e.preventDefault(); upArea.classList.remove('paste-active'); if(e.dataTransfer.files[0]) processImage(e.dataTransfer.files[0]); });
         
         document.addEventListener('paste', e => {
-            if(document.getElementById('routeModal').style.display === 'flex') return;
+            if(document.getElementById('routeModal').style.display === 'flex' || document.getElementById('manualAddModal').style.display === 'flex' || document.getElementById('imageViewerModal').style.display === 'flex' || document.getElementById('killModal').style.display === 'flex') return;
 
             e.preventDefault();
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
@@ -1532,150 +1819,147 @@
         }
 
         function processImage(file) {
+            if (isProcessing) {
+                showToast('⚠️ 正在识别中，请稍候...');
+                return;
+            }
+            
+            isProcessing = true;
             hasScreenshot = true;
             document.getElementById('loading').style.display = 'block';
+            document.getElementById('progress-bar-container').style.display = 'block';
+            document.getElementById('progress-bar-fill').style.width = '0%';
+            document.getElementById('progress-text').innerText = '正在加载 OCR 引擎 (初次较慢)...';
             document.getElementById('results-container').style.display = 'none';
             document.getElementById('copyBtn').style.display = 'none';
             document.getElementById('tableBody').innerHTML = '';
+            
             globalTimers.forEach(t => clearInterval(t)); globalTimers = [];
 
+            // 保存原图用于查看
             const reader = new FileReader();
-            reader.onload = e => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.getElementById('canvas');
-                    const ctx = canvas.getContext('2d');
-                    // 跟排车一样：直接放大 1.5 倍，不做任何复杂的二值化，大幅提升识别率
-                    const scale = 1.5; 
-                    canvas.width = img.width * scale; 
-                    canvas.height = img.height * scale;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    const imgUrl = canvas.toDataURL();
-
-                    document.getElementById('progress-text').innerText = "提取文字信息...";
-                    Tesseract.recognize(imgUrl, 'chi_sim+eng').then(({data}) => {
-                        document.getElementById('loading').style.display = 'none';
-                        parseOCRResults(data.text);
-                    }).catch(err => { document.getElementById('loading').style.display = 'none'; alert("识别失败：" + err); });
-                };
-                img.src = e.target.result;
+            reader.onload = (e) => {
+                currentUploadedImageBase64 = e.target.result;
+                document.getElementById('viewOriginalBtn').style.display = 'block';
             };
             reader.readAsDataURL(file);
+
+            Tesseract.createWorker('chi_sim+eng', 1, {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        const p = Math.round(m.progress * 100);
+                        document.getElementById('progress-text').innerText = `🔍 识别中... ${p}%`;
+                        document.getElementById('progress-bar-fill').style.width = `${p}%`;
+                    }
+                }
+            }).then(async (worker) => {
+                document.getElementById('progress-text').innerText = "正在解析图片...";
+                const ret = await worker.recognize(file);
+                const text = ret.data.text;
+                await worker.terminate();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('progress-bar-fill').style.width = '100%';
+                isProcessing = false;
+                
+                parseAndRender(text);
+            }).catch(err => {
+                document.getElementById('loading').style.display = 'none';
+                isProcessing = false;
+                document.getElementById('results-container').style.display = 'block';
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--red); font-weight:bold;">❌ 识别过程出错：${err}</td></tr>`;
+                showToast('❌ 识别失败，请重试');
+            });
         }
 
-        function parseOCRResults(text) {
-            const tbody = document.getElementById('tableBody');
-            document.getElementById('results-container').style.display = 'block';
-            document.getElementById('copyBtn').style.display = 'block';
+        function parseAndRender(ocrText) {
+            console.log("OCR 原始输出:\n", ocrText);
 
-            // 清理标点和全角字符
-            text = text.replace(/[＜《]/g, '<').replace(/[＞》]/g, '>')
-                       .replace(/[（【\[［]/g, '(').replace(/[）】\]］]/g, ')')
-                       .replace(/[：]/g, ':').replace(/[，、]/g, ',')
-                       .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-                       .replace(/．/g, '.');
+            let text = ocrText.replace(/（/g, '(').replace(/）/g, ')');
+            const lines = text.split('\n');
 
-            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-            
-            let rowCount = 0;
-            const processed = new Set();
-            
             const checkedOcrServers = document.querySelectorAll('#ocrServerMultiContainer input:checked');
             const defaultOcrServers = Array.from(checkedOcrServers).map(cb => cb.value);
-            let currentServer = defaultOcrServers.length > 0 ? defaultOcrServers[0] : "未知";
-            
-            let pendingServer = currentServer;
-            let pendingMonster = null;
+            let fallbackServer = defaultOcrServers.length > 0 ? defaultOcrServers[0] : "未知";
 
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i];
+            const tbody = document.getElementById('tableBody');
+            let rowCount = 0;
 
-                // 1. 识别服务器（容错匹配）
-                for (const srv of ALL_SERVERS) {
-                    if (line.includes(srv)) {
-                        pendingServer = srv;
+            lines.forEach(line => {
+                let cleanLine = line.replace(/\s+/g, '');
+                // 匹配时间格式，例如 32:25 (68%)
+                const timeMatch = cleanLine.match(/(\d{1,2}:\d{2})\s*\((\d{1,3})%\)/);
+                if (!timeMatch) return;
+
+                const timeStr = timeMatch[1];
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                const cleanedForSearch = cleanLine.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+
+                // 使用 S 怪词库直接反推怪物与地图，不依赖写死的地图字典。
+                let matchedMonster = null;
+                for (const sm of S_MONSTERS) {
+                    const nameStr = sm.name.replace(/\s/g, '');
+                    const areaStr = sm.area.replace(/\s/g, '');
+
+                    // 完整怪物名或完整地图优先
+                    if (cleanedForSearch.includes(nameStr) || cleanedForSearch.includes(areaStr)) {
+                        matchedMonster = sm;
                         break;
                     }
-                    if (srv.length >= 4) {
-                        let p1 = srv.substring(0, 2);
-                        let p2 = srv.substring(2, 4);
-                        if (line.includes(p1) && line.includes(p2)) {
-                            pendingServer = srv;
+
+                    // 再尝试怪物名前两个字或后两个字
+                    const coreName1 = nameStr.substring(0, 2);
+                    const coreName2 = nameStr.length > 2 ? nameStr.substring(nameStr.length - 2) : '';
+                    if (cleanedForSearch.includes(coreName1) || (coreName2 && cleanedForSearch.includes(coreName2))) {
+                        matchedMonster = sm;
+                        break;
+                    }
+
+                    // 最后检查黑话、简称与别名
+                    if (sm.alias && sm.alias.some(alias => cleanedForSearch.includes(alias))) {
+                        matchedMonster = sm;
+                        break;
+                    }
+                }
+                if (!matchedMonster) return;
+
+                // 从 OCR 文本提取服务器；识别不到则使用默认服务器。
+                let server = fallbackServer;
+                const serverMatch = line.match(/<([^>]+)>/);
+                if (serverMatch) {
+                    const fs = fuzzyServer(serverMatch[1]);
+                    if (fs !== "未知") server = fs;
+                } else {
+                    for (const srv of ALL_SERVERS) {
+                        if (line.includes(srv)) {
+                            server = srv;
                             break;
                         }
                     }
                 }
 
-                // 2. 识别怪物名（强词库校准）
-                let matchedSm = null;
-                const cleanLine = line.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
-                
-                for (let sm of S_MONSTERS) {
-                    let nameNoSpace = sm.name.replace(/\s/g, '');
-                    if (cleanLine.includes(nameNoSpace)) { matchedSm = sm; break; }
-                    if (cleanLine.includes(sm.area.replace(/\s/g, ''))) { matchedSm = sm; break; }
-                    if (sm.alias && sm.alias.some(al => cleanLine.includes(al))) { matchedSm = sm; break; }
-                    
-                    // 前后缀模糊匹配（必须有时间格式才允许）
-                    if (nameNoSpace.length > 2) {
-                        let prefix = nameNoSpace.substring(0, 2);
-                        let suffix = nameNoSpace.substring(nameNoSpace.length - 2);
-                        if (cleanLine.includes(prefix) || cleanLine.includes(suffix)) { 
-                            if (/\d{1,2}\s*[:：;.]\s*\d{2}/.test(line)) {
-                                matchedSm = sm; 
-                                break; 
-                            }
-                        }
-                    }
-                }
-
-                if (matchedSm) {
-                    pendingMonster = matchedSm;
-                }
-
-                // 3. 提取时间并组装
-                if (pendingMonster) {
-                    // 精确匹配 xx:xx，防止匹配到 256:12:53
-                    let timeMatches = [...line.matchAll(/(?<![0-9])(\d{1,2})\s*[:：;.]\s*(\d{2})(?![\s]*[:：;.]\s*\d{2})/g)];
-                    
-                    for (let tm of timeMatches) {
-                        let matchIndex = tm.index;
-                        let prefix = line.substring(Math.max(0, matchIndex - 20), matchIndex);
-                        
-                        // 过滤天气和时间预测
-                        if (/fog|f0g|fate|开始|in/i.test(prefix)) continue;
-
-                        let h = parseInt(tm[1]);
-                        let m = parseInt(tm[2]);
-                        if (h > 99 || m > 59) continue;
-
-                        // 状态判断：如果有 % 就是存活，否则是CD
-                        let isGreen = line.includes('%');
-                        if (!isGreen) {
-                            let suffixText = line.substring(tm.index, tm.index + 20);
-                            if (suffixText.includes('%')) isGreen = true;
-                        }
-
-                        const uniqueKey = `${pendingMonster.name}_${h}:${m}`;
-                        if (processed.has(uniqueKey)) continue;
-                        processed.add(uniqueKey);
-
-                        createResultRow(tbody, pendingServer, pendingMonster.name, pendingMonster.area, h, m, isGreen, 0);
-                        rowCount++;
-                        pendingMonster = null; 
-                        break; 
-                    }
-                }
-            }
+                // 此格式对应存活时间/综合进度，默认按存活状态录入。
+                const isGreen = true;
+                createResultRow(tbody, server, matchedMonster.name, matchedMonster.area, hours, minutes, isGreen, 0);
+                rowCount++;
+            });
 
             if (rowCount > 0) {
-                try { addHistory('截图', `批量导入识别了 ${rowCount} 只 S 怪数据`); } catch(e) {}
-                showToast(`✅ 识别成功，截图已作为证据`);
+                document.getElementById('results-container').style.display = 'block';
+                document.getElementById('copyBtn').style.display = 'block';
+                showToast(`✅ 识别成功！共解析出 ${rowCount} 条记录`);
                 saveLocalState();
+                try { addHistory('截图', `批量导入识别了 ${rowCount} 只 S 怪数据`); } catch(e) {}
             } else {
-                alert("未能解析出有效数据。");
-                document.getElementById('results-container').style.display = 'none';
-                document.getElementById('copyBtn').style.display = 'none';
+                document.getElementById('results-container').style.display = 'block';
+                document.getElementById('copyBtn').style.display = 'block';
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--red); padding:20px; font-weight:bold;">
+                    ⚠️ 识别失败：没有找到有效的 S 怪和时间。<br>
+                    <span style="font-size:13px; font-weight:normal; color:var(--text-muted);">
+                        请确保图片包含「S怪名字/地区/别名」和「时:分 (进度%)」格式。
+                    </span>
+                </td></tr>`;
+                showToast('⚠️ 未能提取到有效数据');
             }
         }
 
@@ -1685,7 +1969,10 @@
         function createResultRow(tbody, server, name, area, h, m, isGreen, fogSeconds) {
             const tr = document.createElement('tr');
             tr.className = 'calc-row';
-            tr.initialData = { server, name, area, h, m, isGreen, fogSeconds: fogSeconds || 0 };
+            tr.initialData = { 
+                server, name, area, h, m, isGreen, fogSeconds: fogSeconds || 0,
+                initialH: h, initialM: m, initialIsGreen: isGreen 
+            };
             tr.isGreen = isGreen;
             const localFogSec = fogSeconds || 0;
 
@@ -1993,7 +2280,6 @@
             if (currentKillRow.isGreen && !forcedVanished && !modalHasEvidence) { alert("请先提供击杀截图证据！"); return; }
 
             currentKillRow.isGreen = false;
-            // 修正 Bug：击杀后，已进入CD的时长应该是 0，系统会自动算出剩余 CD 84h。
             currentKillRow.initialData.h = 0;
             currentKillRow.initialData.m = 0;
             
@@ -2014,9 +2300,9 @@
 
         function undoRow(tr) {
             const init = tr.initialData;
-            tr.isGreen = init.isGreen;
-            init.h = init.initialH !== undefined ? init.initialH : init.h;
-            init.m = init.initialM !== undefined ? init.initialM : init.m;
+            tr.isGreen = init.initialIsGreen;
+            init.h = init.initialH;
+            init.m = init.initialM;
             
             const timeText = tr.querySelector('.time-text');
             timeText.innerText = `${init.h} : ${init.m}`;
@@ -2042,6 +2328,93 @@
                 text += `${server}${name} | ${status} | 进度:${pct} | 强制预计:${force} | ${countdown}\n`;
             });
             navigator.clipboard.writeText(text).then(() => showToast("📋 表格结果已复制到剪贴板！"));
+        }
+
+        // ==========================================
+        // 8. 手动添加S怪功能
+        // ==========================================
+        function openManualAddModal() {
+            document.getElementById('manualAddModal').style.display = 'flex';
+            document.getElementById('addPercent').value = 0;
+            document.getElementById('addHour').value = 0;
+            document.getElementById('addMin').value = 0;
+            document.querySelector('input[name="addStatus"][value="green"]').checked = true;
+            
+            hasAddEvidence = false;
+            document.getElementById('addEvidenceImg').src = '';
+            document.getElementById('addEvidenceImg').style.display = 'none';
+            document.getElementById('addEvidenceArea').classList.remove('has-img');
+            document.getElementById('btnSubmitAdd').classList.remove('ready');
+            document.getElementById('btnSubmitAdd').style.opacity = 0.5;
+            document.getElementById('btnSubmitAdd').style.pointerEvents = 'none';
+        }
+
+        function closeManualAddModal() {
+            document.getElementById('manualAddModal').style.display = 'none';
+        }
+
+        function handleAddEvidence(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            hasAddEvidence = true;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = document.getElementById('addEvidenceImg');
+                img.src = event.target.result; img.style.display = 'block';
+                document.getElementById('addEvidenceArea').classList.add('has-img');
+                document.getElementById('btnSubmitAdd').classList.add('ready');
+                document.getElementById('btnSubmitAdd').style.opacity = 1;
+                document.getElementById('btnSubmitAdd').style.pointerEvents = 'auto';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('manualAddModal').addEventListener('paste', e => {
+            e.stopPropagation();
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i in items) {
+                if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                    handleAddEvidence({ target: { files: [items[i].getAsFile()] } });
+                    e.preventDefault();
+                    break;
+                }
+            }
+        });
+
+        function submitManualAdd() {
+            if (!hasAddEvidence) {
+                alert("必须上传截图证据！");
+                return;
+            }
+
+            const server = addServerSelect.value;
+            const [name, area] = addMonsterSelect.value.split('|');
+            const isGreen = document.querySelector('input[name="addStatus"]:checked').value === 'green';
+            
+            let p = parseFloat(document.getElementById('addPercent').value) || 0;
+            let h = parseInt(document.getElementById('addHour').value) || 0;
+            let m = parseInt(document.getElementById('addMin').value) || 0;
+            
+            const totalMin = isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
+            
+            if (p > 0 && h === 0 && m === 0) {
+                const calcMin = Math.floor(totalMin * (p / 100));
+                h = Math.floor(calcMin / 60);
+                m = calcMin % 60;
+            } else if (h > 0 || m > 0) {
+                p = ((h * 60 + m) / totalMin) * 100;
+            }
+
+            const tbody = document.getElementById('tableBody');
+            document.getElementById('results-container').style.display = 'block';
+            document.getElementById('copyBtn').style.display = 'block';
+            
+            createResultRow(tbody, server, name, area, h, m, isGreen, 0);
+            
+            showToast("✅ 已成功手动录入并计算");
+            closeManualAddModal();
+            saveLocalState();
+            try { addHistory('手动添加', `[${server}] ${name} (${isGreen?'存活':'CD'})`); } catch(e) {}
         }
 
         // ==========================================
@@ -2129,7 +2502,7 @@
                     document.getElementById('maintenanceToggle').classList.add('active');
                 }
                 if (data.manual) {
-                    if (data.manual.server && mServerSelect.querySelector(`option[value="${data.manual.server}"]`)) mServerSelect.value = data.manual.server;
+                    if (data.manual.server) mServerSelect.value = data.manual.server;
                     if (data.manual.monster && mMonsterSelect.querySelector(`option[value="${data.manual.monster}"]`)) mMonsterSelect.value = data.manual.monster;
                     const savedStatus = data.manual.status || 'green';
                     const targetRadio = document.querySelector(`input[name="mStatus"][value="${savedStatus}"]`);
@@ -2214,6 +2587,37 @@
             updateSpecialCounterUI();
             autoCorrect();
             showToast("🗑️ 输入已清空");
+        }
+
+        // 补充缺失的特殊计数器逻辑以兼容旧代码
+        function updateSpecialCounterUI() {
+            const panel = document.getElementById('specialCounterPanel');
+            const name = mMonsterSelect.value.split('|')[0];
+            if (specialCounters.hasOwnProperty(name)) {
+                panel.style.display = 'block';
+                document.getElementById('counterName').innerText = name + " 小怪击杀计数";
+                document.getElementById('counterDisplay').innerText = specialCounters[name];
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+        function addCounter() {
+            const name = mMonsterSelect.value.split('|')[0];
+            if (specialCounters.hasOwnProperty(name)) {
+                specialCounters[name] += 100;
+                updateSpecialCounterUI();
+                saveLocalState();
+                showToast(`✅ 计数已增加至 ${specialCounters[name]}`);
+            }
+        }
+        function resetCounter() {
+            const name = mMonsterSelect.value.split('|')[0];
+            if (specialCounters.hasOwnProperty(name)) {
+                specialCounters[name] = 0;
+                updateSpecialCounterUI();
+                saveLocalState();
+                showToast(`🗑️ 计数已重置`);
+            }
         }
 
         window.addEventListener('load', () => { setTimeout(() => { loadLocalState(); }, 100); });
