@@ -543,7 +543,7 @@
                 </div>
             </div>
 
-            <!-- 触发者名单添加优化 -->
+            <!-- 触发者名单添加优化 (首页) -->
             <div class="input-section" style="background: transparent; border: none; padding: 0;">
                 <details class="collapse-box">
                     <summary>📋 常用触发者名单 (点击展开)</summary>
@@ -856,6 +856,22 @@
                         <textarea id="announcementOutput" class="announcement-textarea" placeholder="生成的公告将在此显示，支持直接点击修改..."></textarea>
                     </div>
                 </div>
+
+                <!-- 【新增】专注排车页面：常用触发者名单 -->
+                <div class="input-section" style="background: transparent; border: none; padding: 0; margin-top: 15px;">
+                    <details class="collapse-box">
+                        <summary>📋 常用触发者名单 (点击展开)</summary>
+                        <div style="padding: 15px;">
+                            <div class="row-flex" style="margin-bottom: 10px;">
+                                <input type="text" id="routeTriggerSearch" placeholder="🔍 模糊搜索触发者..." style="flex: 1; min-width: 150px;" oninput="renderRouteTriggerList()">
+                                <input type="text" id="routeNewTriggerName" placeholder="输入新触发者名" style="flex: 1; min-width: 150px;">
+                                <select id="routeNewTriggerServer" style="flex: 1; min-width: 120px;"></select>
+                                <button class="btn btn-accent" onclick="addRouteCustomTrigger()">➕ 添加</button>
+                            </div>
+                            <div class="trigger-container" id="routeTriggerContainer"></div>
+                        </div>
+                    </details>
+                </div>
             </div>
 
             <!-- 右侧：输出与结果 -->
@@ -1167,6 +1183,7 @@
                 html += `<option value="__CUSTOM__" style="color:var(--gold); font-weight:bold;">+ 添加自定义触发者...</option>`;
                 sel.innerHTML = html; sel.value = currentVal;
             });
+            renderRouteTriggerList();
         }
 
         const LT_HOURS = 48; 
@@ -1246,7 +1263,7 @@
             }
             sel.innerHTML = html;
 
-            // 初始化新触发者的服务器下拉
+            // 初始化新触发者的服务器下拉 (首页)
             const newTrgServer = document.getElementById('newTriggerServer');
             let trgHtml = '';
             for (const [region, servers] of Object.entries(SERVER_GROUPS)) {
@@ -1255,6 +1272,12 @@
                 trgHtml += `</optgroup>`;
             }
             newTrgServer.innerHTML = trgHtml;
+
+            // 初始化新触发者的服务器下拉 (专注排车页面)
+            const routeNewTrgServer = document.getElementById('routeNewTriggerServer');
+            if(routeNewTrgServer) {
+                routeNewTrgServer.innerHTML = trgHtml;
+            }
 
             // 初始化快捷加怪的服务器下拉
             const quickServerSelect = document.getElementById('quickServerSelect');
@@ -1272,7 +1295,7 @@
             renderQuickMonsterTags(S_MONSTERS);
         }
 
-        // 渲染快捷加怪标签（添加了与其他控件的全面联动）
+        // 渲染快捷加怪标签
         function renderQuickMonsterTags(list) {
             const container = document.getElementById('quickMonsterTags');
             if(!container) return;
@@ -1282,24 +1305,15 @@
                 span.className = 'quick-add-tag';
                 span.innerText = m.name;
                 span.onclick = () => {
-                    // 1. 填入快捷加怪自身的输入框
                     document.getElementById('quickMonsterNameInput').value = m.name;
-                    navigator.clipboard.writeText(m.name).then(() => {
-                        // 静默复制
-                    });
+                    navigator.clipboard.writeText(m.name).then(() => {});
                     
-                    // 2. 联动到“快速手动输入”的S怪下拉框，并触发 change 事件
                     const mMonsterEl = document.getElementById('mMonster');
-                    if(mMonsterEl) {
-                        mMonsterEl.value = `${m.name}|${m.area}`;
-                        mMonsterEl.dispatchEvent(new Event('change'));
-                    }
+                    if(mMonsterEl) { mMonsterEl.value = `${m.name}|${m.area}`; mMonsterEl.dispatchEvent(new Event('change')); }
                     
-                    // 3. 联动到“手动录入”弹窗的S怪下拉框
                     const addMonsterEl = document.getElementById('addMonsterSelect');
                     if(addMonsterEl) addMonsterEl.value = `${m.name}|${m.area}`;
                     
-                    // 4. 联动到“修正/添加”弹窗的S怪下拉框
                     const fixMonsterEl = document.getElementById('fixMonsterSelect');
                     if(fixMonsterEl) fixMonsterEl.value = `${m.name}|${m.area}`;
                     
@@ -1321,13 +1335,7 @@
             const server = document.getElementById('quickServerSelect').value;
             let coord = document.getElementById('quickCoordInput').value.trim();
             
-            // 格式化坐标
-            if (!coord) {
-                coord = "(坐标未知)";
-            } else {
-                // 如果用户没打括号，自动加括号
-                if (!coord.startsWith('(')) coord = `(${coord.replace(/,/g, ', ')})`;
-            }
+            if (!coord) { coord = "(坐标未知)"; } else { if (!coord.startsWith('(')) coord = `(${coord.replace(/,/g, ', ')})`; }
 
             const dbMonster = S_MONSTERS.find(m => m.name === name);
             if (!dbMonster) return;
@@ -1335,22 +1343,11 @@
             const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === server);
             if (isDuplicate) { showToast('⚠️ 该服务器下已有这只怪'); return; }
 
-            parsedMonsters.push({
-                name: dbMonster.name,
-                area: dbMonster.area,
-                version: dbMonster.version,
-                coord: coord,
-                server: server,
-                hp: '100.00%',
-                trigger: ''
-            });
-
-            // 排序并渲染
+            parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coord, server: server, hp: '100.00%', trigger: '' });
             parsedMonsters.sort((a, b) => { const weights = { "7.0": 3, "6.0": 2, "5.0": 1, "未知": 0 }; return (weights[b.version] || 0) - (weights[a.version] || 0); });
             renderRouteResult();
             showToast(`✅ 已精准添加 ${name}`);
             
-            // 清空输入
             document.getElementById('quickMonsterNameInput').value = '';
             document.getElementById('quickCoordInput').value = '';
         }
@@ -1361,18 +1358,9 @@
             if (parsedMonsters.length === 0) { showToast('⚠️ 当前排车列表为空'); return; }
             
             let count = 0;
-            parsedMonsters.forEach(m => {
-                if (m.server === '未知' || !m.server) {
-                    m.server = targetServer;
-                    count++;
-                }
-            });
-            if (count > 0) {
-                renderRouteResult();
-                showToast(`✅ 已成功将 ${count} 只未知 S怪 的服务器设为 ${targetServer}`);
-            } else {
-                showToast('⚠️ 没有找到服务器未知的 S怪');
-            }
+            parsedMonsters.forEach(m => { if (m.server === '未知' || !m.server) { m.server = targetServer; count++; } });
+            if (count > 0) { renderRouteResult(); showToast(`✅ 已成功将 ${count} 只未知 S怪 的服务器设为 ${targetServer}`); } 
+            else { showToast('⚠️ 没有找到服务器未知的 S怪'); }
         }
 
         function calculateRouteTime() {
@@ -1429,11 +1417,7 @@
         }
 
         function loadSavedRouteDirect() {
-            if (loadSavedRoute()) {
-                openFocusRoute();
-            } else {
-                showToast('⚠️ 没有找到20分钟内的排车缓存');
-            }
+            if (loadSavedRoute()) { openFocusRoute(); } else { showToast('⚠️ 没有找到20分钟内的排车缓存'); }
         }
 
         function openFocusRoute() {
@@ -1465,6 +1449,7 @@
                     } catch(e) {}
                 }
             }
+            renderRouteTriggerList();
             calculateRouteTime();
         }
 
@@ -1535,10 +1520,7 @@
         }
         serverDropdownList.innerHTML = dropdownHtml;
 
-        function toggleDropdownRegion(titleEl) {
-            const group = titleEl.parentElement;
-            group.classList.toggle('collapsed');
-        }
+        function toggleDropdownRegion(titleEl) { titleEl.parentElement.classList.toggle('collapsed'); }
 
         mServerSelect.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1564,10 +1546,8 @@
                     if (item.innerText.toLowerCase().includes(val)) { item.style.display = 'block'; hasVisible = true; } 
                     else { item.style.display = 'none'; }
                 });
-                if (hasVisible) {
-                    g.style.display = 'block';
-                    if (val !== '') g.classList.remove('collapsed'); 
-                } else { g.style.display = 'none'; }
+                if (hasVisible) { g.style.display = 'block'; if (val !== '') g.classList.remove('collapsed'); } 
+                else { g.style.display = 'none'; }
             });
         }
 
@@ -1575,8 +1555,7 @@
             if (event) event.stopPropagation(); 
             mServerSelect.value = server;
             serverDropdownPanel.style.display = 'none';
-            autoCorrect(); 
-            saveLocalState();
+            autoCorrect(); saveLocalState();
         }
 
         const mMonsterSelect = document.getElementById('mMonster');
@@ -1627,9 +1606,7 @@
                 : '当前状态：<span style="color:var(--red); font-weight:bold;">未解锁</span>';
         }
         function generateInviteCode() {
-            if (Date.now() < generateCooldownEnd) {
-                const remain = Math.ceil((generateCooldownEnd - Date.now()) / 1000); showToast(`⚠️ 处于冷却期，请等待 ${remain} 秒`); return;
-            }
+            if (Date.now() < generateCooldownEnd) { const remain = Math.ceil((generateCooldownEnd - Date.now()) / 1000); showToast(`⚠️ 处于冷却期，请等待 ${remain} 秒`); return; }
             if (document.getElementById('masterCodeInput').value.trim() !== 'w6168') { showToast('⚠️ 主控码错误，无法生成'); return; }
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let newCode = '';
             for (let i = 0; i < 16; i++) newCode += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -1663,20 +1640,6 @@
             openCorrectionModal(server);
         }
 
-        function initMultiSelectContainers() {
-            const ocrContainer = document.getElementById('ocrServerMultiContainer');
-            const batchContainer = document.getElementById('batchServerList');
-            ocrContainer.innerHTML = ''; batchContainer.innerHTML = '';
-            for (const [region, servers] of Object.entries(SERVER_GROUPS)) {
-                let regionHtml = `<details class="region-details"><summary>${region}</summary><div class="server-checkbox-group">`;
-                servers.forEach(s => { regionHtml += `<label><input type="checkbox" value="${s}"> ${s}</label>`; });
-                regionHtml += `</div></details>`; ocrContainer.innerHTML += regionHtml;
-                let batchHtml = `<details class="region-details"><summary>${region}</summary><div class="server-checkbox-group">`;
-                servers.forEach(s => { batchHtml += `<label><input type="checkbox" value="${s}"> ${s}</label>`; });
-                batchHtml += `</div></details>`; batchContainer.innerHTML += batchHtml;
-            }
-        }
-
         function renderTriggerList() {
             const container = document.getElementById('triggerContainer'); container.innerHTML = '';
             const search = document.getElementById('triggerSearch').value.toLowerCase();
@@ -1685,14 +1648,35 @@
                 if (t.toLowerCase().includes(search)) {
                     const span = document.createElement('span'); span.className = 'trigger-tag'; span.innerText = t;
                     span.onclick = () => { 
-                        // 点击直接填入名字和服务器
+                        const parts = t.split('@');
+                        if(parts.length === 2) { document.getElementById('newTriggerName').value = parts[0]; document.getElementById('newTriggerServer').value = parts[1]; } 
+                        else { document.getElementById('newTriggerName').value = t; }
+                    }; 
+                    container.appendChild(span);
+                }
+            });
+            if (container.innerHTML === '') container.innerHTML = isVipUnlocked ? '<div style="color:var(--text-muted); font-size:12px;">没有找到匹配的触发者</div>' : '<div style="color:var(--gold); font-size:12px; padding: 5px;">⚠️ 预置名单已锁定，请在顶部输入邀请码查看。</div>';
+        }
+
+        // 渲染专注排车页面的触发者名单
+        function renderRouteTriggerList() {
+            const container = document.getElementById('routeTriggerContainer'); 
+            if (!container) return;
+            container.innerHTML = '';
+            const search = (document.getElementById('routeTriggerSearch')?.value || '').toLowerCase();
+            let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
+            displayList.forEach(t => {
+                if (t.toLowerCase().includes(search)) {
+                    const span = document.createElement('span'); span.className = 'trigger-tag'; span.innerText = t;
+                    span.onclick = () => { 
                         const parts = t.split('@');
                         if(parts.length === 2) {
-                            document.getElementById('newTriggerName').value = parts[0];
-                            document.getElementById('newTriggerServer').value = parts[1];
+                            document.getElementById('routeNewTriggerName').value = parts[0];
+                            document.getElementById('routeNewTriggerServer').value = parts[1];
                         } else {
-                            document.getElementById('newTriggerName').value = t;
+                            document.getElementById('routeNewTriggerName').value = t;
                         }
+                        navigator.clipboard.writeText(parts[0] || t).then(()=> showToast('📋 触发者名字已复制'));
                     }; 
                     container.appendChild(span);
                 }
@@ -1707,7 +1691,21 @@
             const val = `${name}@${server}`;
             if (!customTriggers.includes(val)) { customTriggers.push(val); localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers)); }
             if (!allTriggers.includes(val)) allTriggers.push(val);
-            showToast('✅ 已添加自定义触发者'); document.getElementById('newTriggerName').value = ''; renderTriggerList(); updateGlobalTriggers();
+            showToast('✅ 已添加自定义触发者'); 
+            document.getElementById('newTriggerName').value = ''; 
+            renderTriggerList(); updateGlobalTriggers();
+        }
+
+        function addRouteCustomTrigger() {
+            const name = document.getElementById('routeNewTriggerName').value.trim();
+            const server = document.getElementById('routeNewTriggerServer').value;
+            if (!name) { showToast('⚠️ 请输入触发者名字'); return; }
+            const val = `${name}@${server}`;
+            if (!customTriggers.includes(val)) { customTriggers.push(val); localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers)); }
+            if (!allTriggers.includes(val)) allTriggers.push(val);
+            showToast('✅ 已添加自定义触发者'); 
+            document.getElementById('routeNewTriggerName').value = ''; 
+            renderRouteTriggerList(); renderTriggerList(); updateGlobalTriggers();
         }
 
         function openOriginalImageModal() { if (!currentRouteImageBase64) return; document.getElementById('originalImageViewer').src = currentRouteImageBase64; document.getElementById('imageViewerModal').style.display = 'flex'; }
@@ -1734,7 +1732,7 @@
         function generateSimpleRoute(force = false, flatList = null) {
             if (!force && isSimpleRouteLocked) return;
             const el = document.getElementById('simpleRouteOutput');
-            if (!el) return; // 防崩溃保护
+            if (!el) return; 
             
             if (parsedMonsters.length === 0) { el.value = ""; return; }
             if (!flatList) {
@@ -1830,24 +1828,17 @@
             if (!str) return "未知"; 
             str = str.replace(/[\s<>＜＞]/g, '');
             
-            // 1. 如果本身就是全称
             if (ALL_SERVERS.includes(str)) return str;
-
-            // 2. 检查包含的全称（比如 "梦羽宝境" 或 "在梦羽宝境"）
             for (let srv of ALL_SERVERS) { if (str.includes(srv)) return srv; }
 
-            // 3. 【新增】额外添加的黑话/别名精准匹配
             for (let alias in SERVER_ALIASES) {
-                // 单字黑话（湖、茶、川）必须完全等于，防止误判
                 if (["湖", "茶", "川"].includes(alias)) {
                     if (str === alias) return SERVER_ALIASES[alias];
                 } else {
-                    // 其他黑话只要包含即可（如 "梦雨"、"cft"）
                     if (str.includes(alias)) return SERVER_ALIASES[alias];
                 }
             }
 
-            // 4. 下面保留你原本的所有硬编码匹配逻辑
             if (str.includes("白金") || str.includes("幻象") || str.includes("白幻")) return "白金幻象";
             if (str.includes("龙巢") || str.includes("神殿") || str.includes("龙昌")) return "龙巢神殿";
             if (str.includes("神拳") || str.includes("拳痕") || str.includes("神卷")) return "神拳痕";
@@ -1877,7 +1868,6 @@
             if (str.includes("柔风") || str.includes("海湾")) return "柔风海湾";
             if (str.includes("琥珀") || str.includes("珀原")) return "琥珀原";
             
-            // 5. 兜底：乱序匹配
             let bestMatch = null, maxMatchCount = 0;
             for (let srv of ALL_SERVERS) {
                 if (srv.length < 2) continue;
@@ -1901,13 +1891,11 @@
                 let serverFound = false; let serverMatch = line.match(/<([^>]+)>/);
                 if (serverMatch) { let fs = fuzzyServer(serverMatch[1]); if (fs !== "未知") { lastServer = fs; serverFound = true; } }
                 
-                // 先找全称
                 if (!serverFound) { for (let srv of ALL_SERVERS) if (line.includes(srv)) { lastServer = srv; serverFound = true; break; } }
                 
-                // 【新增】如果没找到全称，再去黑话库里找
                 if (!serverFound) { 
                     for (let alias in SERVER_ALIASES) {
-                        if (["湖", "茶", "川"].includes(alias)) continue; // 单字在整行文本里极易误判，跳过
+                        if (["湖", "茶", "川"].includes(alias)) continue; 
                         if (line.includes(alias)) { lastServer = SERVER_ALIASES[alias]; serverFound = true; break; }
                     }
                 }
@@ -1951,7 +1939,6 @@
             } else showToast('⚠️ 已经是最前/最后一只了');
         }
 
-        // 新增：移除该服务器最后一只怪
         function removeLastMonsterOfServer(serverName) {
             for (let i = parsedMonsters.length - 1; i >= 0; i--) {
                 if (parsedMonsters[i].server === serverName) {
@@ -1964,7 +1951,6 @@
             showToast(`⚠️ ${serverName} 下没有怪了`);
         }
 
-        // 新增：移除整个服务器
         function removeServer(serverName) {
             const beforeLen = parsedMonsters.length;
             parsedMonsters = parsedMonsters.filter(m => m.server !== serverName);
@@ -1976,12 +1962,10 @@
             }
         }
 
-        // 处理触发者输入框的实时更改（模糊匹配 + 保存）
         function updateRouteTriggerInput(el, idx) {
             const val = el.value.trim();
             if (parsedMonsters[idx]) {
                 parsedMonsters[idx].trigger = val;
-                // 如果输入的是新名字，自动保存到本地
                 if (val && !allTriggers.includes(val)) {
                     customTriggers.push(val); 
                     localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers));
@@ -1991,7 +1975,6 @@
             }
         }
 
-        // 恢复 select 下拉并带搜索功能逻辑（用于其他地方）
         function updateRouteTrigger(val, idx) {
             if (parsedMonsters[idx]) {
                 if (val === "__CUSTOM__") {
@@ -2042,7 +2025,6 @@
 
             let routeStr = "", logHtml = "", flatSortedMonsters = []; 
 
-            // 确保 datalist 存在
             let datalistEl = document.getElementById('trigger-datalist');
             if(!datalistEl) {
                 datalistEl = document.createElement('datalist');
@@ -2057,7 +2039,6 @@
                 const isEditing = editingRouteServers.has(stat.server);
                 routeStr += `【${isFirst ? '⭐ 首站：' : `📍 第${index + 1}站：`}${stat.server}】\n`;
 
-                // 开始生成服务器卡片框
                 logHtml += `<div class="server-card ${isEditing ? 'show-arrows' : ''}">
                     <div class="server-card-header">
                         <div class="server-card-title">${stationPrefix}：${stat.server} <span style="font-size:12px; color:var(--text-muted);">(总计${stat.count}只)</span></div>
@@ -2095,7 +2076,7 @@
                         </div>
                     </div>`;
                 });
-                logHtml += `</div></div>`; // 闭合卡片
+                logHtml += `</div></div>`; 
                 routeStr += `\n`;
             });
 
@@ -2150,7 +2131,6 @@
             document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("💾 排车文件已保存！");
         }
 
-        // 手动录入核心逻辑
         const mHour = document.getElementById('mHour'), mMin = document.getElementById('mMin'), mPercent = document.getElementById('mPercent');
         const mFogGroup = document.getElementById('mFogGroup'), mFogHour = document.getElementById('mFogHour'), mFogMin = document.getElementById('mFogMin'), mFogSec = document.getElementById('mFogSec');
         const manualBox = document.getElementById('manualResultBox'), mFateGroup = document.getElementById('mFateGroup');
@@ -2407,7 +2387,6 @@
             for (let i in items) if (items[i].kind === 'file' && items[i].type.startsWith('image/')) { handleAddEvidence({ target: { files: [items[i].getAsFile()] } }); e.preventDefault(); break; }
         });
 
-        // 补全缺失的 createResultRow 函数，防止提交时崩溃
         function createResultRow(tbody, server, name, area, h, m, isGreen, percent, trigger) {
             const tr = document.createElement('tr'); tr.className = 'calc-row';
             tr.innerHTML = `
@@ -2431,8 +2410,7 @@
                 <td><span class="status-text-col">正常</span></td>
             `;
             tbody.appendChild(tr);
-            // 简单模拟 recalculate，避免报错
-            tr.recalculate = function() { /* 这里由于原版缺失完整逻辑，留空占位防报错 */ };
+            tr.recalculate = function() { /* 留空占位防报错 */ };
             tr.toggleEditTime = function() { /* 同上 */ };
             tr.saveEditTime = function() { /* 同上 */ };
         }
@@ -2459,7 +2437,7 @@
 
         function loadLocalState() {
             const savedTheme = localStorage.getItem('ff14_theme') || 'dark'; changeTheme(savedTheme);
-            updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList();
+            updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList(); renderRouteTriggerList();
             renderRecentList(); calcManual(); updateToolboxBadges();
             initGlobalServerLock();
         }
