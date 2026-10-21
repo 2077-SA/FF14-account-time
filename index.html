@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FF14 S怪 精确时间计算器 + 智能排车 ULTIMATE</title>
+    <title>FF14 S怪帮助计算器 </title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root { 
@@ -51,7 +51,7 @@
         /* 工具箱菜单美化 */
         .toolbox-wrapper { position: relative; display: inline-block; }
         .toolbox-menu { 
-            display: none; position: absolute; background: var(--panel); min-width: 250px; 
+            display: none; position: absolute; background: var(--panel); min-width: 260px; 
             box-shadow: 0 8px 16px rgba(0,0,0,0.3); z-index: 1000; border-radius: 6px; 
             border: 1px solid var(--border); top: 100%; left: 0; padding: 8px 0;
         }
@@ -63,7 +63,7 @@
         .toolbox-menu button:hover { background: var(--panel-light); color: var(--accent); }
         .toolbox-wrapper:hover .toolbox-menu { display: block; }
 
-        /* --- 新增：类似开关灯的 Toggle Switch --- */
+        /* --- Toggle Switch 样式 --- */
         .toggle-switch {
             position: relative;
             width: 36px;
@@ -87,22 +87,9 @@
             transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        /* 开启状态 */
-        .toggle-switch.active {
-            background-color: var(--accent);
-            border-color: var(--accent);
-        }
-        .toggle-switch.active::after {
-            transform: translateX(16px);
-            background-color: #fff;
-        }
-        /* 暗黑模式下轻微调整边框颜色 */
-        [data-theme="light"] .toggle-switch, 
-        [data-theme="pink"] .toggle-switch, 
-        [data-theme="sky"] .toggle-switch {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-        /* ----------------------------------- */
+        .toggle-switch.active { background-color: var(--accent); border-color: var(--accent); }
+        .toggle-switch.active::after { transform: translateX(16px); background-color: #fff; }
+        [data-theme="light"] .toggle-switch, [data-theme="pink"] .toggle-switch, [data-theme="sky"] .toggle-switch { background-color: rgba(0, 0, 0, 0.1); }
 
         .btn-large-route { 
             padding: 12px 30px; font-size: 18px; font-weight: bold; 
@@ -134,8 +121,8 @@
         
         .row-flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; }
         
-        select, input[type="number"], input[type="text"] { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 10px; border-radius: 6px; font-size: 15px; outline: none; transition: border 0.2s; }
-        select:focus, input[type="number"]:focus, input[type="text"]:focus { border-color: var(--accent); }
+        select, input[type="number"], input[type="text"], input[type="password"] { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 10px; border-radius: 6px; font-size: 15px; outline: none; transition: border 0.2s; }
+        select:focus, input[type="number"]:focus, input[type="text"]:focus, input[type="password"]:focus { border-color: var(--accent); }
         select { cursor: pointer; color: var(--accent); width: 100%; max-width: 250px; }
         input[type="number"] { width: 70px; text-align: center; font-family: monospace; font-weight: bold; }
         
@@ -560,6 +547,11 @@
                         <span>🔄 切换 横板/竖板 布局</span>
                         <div class="toggle-switch" id="switch-layout"></div>
                     </button>
+                    <!-- 新增：邀请码管理 -->
+                    <button onclick="openInviteModal()" style="color: var(--blue); border-top: 1px dashed var(--border);">
+                        <span>🔑 邀请码管理 / 特权</span>
+                        <div class="toggle-switch" id="switch-invite"></div>
+                    </button>
                 </div>
             </div>
             
@@ -729,7 +721,7 @@
             <div id="routeResultBox" class="route-result-box">
                 <div class="section-title" style="color: var(--gold); display: flex; justify-content: space-between; align-items: center;">
                     <span>📋 最终发车顺序 (详细版)</span>
-                    <button class="btn-fix" onclick="openCorrectionModal()">🛠️ 添加漏掉的S怪</button>
+                    <button class="btn-fix" onclick="handleRouteAdd()">🛠️ 添加漏掉的S怪</button>
                 </div>
                 <textarea id="routeOutput" class="route-textarea route-output" readonly></textarea>
 
@@ -837,6 +829,41 @@
         </div>
     </div>
 
+    <!-- 邀请码弹窗 -->
+    <div class="modal-overlay" id="inviteModal">
+        <div class="modal-content">
+            <button class="btn-close-modal" onclick="document.getElementById('inviteModal').style.display='none'">×</button>
+            <div class="modal-title" style="color: var(--blue);">🔑 邀请码 / 特权验证</div>
+            <div class="modal-desc">排车与完整触发名单需要邀请码解锁。若无邀请码，请先在第一步生成。</div>
+            
+            <!-- 生成区域 (先弹这个) -->
+            <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px dashed var(--gold); text-align: left; margin-bottom: 15px;">
+                <div style="font-size: 13px; color: var(--gold); font-weight: bold; margin-bottom: 10px;">🛡️ 第一步：生成特权邀请码</div>
+                <div class="row-flex">
+                    <input type="password" id="masterCodeInput" placeholder="输入主控码" style="flex:1; max-width: none;">
+                    <button class="btn btn-outline" onclick="generateInviteCode()">生成邀请码</button>
+                </div>
+                <div id="newCodeResult" style="margin-top: 15px; display: none;">
+                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">生成成功！复制您的 16 位邀请码：</div>
+                    <div class="row-flex" style="background: var(--panel); border: 1px solid var(--accent); padding: 10px; border-radius: 6px;">
+                        <span id="generatedCodeText" style="flex: 1; font-family: monospace; font-size: 16px; color: var(--accent); font-weight: bold; letter-spacing: 1px;"></span>
+                        <button class="btn btn-accent" onclick="copyGeneratedCode()" style="padding: 4px 10px; font-size: 12px;">一键复制</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 验证区域 -->
+            <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="font-size: 13px; color: var(--blue); font-weight: bold; margin-bottom: 10px;">🔓 第二步：输入邀请码解锁</div>
+                <div id="vipStatusText" style="margin-bottom: 10px; font-weight: bold; color: var(--text); font-size: 13px;">当前状态：<span style="color:var(--red)">未解锁</span></div>
+                <div class="row-flex">
+                    <input type="text" id="inviteCodeInput" placeholder="请粘贴 16 位邀请码" style="flex:1; max-width: none;">
+                    <button class="btn btn-accent" onclick="validateInviteCode()">验证解锁</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="floatingCountdown">
         <div class="fc-header">
             <span class="fc-title">⏱️ 手动计算 · 倒计时</span>
@@ -889,13 +916,41 @@
             "等风也在等你@潮风亭", "早桜弥月@沃仙曦染"
         ]));
 
-        let allTriggers = [...DEFAULT_TRIGGERS];
+        // --- 邀请码系统数据 ---
+        let generatedInvites = [];
+        try {
+            const savedCodes = localStorage.getItem('ff14_generated_invites');
+            if (savedCodes) generatedInvites = JSON.parse(savedCodes);
+        } catch(e) {}
+
+        let isVipUnlocked = localStorage.getItem('ff14_vip_unlocked') === 'true';
+        
+        let customTriggers = [];
         try {
             const savedTriggers = localStorage.getItem('ff14_custom_triggers');
-            if (savedTriggers) {
-                allTriggers = Array.from(new Set([...allTriggers, ...JSON.parse(savedTriggers)]));
-            }
+            if (savedTriggers) customTriggers = JSON.parse(savedTriggers);
         } catch(e) {}
+
+        let allTriggers = [];
+
+        function updateGlobalTriggers() {
+            if (isVipUnlocked) {
+                allTriggers = Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers]));
+            } else {
+                allTriggers = [...customTriggers];
+            }
+            // 刷新所有下拉框
+            document.querySelectorAll('.select-trigger').forEach(sel => {
+                const currentVal = sel.value;
+                let html = `<option value="">-- 选择触发者 --</option>`;
+                allTriggers.forEach(t => {
+                    html += `<option value="${t}">${t}</option>`;
+                });
+                html += `<option value="__CUSTOM__" style="color:var(--gold); font-weight:bold;">+ 添加自定义触发者...</option>`;
+                sel.innerHTML = html;
+                sel.value = currentVal;
+            });
+        }
 
         const LT_HOURS = 48; 
         let CD_HOURS = 84;   
@@ -915,6 +970,110 @@
         let currentRouteImageBase64 = null; 
         let editingRouteServers = new Set(); 
         let isSimpleRouteLocked = false; 
+
+        // ==========================================
+        // 🔑 邀请码系统逻辑
+        // ==========================================
+        function openInviteModal() {
+            document.getElementById('inviteModal').style.display = 'flex';
+            document.getElementById('newCodeResult').style.display = 'none';
+            document.getElementById('masterCodeInput').value = '';
+            document.getElementById('inviteCodeInput').value = '';
+            
+            updateInviteStatusUI();
+        }
+
+        function updateInviteStatusUI() {
+            const statusText = document.getElementById('vipStatusText');
+            const swInvite = document.getElementById('switch-invite');
+            if (isVipUnlocked) {
+                statusText.innerHTML = '当前状态：<span style="color:var(--accent); font-weight:bold;">已解锁特权</span>';
+                swInvite.classList.add('active');
+            } else {
+                statusText.innerHTML = '当前状态：<span style="color:var(--red); font-weight:bold;">未解锁</span>';
+                swInvite.classList.remove('active');
+            }
+        }
+
+        function validateInviteCode() {
+            const code = document.getElementById('inviteCodeInput').value.trim();
+            if (!code) {
+                showToast('请输入邀请码');
+                return;
+            }
+            
+            // 检查是否在已生成的本地名单中
+            if (generatedInvites.includes(code)) {
+                isVipUnlocked = true;
+                localStorage.setItem('ff14_vip_unlocked', 'true');
+                
+                updateInviteStatusUI();
+                updateGlobalTriggers();
+                renderTriggerList();
+                
+                showToast('✅ 邀请码验证成功！已解锁高级特权。');
+                document.getElementById('inviteModal').style.display = 'none';
+                
+                if (document.getElementById('routeModal').style.display === 'flex' && parsedMonsters.length > 0) {
+                    renderRouteResult();
+                }
+            } else {
+                showToast('❌ 邀请码无效或不存在！');
+            }
+        }
+
+        function generateInviteCode() {
+            const master = document.getElementById('masterCodeInput').value.trim();
+            if (master !== 'w6168') {
+                showToast('⚠️ 主控码错误，无法生成');
+                return;
+            }
+            
+            // 生成 16 位随机字符
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let newCode = '';
+            for (let i = 0; i < 16; i++) {
+                newCode += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            // 确保唯一性并保存
+            if (!generatedInvites.includes(newCode)) {
+                generatedInvites.push(newCode);
+                localStorage.setItem('ff14_generated_invites', JSON.stringify(generatedInvites));
+            }
+            
+            document.getElementById('generatedCodeText').innerText = newCode;
+            document.getElementById('newCodeResult').style.display = 'block';
+            document.getElementById('masterCodeInput').value = '';
+            showToast('✅ 新的 16 位邀请码已生成');
+        }
+
+        function copyGeneratedCode() {
+            const code = document.getElementById('generatedCodeText').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('📋 邀请码已复制到剪贴板！');
+            });
+        }
+
+        // 拦截排车界面的 +1 按钮
+        function handleRouteAdd(server) {
+            if (!isVipUnlocked) {
+                alert("⚠️ 排车及无截图添加功能目前为邀请制。\n请前往【工具箱】-【邀请码管理】，输入主控码生成邀请码并解锁后使用！\n\n未解锁状态下，您可以使用主界面的【➕ 手动录入 S怪】进行添加（需要上传截图证据）。");
+                return;
+            }
+            openCorrectionModal(server);
+        }
+
+        // 拦截排车弹窗开启：未解锁时直接弹窗提示
+        const _originalOpenRouteModal = openRouteModal;
+        openRouteModal = function() {
+            if (!isVipUnlocked) {
+                openInviteModal();
+                showToast('⚠️ 请先生成或输入邀请码解锁排车特权');
+                return;
+            }
+            _originalOpenRouteModal();
+        };
 
         // ==========================================
         // 🚗 初始化自定义服务器选择组件
@@ -1048,7 +1207,14 @@
             container.innerHTML = '';
             const search = document.getElementById('triggerSearch').value.toLowerCase();
             
-            allTriggers.forEach(t => {
+            let displayList = [];
+            if (isVipUnlocked) {
+                displayList = Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers]));
+            } else {
+                displayList = [...customTriggers];
+            }
+
+            displayList.forEach(t => {
                 if (t.toLowerCase().includes(search)) {
                     const span = document.createElement('span');
                     span.className = 'trigger-tag';
@@ -1057,8 +1223,13 @@
                     container.appendChild(span);
                 }
             });
+            
             if (container.innerHTML === '') {
-                container.innerHTML = '<div style="color:var(--text-muted); font-size:12px;">没有找到匹配的触发者</div>';
+                if (!isVipUnlocked) {
+                    container.innerHTML = '<div style="color:var(--gold); font-size:12px; padding: 5px;">⚠️ 预置名单已锁定，请在【工具箱】输入邀请码查看。当前仅显示您自己添加的名单。</div>';
+                } else {
+                    container.innerHTML = '<div style="color:var(--text-muted); font-size:12px;">没有找到匹配的触发者</div>';
+                }
             }
         }
 
@@ -1069,13 +1240,17 @@
         function addCustomTrigger() {
             const val = document.getElementById('newTriggerName').value.trim();
             if (!val) return;
+            
+            if (!customTriggers.includes(val)) {
+                customTriggers.push(val);
+                localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers));
+            }
+            
             if (!allTriggers.includes(val)) {
                 allTriggers.push(val);
-                localStorage.setItem('ff14_custom_triggers', JSON.stringify(allTriggers));
-                showToast('✅ 已添加新触发者');
-            } else {
-                showToast('⚠️ 该触发者已存在');
             }
+            
+            showToast('✅ 已添加自定义触发者');
             document.getElementById('newTriggerName').value = '';
             renderTriggerList();
             updateAllTriggerSelects();
@@ -1594,10 +1769,16 @@
                     const custom = prompt("请输入自定义触发者名字 (例: 张三@服务器):");
                     if (custom && custom.trim()) {
                         const newVal = custom.trim();
+                        
+                        // 加入用户自定义名单
+                        if (!customTriggers.includes(newVal)) {
+                            customTriggers.push(newVal);
+                            localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers));
+                        }
                         if (!allTriggers.includes(newVal)) {
                             allTriggers.push(newVal);
-                            localStorage.setItem('ff14_custom_triggers', JSON.stringify(allTriggers));
                         }
+                        
                         parsedMonsters[idx].trigger = newVal;
                         renderTriggerList(); 
                         renderRouteResult(); 
@@ -1659,7 +1840,7 @@
                 logHtml += `<div class="route-log-item" style="background:rgba(255,255,255,0.05); padding: 6px; font-weight:bold; margin-top:5px; display:flex; justify-content:space-between; align-items:center;">
                     <span>${isFirst ? '⭐ 首站：' : `📍 第${index + 1}站：`} ${stat.server} (总计${stat.count}只)</span>
                     <span>
-                        <button class="route-add-btn" onclick="openCorrectionModal('${stat.server}')">+1只</button>
+                        <button class="route-add-btn" onclick="handleRouteAdd('${stat.server}')">+1只</button>
                         <button class="route-add-btn" style="background:var(--purple);" onclick="toggleRouteArrows('${stat.server}')">
                             ${isEditing ? '完成调整' : '🔃 调整车序'}
                         </button>
@@ -2194,6 +2375,9 @@
         upArea.addEventListener('drop', e => { e.preventDefault(); upArea.classList.remove('paste-active'); if(e.dataTransfer.files[0]) processImage(e.dataTransfer.files[0]); });
         
         document.addEventListener('paste', e => {
+            // 修复：如果在输入框内粘贴，放行，不拦截
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
             if(document.getElementById('routeModal').style.display === 'flex' || document.getElementById('manualAddModal').style.display === 'flex' || document.getElementById('imageViewerModal').style.display === 'flex' || document.getElementById('killModal').style.display === 'flex') return;
 
             e.preventDefault();
@@ -2575,10 +2759,15 @@
                     const custom = prompt("请输入自定义触发者名字 (例: 张三@服务器):");
                     if (custom && custom.trim()) {
                         const newVal = custom.trim();
+                        
+                        if (!customTriggers.includes(newVal)) {
+                            customTriggers.push(newVal);
+                            localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers));
+                        }
                         if (!allTriggers.includes(newVal)) {
                             allTriggers.push(newVal);
-                            localStorage.setItem('ff14_custom_triggers', JSON.stringify(allTriggers));
                         }
+                        
                         tr.initialData.trigger = newVal;
                         updateAllTriggerSelects();
                         sel.value = newVal;
@@ -2899,6 +3088,9 @@
             const savedTheme = localStorage.getItem('ff14_theme') || 'dark';
             changeTheme(savedTheme);
             
+            // 初始化邀请码和特权状态
+            updateInviteStatusUI();
+            updateGlobalTriggers();
             renderTriggerList();
 
             const defaultOcrServersStr = localStorage.getItem('ff14_ocr_default_servers');
