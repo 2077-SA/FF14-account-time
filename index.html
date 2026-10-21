@@ -329,7 +329,7 @@
         .focus-col-right {
             flex: var(--right-ratio, 1.5); display: flex; flex-direction: column; background: var(--panel); 
             border: 1px solid var(--border); border-radius: 12px; padding: 20px;
-            transition: flex 0.3s; overflow: hidden; /* 核心修复：防止撑开，限制高度 */
+            transition: flex 0.3s; overflow: hidden; /* 防止撑开，限制高度 */
         }
 
         .route-textarea { width: 100%; height: 180px; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; box-sizing: border-box; resize: none; margin-bottom: 10px; outline: none; font-size: 14px; line-height: 1.6; }
@@ -338,17 +338,65 @@
         
         /* 核心修复：右侧容器自适应撑满并允许内部滚动 */
         .route-result-box { display: none; text-align: left; flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; }
-        /* 针对明细列表增加了滚动条支持 */
-        .route-log-list { font-size: 12px; color: var(--text-muted); flex: 1; overflow-y: auto; margin-top: 10px; border: 1px solid var(--border); border-radius: 6px; padding: 10px; background: var(--input-bg); min-height: 0; max-height: 650px; }
-        .route-log-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; gap: 8px;}
-        .route-log-item:last-child { border-bottom: none; }
+        
+        /* 针对明细列表增加了滚动条支持（核心调整：改为 60vh，防止滑出屏幕） */
+        .route-log-list { 
+            font-size: 12px; color: var(--text-muted); flex: 1; overflow-y: auto; 
+            margin-top: 10px; border: none; border-radius: 0; padding: 0; 
+            background: transparent; min-height: 0; max-height: 60vh; 
+        }
+
+        /* 新增：每个服务器独立卡片样式 */
+        .server-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .server-card-header {
+            background: var(--panel-light);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .server-card-title {
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 14px;
+        }
+        .server-card-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        /* 怪物列表项优化 */
+        .monster-list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .monster-list-item:last-child { border-bottom: none; }
+        .monster-list-item:hover { background: rgba(255,255,255,0.02); }
+
         .v7 { color: var(--red); font-weight: bold; background: rgba(255,77,77,0.1); padding: 2px 4px; border-radius: 3px;}
         .v6 { color: var(--gold); font-weight: bold; background: rgba(243,156,18,0.1); padding: 2px 4px; border-radius: 3px;}
         .v5 { color: var(--blue); font-weight: bold; background: rgba(0,191,255,0.1); padding: 2px 4px; border-radius: 3px;}
 
         .btn-fix { background: var(--gold); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
         .btn-fix:hover { filter: brightness(0.9); }
-        .route-add-btn { background: var(--accent); color: var(--panel); border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; margin-left: 5px;}
+        .route-add-btn { background: var(--accent); color: var(--panel); border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
         .route-add-btn:hover { filter: brightness(0.9); }
 
         .btn-edit-small, .btn-delete-small, .btn-order-up, .btn-order-down {
@@ -360,13 +408,13 @@
         .btn-delete-small:hover { background: rgba(255, 77, 77, 0.1); border-color: var(--red); }
         
         .btn-order-up, .btn-order-down { color: var(--text-muted); display: none; }
-        .route-log-item.show-arrows .btn-order-up, .route-log-item.show-arrows .btn-order-down { display: inline-block; }
+        .server-card.show-arrows .btn-order-up, .server-card.show-arrows .btn-order-down { display: inline-block; }
         .btn-order-up:hover, .btn-order-down:hover { color: var(--accent); background: rgba(0, 255, 127, 0.1); border-radius: 4px; }
 
         /* 优化输入框样式：带搜索的触发者 */
         .input-trigger-compact {
             background: var(--input-bg); border: 1px solid var(--border); color: var(--gold); 
-            padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 180px; outline: none;
+            padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 220px; outline: none;
             transition: 0.2s;
         }
         .input-trigger-compact:focus { border-color: var(--accent); background: var(--panel); }
@@ -393,6 +441,7 @@
             .focus-container { flex-direction: column; min-height: auto; }
             .focus-col-left, .focus-col-right { flex: none !important; overflow: visible; }
             .btn-large-route { font-size: 20px; padding: 14px 25px; }
+            .route-log-list { max-height: none; }
         }
 
         @media (max-width: 768px) {
@@ -432,7 +481,7 @@
         <div class="theme-btn sky" onclick="changeTheme('sky')" title="天蓝模式"></div>
     </div>
 
-    <h1>FF14 S怪 精确时间计算器 & 智能排车 ULTIMATE</h1>
+    <h1>FF14 S怪 时间计算器及其智能排车 </h1>
     <div class="subtitle"></div>
 
     <!-- 快速手动输入折叠 -->
@@ -679,7 +728,7 @@
                 <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
                     💡 支持格式：怪物名 100.00% 地区 (x.x, x.x) 服务器 (地区可省略)
                 </div>
-                <textarea id="routeInput" class="route-textarea" placeholder="在此粘贴聊天框文本..."></textarea>
+                <textarea id="routeInput" class="route-textarea" style="resize: vertical; min-height: 120px;" placeholder="在此粘贴聊天框文本..."></textarea>
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                     <button class="btn btn-accent" onclick="generateRoute()" style="flex:1; font-size: 16px; padding: 12px 0;">🚀 开始解析排车</button>
@@ -765,7 +814,7 @@
                         <button class="btn-fix" onclick="copySimpleRoute()">📋 复制</button>
                     </span>
                 </div>
-               <textarea id="simpleRouteOutput" class="route-textarea" style="color:var(--text); border-color:var(--accent); height: 120px; min-height: 120px; font-size: 14px; line-height: 1.6; margin-top: 10px; resize: both;" placeholder="简版车序自动生成中..."></textarea>
+                <textarea id="simpleRouteOutput" class="route-textarea" style="color:var(--text); border-color:var(--accent); height: 120px; min-height: 120px; font-size: 14px; line-height: 1.6; margin-top: 10px; resize: both;" placeholder="简版车序自动生成中..."></textarea>
 
                 <!-- 一键发布公告 -->
                 <div class="advanced-route-panel" style="margin-top: 15px;">
@@ -825,8 +874,9 @@
                     <textarea id="routeOutput" class="route-textarea route-output" readonly style="height: 200px; margin-bottom: 15px;"></textarea>
 
                     <details class="collapse-box" open style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
-                        <summary style="font-size: 14px;">🔍 识别解析与发车明细 (可调整顺序/删除/分配触发者)</summary>
-                        <div class="route-log-list" id="routeLogList" style="border: none; border-radius: 0; flex: 1; max-height: 650px; overflow-y: auto;"></div>
+                        <summary style="font-size: 14px; margin-bottom: 10px; cursor: pointer;">🔍 识别解析与发车明细 (可调整顺序/删除/分配触发者)</summary>
+                        <!-- 核心调整：列表容器 -->
+                        <div class="route-log-list" id="routeLogList"></div>
                     </details>
                 </div>
                 <div id="routeEmptyState" style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted);">
@@ -1861,6 +1911,31 @@
             } else showToast('⚠️ 已经是最前/最后一只了');
         }
 
+        // 新增：移除该服务器最后一只怪
+        function removeLastMonsterOfServer(serverName) {
+            for (let i = parsedMonsters.length - 1; i >= 0; i--) {
+                if (parsedMonsters[i].server === serverName) {
+                    parsedMonsters.splice(i, 1);
+                    renderRouteResult();
+                    showToast(`已移除 ${serverName} 的最后一只怪`);
+                    return;
+                }
+            }
+            showToast(`⚠️ ${serverName} 下没有怪了`);
+        }
+
+        // 新增：移除整个服务器
+        function removeServer(serverName) {
+            const beforeLen = parsedMonsters.length;
+            parsedMonsters = parsedMonsters.filter(m => m.server !== serverName);
+            if (parsedMonsters.length !== beforeLen) {
+                renderRouteResult();
+                showToast(`已移除服务器：${serverName}`);
+            } else {
+                showToast(`⚠️ 没有找到该服务器的怪`);
+            }
+        }
+
         // 处理触发者输入框的实时更改（模糊匹配 + 保存）
         function updateRouteTriggerInput(el, idx) {
             const val = el.value.trim();
@@ -1938,19 +2013,23 @@
             allTriggers.forEach(t => { datalistEl.innerHTML += `<option value="${t}">`; });
 
             serverStats.forEach((stat, index) => {
-                const isFirst = index === 0; const stationPrefix = isFirst ? '【⭐ 首站：' : `【📍 第${index + 1}站：`;
+                const isFirst = index === 0; const stationPrefix = isFirst ? '⭐ 首站' : `📍 第${index + 1}站`;
                 const isEditing = editingRouteServers.has(stat.server);
-                routeStr += `${stationPrefix}${stat.server}】\n`;
+                routeStr += `【${isFirst ? '⭐ 首站：' : `📍 第${index + 1}站：`}${stat.server}】\n`;
 
-                // 增加了 +1服 按钮
-                logHtml += `<div class="route-log-item" style="background:rgba(255,255,255,0.05); padding: 8px; font-weight:bold; margin-top:5px; display:flex; justify-content:space-between; align-items:center; border-radius:6px;">
-                    <span>${isFirst ? '⭐ 首站：' : `📍 第${index + 1}站：`} ${stat.server} (总计${stat.count}只)</span>
-                    <span>
-                        <button class="route-add-btn" onclick="handleRouteAdd('${stat.server}')">+1只</button>
-                        <button class="route-add-btn" style="background:var(--gold); color:var(--panel);" onclick="openCorrectionModal('${stat.server}')">+1服</button>
-                        <button class="route-add-btn" style="background:var(--purple);" onclick="toggleRouteArrows('${stat.server}')">${isEditing ? '完成调整' : '🔃 调整车序'}</button>
-                    </span>
-                </div>`;
+                // 开始生成服务器卡片框
+                logHtml += `<div class="server-card ${isEditing ? 'show-arrows' : ''}">
+                    <div class="server-card-header">
+                        <div class="server-card-title">${stationPrefix}：${stat.server} <span style="font-size:12px; color:var(--text-muted);">(总计${stat.count}只)</span></div>
+                        <div class="server-card-actions">
+                            <button class="route-add-btn" onclick="handleRouteAdd('${stat.server}')">+1只</button>
+                            <button class="route-add-btn" style="background:var(--red); color:#fff;" onclick="removeLastMonsterOfServer('${stat.server}')">-1只</button>
+                            <button class="route-add-btn" style="background:var(--gold); color:var(--panel);" onclick="openCorrectionModal('${stat.server}')">+1服</button>
+                            <button class="route-add-btn" style="background:var(--red); color:#fff;" onclick="removeServer('${stat.server}')">-1服</button>
+                            <button class="route-add-btn" style="background:var(--purple); color:#fff;" onclick="toggleRouteArrows('${stat.server}')">${isEditing ? '完成调整' : '🔃 调整车序'}</button>
+                        </div>
+                    </div>
+                    <div class="monster-list">`;
 
                 stat.list.forEach(m => {
                     flatSortedMonsters.push(m); 
@@ -1959,13 +2038,12 @@
                     routeStr += `S：${m.name} ${m.hp} ${m.area} ${m.coord} ${m.server} ${m.trigger ? '(触发: '+m.trigger+')' : ''}\n`;
                     let vClass = m.version === "7.0" ? "v7" : m.version === "6.0" ? "v6" : "v5";
                     
-                    logHtml += `<div class="route-log-item ${isEditing ? 'show-arrows' : ''}">
+                    logHtml += `<div class="monster-list-item">
                         <div style="display:flex; flex-direction:column; gap:4px; flex:1; margin-right:10px;">
                             <span style="font-family:monospace;">
-                                <span style="color:var(--gold); font-weight:bold;">S：${m.name}</span>
+                                <span style="color:var(--gold); font-weight:bold; font-size: 13px;">S：${m.name}</span>
                                 <span style="color:var(--text-muted);">${m.hp} ${m.area} ${m.coord}</span>${triggerDisplay}
                             </span>
-                            <!-- 替换为支持模糊搜索的 input + datalist -->
                             <input type="text" class="input-trigger-compact" list="trigger-datalist" placeholder="搜索或输入新触发者" value="${m.trigger || ''}" onchange="updateRouteTriggerInput(this, ${m._globalIdx})">
                         </div>
                         <div style="display:flex; align-items:center; gap: 8px;">
@@ -1977,6 +2055,7 @@
                         </div>
                     </div>`;
                 });
+                logHtml += `</div></div>`; // 闭合卡片
                 routeStr += `\n`;
             });
 
