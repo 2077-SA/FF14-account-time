@@ -398,6 +398,7 @@
         .v7 { color: var(--red); font-weight: bold; background: rgba(255,77,77,0.1); padding: 2px 4px; border-radius: 3px;}
         .v6 { color: var(--gold); font-weight: bold; background: rgba(243,156,18,0.1); padding: 2px 4px; border-radius: 3px;}
         .v5 { color: var(--blue); font-weight: bold; background: rgba(0,191,255,0.1); padding: 2px 4px; border-radius: 3px;}
+        .v4 { color: var(--purple); font-weight: bold; background: rgba(155,89,182,0.1); padding: 2px 4px; border-radius: 3px;}
 
         .btn-fix { background: var(--gold); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
         .btn-fix:hover { filter: brightness(0.9); }
@@ -766,9 +767,28 @@
                 </div>
 
                 <!-- 精简输入提示 -->
-                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
-                    💡 支持任意顺序：服务器 S怪名字(或黑话) [血量] [坐标] [触发者]，[ ]内为选填。若同服可省略不写服务器，自动继承上一行。 支持 xxx@服务器 格式自动识别触发者。
-                </div>
+                <details style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; cursor: pointer;">
+                    <summary style="font-weight: bold; color: var(--gold);">💡 支持任意顺序与写法（点击查看所有支持的输入示例）</summary>
+                    <div style="background: var(--input-bg); padding: 12px; border-radius: 6px; margin-top: 5px; line-height: 1.8; border: 1px solid var(--border);">
+                        <div style="margin-bottom: 8px; color: var(--accent); font-weight: bold;">✅ 基础格式（顺序任意，空格隔开）：</div>
+                        <code>服务器 S怪黑话/名字 坐标 触发者</code><br>
+                        <code>cft 蛋仔 (19.2, 18.5) 阿希娜@白银乡</code><br>
+                        
+                        <div style="margin-top: 10px; margin-bottom: 8px; color: var(--accent); font-weight: bold;">✅ 极简排车格式（服务器单行，同触发者用+连接）：</div>
+                        <code>龙巢</code><br>
+                        <code>鱼粉（酸梅）pzj+蘑菇+蛋仔（猪烟）多汁（我）</code><br>
+                        
+                        <div style="margin-top: 10px; margin-bottom: 8px; color: var(--accent); font-weight: bold;">✅ 多触发者/空括号/防粘连：</div>
+                        <code>爬爬（依戀痛@白金幻象+三月兔的茶会@摩杜纳）孔雀（）</code><br>
+                        <code>(19.2, 18.5)阿希娜@白银乡 cft 蛋仔</code><br>
+                        
+                        <div style="margin-top: 10px; color: var(--text-muted); font-size: 12px;">
+                            *注：支持地区名、绰号、拼音首字母（如 yxd、cft、pzj）。<br>
+                            *注：血量默认为100%，坐标默认为未知。<br>
+                            *注：行内若没写服务器，会自动继承上一行的服务器。
+                        </div>
+                    </div>
+                </details>
                 
                 <textarea id="routeInput" class="route-textarea" style="resize: vertical; min-height: 120px;" placeholder="在此粘贴聊天框文本..."></textarea>
                 
@@ -1150,7 +1170,7 @@
 
     <div id="floatingCountdown">
         <div class="fc-header">
-            <span class="fc-title">⏱️ 手动计算 · 倒计时</span>
+            <span class="fc-title">⏱️ 手动计算倒计时</span>
             <button class="fc-close" onclick="hideFloatingCountdown()">×</button>
         </div>
         <div class="fc-body" id="floatingCountdownBody"></div>
@@ -1180,24 +1200,37 @@
         };
         
         const S_MONSTERS = [
+            // 7.0
+            { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥"] }, 
+            { name: "伊努索奇", area: "克扎玛乌卡湿地", version: "7.0", alias: ["螳螂", "湿地"] }, 
+            { name: "内尤佐缇", area: "亚克特尔树海", version: "7.0", alias: ["鱼粉"] },
+            { name: "山谢亚", area: "夏劳尼荒野", version: "7.0", alias: ["山火", "山谢娅", "荒野"] },
+            { name: "先驱勇士 阿提卡斯", area: "遗产之地", version: "7.0", alias: ["烤肉", "牛排"] }, 
+            { name: "天气预报机器人", area: "活着的记忆", version: "7.0", alias: ["天气", "机器人", "预言家"] },
+            
+            // 6.0
+            { name: "布弗鲁", area: "迷津", version: "6.0", alias: ["少爷", "bfl"] }, 
+            { name: "颇胝迦", area: "萨维奈岛", version: "6.0", alias: ["腰子", "pzj"] }, 
+            { name: "阿姆斯特朗", area: "加雷马", version: "6.0", alias: ["壮壮", "胳膊壮", "gbz"] },
+            { name: "沉思之物", area: "叹息海", version: "6.0", alias: ["路由器", "蘑菇"] }, 
+            { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0", alias: ["鸟蛋", "蛋仔", "俄菲"] }, 
+            { name: "狭缝", area: "天外天垓", version: "6.0", alias: ["芒果"] },
+            
+            // 5.0
             { name: "戾虫", area: "雷克兰德", version: "5.0", alias: ["李冲"] }, 
             { name: "得到宽恕的炫学", area: "珂露西亚岛", version: "5.0", alias: ["棉花", "嫂子"] }, 
             { name: "多智兽", area: "安穆·艾兰", version: "5.0", alias: ["多汁"] }, 
             { name: "阿格拉俄珀", area: "伊尔美格", version: "5.0", alias: ["蛾子", "孔雀"] }, 
             { name: "伊休妲", area: "拉凯提卡大森林", version: "5.0", alias: ["大森", "yxd", "伊休但"] }, 
             { name: "顾尼图", area: "黑风海", version: "5.0", alias: ["图图", "船长"] },
-            { name: "布弗鲁", area: "迷津", version: "6.0", alias: ["少爷", "bfl"] }, 
-            { name: "颇胝迦", area: "萨维奈岛", version: "6.0", alias: ["腰子", "pzj"] }, 
-            { name: "阿姆斯特朗", area: "加雷马", version: "6.0", alias: ["壮壮", "胳膊壮", "gbz"] },
-            { name: "沉思之物", area: "叹息海", version: "6.0", alias: ["路由器", "蘑菇"] }, 
-            { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0", alias: ["鸟蛋", "蛋仔"] }, 
-            { name: "狭缝", area: "天外天垓", version: "6.0", alias: ["芒果"] },
-            { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥"] }, 
-            { name: "伊努索奇", area: "克扎玛乌卡湿地", version: "7.0", alias: ["螳螂"] }, 
-            { name: "内尤佐缇", area: "亚克特尔树海", version: "7.0", alias: ["鱼粉"] },
-            { name: "山谢亚", area: "夏劳尼荒野", version: "7.0", alias: ["山火", "山谢娅"] },
-            { name: "先驱勇士 阿提卡斯", area: "遗产之地", version: "7.0", alias: ["烤肉", "牛排"] }, 
-            { name: "天气预报机器人", area: "活着的记忆", version: "7.0", alias: ["天气", "机器人", "预言家"] }
+            
+            // 4.0
+            { name: "优昙婆罗花", area: "基拉巴尼亚边区", version: "4.0", alias: ["边花", "花"] },
+            { name: "爬骨怪龙", area: "基拉巴尼亚山区", version: "4.0", alias: ["爬爬"] },
+            { name: "盐和光", area: "基拉巴尼亚湖区", version: "4.0", alias: ["基佬", "盐基佬", "扔垃圾"] },
+            { name: "巨大鳐", area: "红玉海", version: "4.0", alias: ["窑子", "瑶子", "鳐子"] },
+            { name: "伽马", area: "延夏", version: "4.0", alias: ["γ", "伽马", "加马", "蜘蛛"] },
+            { name: "兀鲁忽乃朝鲁", area: "太阳神草原", version: "4.0", alias: ["石板", "门板", "板子"] }
         ];
 
         const DEFAULT_TRIGGERS = Array.from(new Set([
@@ -1207,7 +1240,7 @@
             "雾海小紫@神拳痕", "天童凯伊@白银乡", "传承录@梦羽宝境", "边城@潮风亭", "浮閻舟渡@拂晓之间", 
             "风侍葬@拂晓之间", "阿馥奇朵@神拳痕", "兽鬼不是受鬼@拂晓之间", "小海豹猪猪@潮风亭", "若曦雨@白银乡", 
             "千时@白金幻象", "静名@白银乡", "秩、阳@旅人栈桥", "厚烧猪排@旅人栈桥", "清野青@潮风亭", 
-            "等风也在等你@潮风亭", "早桜弥月@沃仙曦染"
+            "等风也在等你@潮风亭", "早桜弥月@沃仙曦染", "三月兔的茶会@摩杜纳", "血红乱@柔风海湾", "依戀痛@白金幻象"
         ]));
 
         let currentActiveInvite = null;
@@ -1480,13 +1513,14 @@
                 return;
             }
 
-            let v7Count = 0, v6Count = 0, v5Count = 0;
+            let v7Count = 0, v6Count = 0, v5Count = 0, v4Count = 0;
             activeMonsters.forEach(m => {
                 if (m.version === '7.0') v7Count++;
                 else if (m.version === '6.0') v6Count++;
-                else v5Count++;
+                else if (m.version === '5.0') v5Count++;
+                else v4Count++;
             });
-            document.getElementById('routeCountStats').innerHTML = `<span style="color:var(--red)">${v7Count}</span> / <span style="color:var(--gold)">${v6Count}</span> / <span style="color:var(--blue)">${v5Count}</span> (7/6/5)`;
+            document.getElementById('routeCountStats').innerHTML = `<span style="color:var(--red)">${v7Count}</span> / <span style="color:var(--gold)">${v6Count}</span> / <span style="color:var(--blue)">${v5Count}</span> / <span style="color:var(--purple)">${v4Count}</span> (7/6/5/4)`;
 
             const serverSet = new Set(activeMonsters.map(m => m.server));
             const crossServerCount = serverSet.size;
@@ -1574,11 +1608,12 @@
                 if (firstM) station = `【${firstM.server}】${firstM.area} ${firstM.coord}`;
             }
 
-            let v7 = 0, v6 = 0, v5 = 0;
+            let v7 = 0, v6 = 0, v5 = 0, v4 = 0;
             activeMonsters.forEach(m => {
                 if (m.version === '7.0') v7++;
                 else if (m.version === '6.0') v6++;
-                else v5++;
+                else if (m.version === '5.0') v5++;
+                else v4++;
             });
 
             const now = new Date();
@@ -1591,13 +1626,13 @@
                 output += `开车时间:${mTime}\n`;
                 output += `始发站：${station}\n`;
                 output += `车头：${header}\n`;
-                output += `100S*${v7} 90S*${v6} 80S*${v5}`;
+                output += `100S*${v7} 90S*${v6} 80S*${v5} 70S*${v4}`;
             } else {
                 const eTime = document.getElementById('annEveningTime').value || '17:50';
                 output = `${dateStr} 晚车 ${eTime}\n`;
                 output += `首站 ${station.replace(/[【】]/g, '')}\n`; 
                 output += `车头 ${header}\n`;
-                output += `100s*${v7} 90s*${v6} 80s*${v5}`;
+                output += `100s*${v7} 90s*${v6} 80s*${v5} 70s*${v4}`;
             }
 
             document.getElementById('announcementOutput').value = output;
@@ -1864,17 +1899,20 @@
             const serverStats = [];
             for (let server in serverMap) {
                 const list = serverMap[server];
-                list.sort((a,b) => { const weights = { "7.0": 3, "6.0": 2, "5.0": 1, "未知": 0 }; return (weights[b.version] || 0) - (weights[a.version] || 0); });
+                // 排序优先级：7.0 > 6.0 > 5.0 > 4.0
+                list.sort((a,b) => { const weights = { "7.0": 4, "6.0": 3, "5.0": 2, "4.0": 1, "未知": 0 }; return (weights[b.version] || 0) - (weights[a.version] || 0); });
                 let v7 = list.filter(m => m.version === "7.0").length;
                 let v6 = list.filter(m => m.version === "6.0").length;
                 let v5 = list.filter(m => m.version === "5.0").length;
-                serverStats.push({ server, list, count: list.length, v7, v6, v5 });
+                let v4 = list.filter(m => m.version === "4.0").length;
+                serverStats.push({ server, list, count: list.length, v7, v6, v5, v4 });
             }
             serverStats.sort((a, b) => { 
                 if (b.v7 !== a.v7) return b.v7 - a.v7; 
                 if (b.count !== a.count) return b.count - a.count; 
                 if (b.v6 !== a.v6) return b.v6 - a.v6; 
-                return b.v5 - a.v5; 
+                if (b.v5 !== a.v5) return b.v5 - a.v5;
+                return b.v4 - a.v4; 
             });
             parsedMonsters = [];
             serverStats.forEach(stat => {
@@ -1901,9 +1939,10 @@
                     let v7 = list.filter(m => m.version === "7.0").length;
                     let v6 = list.filter(m => m.version === "6.0").length;
                     let v5 = list.filter(m => m.version === "5.0").length;
-                    serverStats.push({ server, list, v7, v6, v5 });
+                    let v4 = list.filter(m => m.version === "4.0").length;
+                    serverStats.push({ server, list, v7, v6, v5, v4 });
                 }
-                serverStats.sort((a, b) => { if (b.v7 !== a.v7) return b.v7 - a.v7; if (b.count !== a.count) return b.count - a.count; if (b.v6 !== a.v6) return b.v6 - a.v6; return b.v5 - a.v5; });
+                serverStats.sort((a, b) => { if (b.v7 !== a.v7) return b.v7 - a.v7; if (b.count !== a.count) return b.count - a.count; if (b.v6 !== a.v6) return b.v6 - a.v6; if (b.v5 !== a.v5) return b.v5 - a.v5; return b.v4 - a.v4; });
                 flatList = []; serverStats.forEach(stat => { stat.list.forEach(m => flatList.push(m)); });
             }
             let simpleStr = "今日车序：\n"; let lastServer = "";
@@ -2088,35 +2127,15 @@
                 let hp = "100.00%";
                 let serverFound = false;
                 let currentServer = lastServer;
-                let matchedMonster = null;
-                let triggerId = "";
 
-                // 1. 优先提取触发器 (带@的格式，防止触发者服务器名污染)
-                let triggerMatch = currentLine.match(/([^\s@]+@[^\s@]+)/);
-                if (triggerMatch) {
-                    triggerId = triggerMatch[1];
-                    currentLine = currentLine.replace(triggerId, ' '); 
-                }
-
-                // 2. 尖括号服务器提取
-                let serverMatch = currentLine.match(/<([^>]+)>/);
-                if (serverMatch) { 
-                    let fs = fuzzyServer(serverMatch[1]); 
-                    if (fs !== "未知") { 
-                        currentServer = fs; 
-                        serverFound = true; 
-                    }
-                    currentLine = currentLine.replace(serverMatch[0], ' '); 
-                }
-                
-                // 3. 坐标提取
+                // 1. 坐标提取 (优先提取，防止坐标被当做触发者的一部分)
                 let coordMatch = currentLine.match(/[\(（]?\s*(\d{1,2}\.\d{1,2})\s*[,，\s]\s*(\d{1,2}\.\d{1,2})\s*[\)）]?/);
                 if (coordMatch) { 
                     coord = `(${coordMatch[1]}, ${coordMatch[2]})`; 
                     currentLine = currentLine.replace(coordMatch[0], ' '); 
                 }
                 
-                // 4. 血量提取
+                // 2. 血量提取
                 let hpMatch = currentLine.match(/(\d+(?:\.\d+)?)\s*%/); 
                 if (hpMatch) { 
                     let hpVal = parseFloat(hpMatch[1]);
@@ -2124,9 +2143,31 @@
                     currentLine = currentLine.replace(hpMatch[0], ' '); 
                 }
                 
-                // 5. 行内服务器匹配
+                // 3. 服务器独立行判断
+                let cleanForServer = currentLine.replace(/[\s\(\)（）]/g, '');
+                let isOnlyServer = false;
+                
+                for (let srv of ALL_SERVERS) {
+                    if (cleanForServer === srv) { currentServer = srv; serverFound = true; isOnlyServer = true; break; }
+                }
+                if (!isOnlyServer) {
+                    for (let alias in SERVER_ALIASES) {
+                        if (!["湖", "茶", "川"].includes(alias) && cleanForServer === alias) {
+                            currentServer = SERVER_ALIASES[alias];
+                            serverFound = true;
+                            isOnlyServer = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (isOnlyServer) {
+                    lastServer = currentServer;
+                    continue; 
+                }
+
+                // 4. 行内服务器匹配
                 if (!serverFound) {
-                    // 优先找全名
                     for (let srv of ALL_SERVERS) {
                         if (currentLine.includes(srv)) { 
                             currentServer = srv; 
@@ -2135,7 +2176,6 @@
                             break; 
                         }
                     }
-                    // 再找黑话别名
                     if (!serverFound) {
                         for (let alias in SERVER_ALIASES) {
                             if (["湖", "茶", "川"].includes(alias)) continue; 
@@ -2152,58 +2192,124 @@
                 if (serverFound) lastServer = currentServer;
                 else currentServer = lastServer;
 
-                // 6. 怪物名匹配 (优先匹配黑话)
-                let matchLen = 0;
-                for (let sm of S_MONSTERS) {
-                    if (sm.alias) {
-                        for (let al of sm.alias) {
-                            if (currentLine.includes(al)) {
-                                if (al.length > matchLen) {
-                                    matchedMonster = sm;
-                                    matchLen = al.length;
-                                }
-                            }
+                // 5. 判断是否为组合格式（带括号触发者）
+                let parsedFromGroups = [];
+                let regex = /([^()（）]+?)[（(]([^）)]*)[）)]/g;
+                let match;
+                
+                while ((match = regex.exec(currentLine)) !== null) {
+                    let rawNames = match[1].trim();
+                    let rawTrigger = match[2].trim();
+                    
+                    let triggersArr = rawTrigger.split(/[+＋]+/);
+                    let finalTrigger = triggersArr.filter(t => t).join('、');
+                    
+                    let namesArr = rawNames.split(/[+＋]+/);
+                    for (let nameStr of namesArr) {
+                        if (nameStr.trim()) {
+                            parsedFromGroups.push({ name: nameStr.trim(), trigger: finalTrigger });
                         }
                     }
                 }
                 
-                // 如果没找到黑话，找名字或地区名
-                if (!matchedMonster) {
-                    for (let sm of S_MONSTERS) {
-                        let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, '');
-                        if (currentLine.includes(areaStr) || currentLine.includes(nameStr)) {
-                            matchedMonster = sm;
-                            break;
+                if (parsedFromGroups.length > 0) {
+                    // 新格式：逐一匹配怪物名
+                    for (let item of parsedFromGroups) {
+                        let matchedMonster = null;
+                        let cleanName = item.name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9γ]/g, '');
+                        
+                        // 优先匹配黑话
+                        let matchLen = 0;
+                        for (let sm of S_MONSTERS) {
+                            if (sm.alias) {
+                                for (let al of sm.alias) {
+                                    if (cleanName.includes(al)) {
+                                        if (al.length > matchLen) {
+                                            matchedMonster = sm;
+                                            matchLen = al.length;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 如果没有黑话，匹配名字或地区名
+                        if (!matchedMonster) {
+                            for (let sm of S_MONSTERS) {
+                                let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, '');
+                                if (cleanName.includes(areaStr) || cleanName.includes(nameStr)) {
+                                    matchedMonster = sm;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (matchedMonster) {
+                            let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === currentServer);
+                            if (!isDuplicate) {
+                                parsedMonsters.push({
+                                    name: matchedMonster.name,
+                                    area: matchedMonster.area,
+                                    version: matchedMonster.version,
+                                    coord: coord,
+                                    server: currentServer,
+                                    hp: hp,
+                                    trigger: item.trigger,
+                                    isDead: false,
+                                    isTarget: false
+                                });
+                            }
                         }
                     }
-                }
-
-                if (matchedMonster) {
-                    // 剔除匹配到的怪物相关词
-                    let nameStr = matchedMonster.name, areaStr = matchedMonster.area;
-                    if (matchedMonster.alias) {
-                        for (let al of matchedMonster.alias) currentLine = currentLine.replace(al, ' ');
+                } else {
+                    // 老格式（空格分隔）
+                    let matchedMonster = null;
+                    let matchLen = 0;
+                    for (let sm of S_MONSTERS) {
+                        if (sm.alias) {
+                            for (let al of sm.alias) {
+                                if (currentLine.includes(al)) {
+                                    if (al.length > matchLen) {
+                                        matchedMonster = sm;
+                                        matchLen = al.length;
+                                    }
+                                }
+                            }
+                        }
                     }
-                    currentLine = currentLine.replace(nameStr, ' ').replace(areaStr, ' ');
-
-                    // 7. 如果之前没抓取到触发器（没@），把剩下的清理出来
-                    if (!triggerId) {
-                        triggerId = currentLine.replace(/[\(（\)）\[\]【】\<\>\s,，]/g, '').trim();
+                    if (!matchedMonster) {
+                        for (let sm of S_MONSTERS) {
+                            let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, '');
+                            if (currentLine.includes(areaStr) || currentLine.includes(nameStr)) {
+                                matchedMonster = sm;
+                                break;
+                            }
+                        }
                     }
+                    
+                    if (matchedMonster) {
+                        let nameStr = matchedMonster.name, areaStr = matchedMonster.area;
+                        if (matchedMonster.alias) {
+                            for (let al of matchedMonster.alias) currentLine = currentLine.replace(al, ' ');
+                        }
+                        currentLine = currentLine.replace(nameStr, ' ').replace(areaStr, ' ');
 
-                    let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === currentServer);
-                    if (!isDuplicate) {
-                        parsedMonsters.push({ 
-                            name: matchedMonster.name, 
-                            area: matchedMonster.area, 
-                            version: matchedMonster.version, 
-                            coord: coord, 
-                            server: currentServer, 
-                            hp: hp, 
-                            trigger: triggerId, 
-                            isDead: false, 
-                            isTarget: false 
-                        });
+                        let triggerId = currentLine.replace(/[\(（\)）\[\]【】\<\>\s,，]/g, '').trim();
+
+                        let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === currentServer);
+                        if (!isDuplicate) {
+                            parsedMonsters.push({ 
+                                name: matchedMonster.name, 
+                                area: matchedMonster.area, 
+                                version: matchedMonster.version, 
+                                coord: coord, 
+                                server: currentServer, 
+                                hp: hp, 
+                                trigger: triggerId, 
+                                isDead: false, 
+                                isTarget: false 
+                            });
+                        }
                     }
                 }
             }
@@ -2516,7 +2622,7 @@
 
                 list.forEach(m => {
                     let triggerDisplay = m.trigger ? ` <span style="color:var(--gold); font-size:11px;">[${m.trigger}]</span>` : '';
-                    let vClass = m.version === "7.0" ? "v7" : m.version === "6.0" ? "v6" : "v5";
+                    let vClass = m.version === "7.0" ? "v7" : m.version === "6.0" ? "v6" : m.version === "5.0" ? "v5" : "v4";
                     let deadStyle = m.isDead ? 'opacity: 0.5; text-decoration: line-through;' : '';
                     
                     let itemClass = `monster-list-item`;
