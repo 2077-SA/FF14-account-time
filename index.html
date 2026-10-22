@@ -418,7 +418,7 @@
 
         .input-trigger-compact {
             background: var(--input-bg); border: 1px solid var(--border); color: var(--gold); 
-            padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 220px; outline: none;
+            padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 180px; outline: none;
             transition: 0.2s;
         }
         .input-trigger-compact:focus { border-color: var(--accent); background: var(--panel); }
@@ -767,7 +767,7 @@
 
                 <!-- 精简输入提示 -->
                 <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
-                    💡 支持格式：怪物名 100.00% 地区 (x.x, x.x) 服务器 (地区可省略)
+                    💡 支持任意顺序：服务器 S怪名字(或黑话) [血量] [坐标] [触发者]，[ ]内为选填。若同服可省略不写服务器，自动继承上一行。 支持 xxx@服务器 格式自动识别触发者。
                 </div>
                 
                 <textarea id="routeInput" class="route-textarea" style="resize: vertical; min-height: 120px;" placeholder="在此粘贴聊天框文本..."></textarea>
@@ -1049,6 +1049,22 @@
         </div>
     </div>
 
+    <!-- 触发者快捷选择弹窗 -->
+    <div class="modal-overlay" id="triggerSelectModal">
+        <div class="modal-content" style="max-width: 800px; text-align: left;">
+            <button class="btn-close-modal" onclick="document.getElementById('triggerSelectModal').style.display='none'">×</button>
+            <div class="modal-title" style="text-align: center; color: var(--gold); margin-bottom: 15px;">👤 选择触发者</div>
+            <div class="row-flex" style="margin-bottom: 15px;">
+                <input type="text" id="selectTriggerSearch" class="dropdown-search" placeholder="🔍 搜索触发者名字或服务器..." oninput="filterSelectTriggers()" style="flex:1; margin-bottom: 0;">
+            </div>
+            <div class="trigger-container" id="selectTriggerList" style="max-height: 400px;"></div>
+            <div class="modal-btns" style="margin-top: 15px;">
+                <button class="btn-modal btn-cancel" onclick="document.getElementById('triggerSelectModal').style.display='none'">取消</button>
+                <button class="btn-modal btn-confirm ready" onclick="clearTriggerForCurrentMonster()" style="background: var(--red); color: #fff;">清空该怪触发者</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="manualAddModal">
         <div class="modal-content" style="max-width: 600px; text-align: left;">
             <button class="btn-close-modal" onclick="closeManualAddModal()">×</button>
@@ -1254,6 +1270,9 @@
         let isSimpleRouteLocked = false; 
 
         let currentAnnType = 'morning';
+        
+        // 触发者弹窗状态
+        let currentTriggerSelectIdx = -1;
 
         // 折叠
         function toggleManualCard() {
@@ -2053,44 +2072,146 @@
             if (!routeInputEl) return;
             let text = routeInputEl.value;
             if (!text.trim()) { alert("请先粘贴或识别 S怪 信息！"); return; }
+            
+            // 统一符号
             text = text.replace(/[＜《]/g, '<').replace(/[＞》]/g, '>').replace(/[（【\[［]/g, '(').replace(/[）】\]］]/g, ')').replace(/[：]/g, ':').replace(/[，、]/g, ',');
-            const lines = text.split('\n'); parsedMonsters = []; let lastServer = "未知";
+            const lines = text.split('\n'); 
+            parsedMonsters = []; 
+            let lastServer = "未知";
             
             for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim(); if (!line) continue;
-                let serverFound = false; let serverMatch = line.match(/<([^>]+)>/);
-                if (serverMatch) { let fs = fuzzyServer(serverMatch[1]); if (fs !== "未知") { lastServer = fs; serverFound = true; } }
+                let line = lines[i].trim(); 
+                if (!line) continue;
                 
-                if (!serverFound) { for (let srv of ALL_SERVERS) if (line.includes(srv)) { lastServer = srv; serverFound = true; break; } }
+                let currentLine = line;
+                let coord = "(坐标未知)";
+                let hp = "100.00%";
+                let serverFound = false;
+                let currentServer = lastServer;
+                let matchedMonster = null;
+                let triggerId = "";
+
+                // 1. 优先提取触发器 (带@的格式，防止触发者服务器名污染)
+                let triggerMatch = currentLine.match(/([^\s@]+@[^\s@]+)/);
+                if (triggerMatch) {
+                    triggerId = triggerMatch[1];
+                    currentLine = currentLine.replace(triggerId, ' '); 
+                }
+
+                // 2. 尖括号服务器提取
+                let serverMatch = currentLine.match(/<([^>]+)>/);
+                if (serverMatch) { 
+                    let fs = fuzzyServer(serverMatch[1]); 
+                    if (fs !== "未知") { 
+                        currentServer = fs; 
+                        serverFound = true; 
+                    }
+                    currentLine = currentLine.replace(serverMatch[0], ' '); 
+                }
                 
-                if (!serverFound) { 
-                    for (let alias in SERVER_ALIASES) {
-                        if (["湖", "茶", "川"].includes(alias)) continue; 
-                        if (line.includes(alias)) { lastServer = SERVER_ALIASES[alias]; serverFound = true; break; }
+                // 3. 坐标提取
+                let coordMatch = currentLine.match(/[\(（]?\s*(\d{1,2}\.\d{1,2})\s*[,，\s]\s*(\d{1,2}\.\d{1,2})\s*[\)）]?/);
+                if (coordMatch) { 
+                    coord = `(${coordMatch[1]}, ${coordMatch[2]})`; 
+                    currentLine = currentLine.replace(coordMatch[0], ' '); 
+                }
+                
+                // 4. 血量提取
+                let hpMatch = currentLine.match(/(\d+(?:\.\d+)?)\s*%/); 
+                if (hpMatch) { 
+                    let hpVal = parseFloat(hpMatch[1]);
+                    hp = hpVal.toFixed(2) + '%';
+                    currentLine = currentLine.replace(hpMatch[0], ' '); 
+                }
+                
+                // 5. 行内服务器匹配
+                if (!serverFound) {
+                    // 优先找全名
+                    for (let srv of ALL_SERVERS) {
+                        if (currentLine.includes(srv)) { 
+                            currentServer = srv; 
+                            serverFound = true; 
+                            currentLine = currentLine.replace(srv, ' '); 
+                            break; 
+                        }
+                    }
+                    // 再找黑话别名
+                    if (!serverFound) {
+                        for (let alias in SERVER_ALIASES) {
+                            if (["湖", "茶", "川"].includes(alias)) continue; 
+                            if (currentLine.includes(alias)) { 
+                                currentServer = SERVER_ALIASES[alias]; 
+                                serverFound = true; 
+                                currentLine = currentLine.replace(alias, ' '); 
+                                break;
+                            }
+                        }
                     }
                 }
 
-                let coord = "(坐标未知)"; let lineWithoutCoord = line;
-                let coordMatch = line.match(/[\(（]?\s*(\d{1,2}\.\d{1,2})\s*[,，\s]\s*(\d{1,2}\.\d{1,2})\s*[\)）]?/);
-                if (coordMatch) { coord = `(${coordMatch[1]}, ${coordMatch[2]})`; lineWithoutCoord = line.replace(coordMatch[0], ''); }
-                let hp = '100.00%'; let hpMatch = line.match(/(\d+\.\d+)%/); if (hpMatch) hp = hpMatch[1] + '%';
-                let cleanLine = lineWithoutCoord.replace(/[^\u4e00-\u9fa5a-zA-Z0-9%]/g, ''); let matchedMonster = null;
+                if (serverFound) lastServer = currentServer;
+                else currentServer = lastServer;
 
+                // 6. 怪物名匹配 (优先匹配黑话)
+                let matchLen = 0;
                 for (let sm of S_MONSTERS) {
-                    let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, '');
-                    if (cleanLine.includes(areaStr) || cleanLine.includes(nameStr)) { matchedMonster = sm; break; }
-                    let coreName1 = nameStr.substring(0, 2), coreName2 = nameStr.length > 2 ? nameStr.substring(nameStr.length - 2) : '';
-                    if (cleanLine.includes(coreName1) || (coreName2 && cleanLine.includes(coreName2))) { matchedMonster = sm; break; }
-                    if (sm.alias) { let aliasMatched = false; for (let al of sm.alias) if (cleanLine.includes(al)) { aliasMatched = true; break; } if (aliasMatched) { matchedMonster = sm; break; } }
+                    if (sm.alias) {
+                        for (let al of sm.alias) {
+                            if (currentLine.includes(al)) {
+                                if (al.length > matchLen) {
+                                    matchedMonster = sm;
+                                    matchLen = al.length;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 如果没找到黑话，找名字或地区名
+                if (!matchedMonster) {
+                    for (let sm of S_MONSTERS) {
+                        let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, '');
+                        if (currentLine.includes(areaStr) || currentLine.includes(nameStr)) {
+                            matchedMonster = sm;
+                            break;
+                        }
+                    }
                 }
 
                 if (matchedMonster) {
-                    let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === lastServer);
-                    if (!isDuplicate) parsedMonsters.push({ name: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: lastServer, hp: hp, trigger: "", isDead: false, isTarget: false });
+                    // 剔除匹配到的怪物相关词
+                    let nameStr = matchedMonster.name, areaStr = matchedMonster.area;
+                    if (matchedMonster.alias) {
+                        for (let al of matchedMonster.alias) currentLine = currentLine.replace(al, ' ');
+                    }
+                    currentLine = currentLine.replace(nameStr, ' ').replace(areaStr, ' ');
+
+                    // 7. 如果之前没抓取到触发器（没@），把剩下的清理出来
+                    if (!triggerId) {
+                        triggerId = currentLine.replace(/[\(（\)）\[\]【】\<\>\s,，]/g, '').trim();
+                    }
+
+                    let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === currentServer);
+                    if (!isDuplicate) {
+                        parsedMonsters.push({ 
+                            name: matchedMonster.name, 
+                            area: matchedMonster.area, 
+                            version: matchedMonster.version, 
+                            coord: coord, 
+                            server: currentServer, 
+                            hp: hp, 
+                            trigger: triggerId, 
+                            isDead: false, 
+                            isTarget: false 
+                        });
+                    }
                 }
             }
+            
             sortParsedMonstersDefault();
-            editingRouteServers.clear(); isSimpleRouteLocked = false; renderRouteResult();
+            editingRouteServers.clear(); 
+            isSimpleRouteLocked = false; 
+            renderRouteResult();
         }
 
         function toggleRouteArrows(server) {
@@ -2226,6 +2347,55 @@
                 } else { parsedMonsters[idx].trigger = val; }
             }
         }
+
+        // ======= 触发者选择弹窗逻辑 =======
+        function openTriggerSelectModal(idx) {
+            currentTriggerSelectIdx = idx;
+            const m = parsedMonsters[idx];
+            document.getElementById('triggerSelectModal').style.display = 'flex';
+            document.getElementById('selectTriggerSearch').value = '';
+            filterSelectTriggers();
+        }
+
+        function filterSelectTriggers() {
+            const search = document.getElementById('selectTriggerSearch').value.toLowerCase();
+            const container = document.getElementById('selectTriggerList');
+            container.innerHTML = '';
+            
+            let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
+            displayList.forEach(t => {
+                if (t.toLowerCase().includes(search)) {
+                    const span = document.createElement('span'); span.className = 'trigger-tag';
+                    const parts = t.split('@');
+                    if(parts.length === 2) {
+                        span.innerHTML = `${parts[0]}<span class="server-part">@${parts[1]}</span>`;
+                    } else {
+                        span.innerText = t;
+                    }
+                    
+                    span.onclick = () => {
+                        if (currentTriggerSelectIdx >= 0 && parsedMonsters[currentTriggerSelectIdx]) {
+                            parsedMonsters[currentTriggerSelectIdx].trigger = t;
+                            renderRouteResult();
+                            document.getElementById('triggerSelectModal').style.display = 'none';
+                            showToast(`✅ 已为 ${parsedMonsters[currentTriggerSelectIdx].name} 分配触发者：${t}`);
+                        }
+                    };
+                    container.appendChild(span);
+                }
+            });
+            if (container.innerHTML === '') container.innerHTML = isVipUnlocked ? '<div style="color:var(--text-muted); font-size:12px;">没有找到匹配的触发者</div>' : '<div style="color:var(--gold); font-size:12px; padding: 5px;">⚠️ 预置名单已锁定，请在顶部输入邀请码查看。</div>';
+        }
+
+        function clearTriggerForCurrentMonster() {
+            if (currentTriggerSelectIdx >= 0 && parsedMonsters[currentTriggerSelectIdx]) {
+                parsedMonsters[currentTriggerSelectIdx].trigger = "";
+                renderRouteResult();
+                document.getElementById('triggerSelectModal').style.display = 'none';
+                showToast(`🗑️ 已清空该怪触发者`);
+            }
+        }
+        // ===================================
 
         function renderTacticMacros() {
             const container = document.getElementById('tacticMacroList');
@@ -2363,7 +2533,10 @@
                                 <span style="color:var(--gold); font-weight:bold; font-size: 13px;">S：${m.name}</span>
                                 <span style="color:var(--text-muted);">${m.hp} ${m.area} ${m.coord}</span>${triggerDisplay}
                             </span>
-                            <input type="text" class="input-trigger-compact" list="trigger-datalist" placeholder="搜索或输入新触发者" value="${m.trigger || ''}" onchange="updateRouteTriggerInput(this, ${m._globalIdx})">
+                            <div class="row-flex">
+                                <input type="text" class="input-trigger-compact" list="trigger-datalist" placeholder="触发者 (可搜索)" value="${m.trigger || ''}" onchange="updateRouteTriggerInput(this, ${m._globalIdx})">
+                                <button class="btn btn-outline" style="padding:4px 8px; font-size:12px; border-color:var(--purple); color:var(--purple);" onclick="openTriggerSelectModal(${m._globalIdx})">👤 选人</button>
+                            </div>
                         </div>
                         <div style="display:flex; align-items:center; gap: 8px;">
                             <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:12px; color:var(--red); font-weight:bold;">
