@@ -319,7 +319,7 @@
         
         .focus-container {
             display: flex; flex: 1; gap: 20px; max-width: 1600px; margin: 0 auto; width: 100%;
-            align-items: stretch; min-height: 800px; /* 保持一定高度，防止太矮 */
+            align-items: stretch; min-height: 800px;
         }
         .focus-col-left {
             flex: var(--left-ratio, 1); display: flex; flex-direction: column; background: var(--panel); 
@@ -329,24 +329,21 @@
         .focus-col-right {
             flex: var(--right-ratio, 1.5); display: flex; flex-direction: column; background: var(--panel); 
             border: 1px solid var(--border); border-radius: 12px; padding: 20px;
-            transition: flex 0.3s; overflow: hidden; /* 防止撑开，限制高度 */
+            transition: flex 0.3s; overflow: hidden;
         }
 
         .route-textarea { width: 100%; height: 180px; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; box-sizing: border-box; resize: none; margin-bottom: 10px; outline: none; font-size: 14px; line-height: 1.6; }
         .route-textarea:focus { border-color: var(--accent); }
         .route-output { color: var(--gold); border-style: dashed; height: 200px; font-size: 14px; flex-shrink: 0; }
         
-        /* 核心修复：右侧容器自适应撑满并允许内部滚动 */
         .route-result-box { display: none; text-align: left; flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; }
         
-        /* 针对明细列表增加了滚动条支持（核心调整：改为 60vh，防止滑出屏幕） */
         .route-log-list { 
             font-size: 12px; color: var(--text-muted); flex: 1; overflow-y: auto; 
             margin-top: 10px; border: none; border-radius: 0; padding: 0; 
             background: transparent; min-height: 0; max-height: 60vh; 
         }
 
-        /* 新增：每个服务器独立卡片样式 */
         .server-card {
             background: var(--panel);
             border: 1px solid var(--border);
@@ -376,7 +373,6 @@
             flex-wrap: wrap;
         }
         
-        /* 怪物列表项优化 */
         .monster-list-item {
             display: flex;
             justify-content: space-between;
@@ -411,7 +407,6 @@
         .server-card.show-arrows .btn-order-up, .server-card.show-arrows .btn-order-down { display: inline-block; }
         .btn-order-up:hover, .btn-order-down:hover { color: var(--accent); background: rgba(0, 255, 127, 0.1); border-radius: 4px; }
 
-        /* 优化输入框样式：带搜索的触发者 */
         .input-trigger-compact {
             background: var(--input-bg); border: 1px solid var(--border); color: var(--gold); 
             padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 220px; outline: none;
@@ -419,21 +414,17 @@
         }
         .input-trigger-compact:focus { border-color: var(--accent); background: var(--panel); }
 
-        /* 高级排车评估 */
         .advanced-route-panel { margin-top: 15px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); }
         .advanced-route-header { padding: 12px 15px; font-weight: bold; color: var(--accent); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
         .advanced-route-body { padding: 0 15px 15px 15px; display: none; }
         .stat-box { display: flex; justify-content: space-between; background: var(--panel); padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; flex-wrap: wrap; gap: 10px;}
 
-        /* 修复早车晚车时间框溢出 */
         #announcementBody .input-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-bottom: 10px; }
         #announcementBody input[type="text"] { width: 100%; box-sizing: border-box; }
 
-        /* 高级排车生成器 */
         .announcement-box { background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: 10px; }
         .announcement-textarea { width: 100%; height: 160px; background: var(--panel); color: var(--text); border: 1px solid var(--border); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; line-height: 1.6; margin-top: 10px; resize: vertical; }
 
-        /* 快捷精准加怪面板 */
         .quick-add-tag { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; user-select: none; }
         .quick-add-tag:hover { background: var(--accent); color: var(--panel); border-color: var(--accent); transform: translateY(-1px); }
         
@@ -844,7 +835,7 @@
                         </div>
                         
                         <div class="input-group" style="margin-bottom: 10px;">
-                            <label>始发站覆盖 (留空自动抓取7.0)</label>
+                            <label>始发站覆盖 (留空自动抓取当前车序首站)</label>
                             <input type="text" id="annStartStation" placeholder="例：【梦羽宝境】树海 (21.7,28.3)">
                         </div>
 
@@ -877,20 +868,20 @@
             <!-- 右侧：输出与结果 -->
             <div class="focus-col-right">
                 <div id="routeResultBox" class="route-result-box">
-                    <div class="section-title" style="color: var(--gold); display: flex; justify-content: space-between; align-items: center; font-size: 16px;">
+                    <div class="section-title" style="color: var(--gold); display: flex; justify-content: space-between; align-items: center; font-size: 16px; flex-wrap: wrap; gap: 10px;">
                         <span>📋 最终发车顺序 (详细版)</span>
-                        <span style="display:flex; gap:5px;">
-                            <button class="btn btn-accent" onclick="copyRoute()" style="padding: 6px 12px; font-size: 12px;">📋 复制详细</button>
+                        <span style="display:flex; gap:5px; flex-wrap:wrap;">
+                            <button class="btn btn-accent" onclick="copyDetailedRoute()" style="padding: 6px 12px; font-size: 12px;">📋 复制详细</button>
                             <button class="btn" style="background: var(--gold); color: #fff; padding: 6px 12px; font-size: 12px;" onclick="exportMonsterTriggers()">📋 导出触发者</button>
-                            <button class="btn" style="background: var(--blue); color: #fff; padding: 6px 12px; font-size: 12px;" onclick="downloadRouteText()">💾 存为TXT</button>
+                            <button class="btn" style="background: var(--blue); color: #fff; padding: 6px 12px; font-size: 12px;" onclick="exportTxtWithOptions()">💾 存为TXT</button>
+                            <button class="btn" style="background: var(--purple); color: #fff; padding: 6px 12px; font-size: 12px;" onclick="saveTriggers()">💾 保存分配</button>
+                            <button class="btn btn-red" onclick="clearDeadMonsters()" style="padding: 6px 12px; font-size: 12px;">🧹 一键清理已死</button>
                         </span>
                     </div>
-                    <!-- 缩小详细版高度，给明细让路 -->
                     <textarea id="routeOutput" class="route-textarea route-output" readonly style="height: 200px; margin-bottom: 15px;"></textarea>
 
                     <details class="collapse-box" open style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
                         <summary style="font-size: 14px; margin-bottom: 10px; cursor: pointer;">🔍 识别解析与发车明细 (可调整顺序/删除/分配触发者)</summary>
-                        <!-- 核心调整：列表容器 -->
                         <div class="route-log-list" id="routeLogList"></div>
                     </details>
                 </div>
@@ -1095,20 +1086,13 @@
         };
         const ALL_SERVERS = Object.values(SERVER_GROUPS).flat();
         
-        // ==========================================
-        // ⬇️ 新增：服务器黑话/别名库（可随时修改这里）
-        // ==========================================
         const SERVER_ALIASES = {
-            // 豆豆柴
             "水塔": "水晶塔", "湖": "银泪湖", "海岸": "太阳海岸", "加都": "伊修加德", "茶": "红茶川", "川": "红茶川",
-            // 陆行鸟
             "瓜海": "红玉海", "神1": "神意之地", "神y": "神意之地", "拉诺": "拉诺西亚", "幻影": "幻影群岛", 
             "萌芽": "萌芽池", "宇宙": "宇宙和音", "沃仙": "沃仙曦染", "晨曦": "晨曦王座", "cx": "晨曦王座",
-            // 莫古力
             "白银": "白银乡", "白金": "白金幻象", "神拳": "神拳痕", "cft": "潮风亭", "潮风": "潮风亭", 
             "嘲讽": "潮风亭", "旅人": "旅人栈桥", "拂晓": "拂晓之间", "龙巢": "龙巢神殿", "梦雨": "梦羽宝境", 
             "梦语": "梦羽宝境", "梦羽": "梦羽宝境",
-            // 猫小胖
             "紫水": "紫水栈桥", "yx": "延夏", "鲸鱼": "静语庄园", "海猫": "海猫茶屋", "海湾": "柔风海湾", 
             "柔风": "柔风海湾", "湖泊": "琥珀原", "琥珀": "琥珀原"
         };
@@ -1343,8 +1327,8 @@
             const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === server);
             if (isDuplicate) { showToast('⚠️ 该服务器下已有这只怪'); return; }
 
-            parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coord, server: server, hp: '100.00%', trigger: '' });
-            parsedMonsters.sort((a, b) => { const weights = { "7.0": 3, "6.0": 2, "5.0": 1, "未知": 0 }; return (weights[b.version] || 0) - (weights[a.version] || 0); });
+            parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coord, server: server, hp: '100.00%', trigger: '', isDead: false });
+            sortParsedMonstersDefault();
             renderRouteResult();
             showToast(`✅ 已精准添加 ${name}`);
             
@@ -1364,7 +1348,8 @@
         }
 
         function calculateRouteTime() {
-            if (parsedMonsters.length === 0) {
+            const activeMonsters = parsedMonsters.filter(m => !m.isDead);
+            if (activeMonsters.length === 0) {
                 document.getElementById('routeCountStats').innerText = '0只';
                 document.getElementById('routeTotalDuration').innerText = '-';
                 document.getElementById('routeEndTime').innerText = '-';
@@ -1372,21 +1357,21 @@
             }
 
             let v7Count = 0, v6Count = 0, v5Count = 0;
-            parsedMonsters.forEach(m => {
+            activeMonsters.forEach(m => {
                 if (m.version === '7.0') v7Count++;
                 else if (m.version === '6.0') v6Count++;
                 else v5Count++;
             });
             document.getElementById('routeCountStats').innerHTML = `<span style="color:var(--red)">${v7Count}</span> / <span style="color:var(--gold)">${v6Count}</span> / <span style="color:var(--blue)">${v5Count}</span> (7/6/5)`;
 
-            const serverSet = new Set(parsedMonsters.map(m => m.server));
+            const serverSet = new Set(activeMonsters.map(m => m.server));
             const crossServerCount = serverSet.size;
 
             const playerCount = parseInt(document.getElementById('routePlayerCount').value) || 24;
             const waitTime = parseFloat(document.getElementById('routeWaitTime').value) || 2;
             const crossTime = parseFloat(document.getElementById('routeCrossTime').value) || 3;
 
-            let baseDuration = (parsedMonsters.length * waitTime) + (Math.max(0, crossServerCount - 1) * crossTime);
+            let baseDuration = (activeMonsters.length * waitTime) + (Math.max(0, crossServerCount - 1) * crossTime);
             if (playerCount > 24) baseDuration *= 1.1; 
 
             const hours = Math.floor(baseDuration / 60);
@@ -1439,12 +1424,9 @@
                     try {
                         const data = JSON.parse(cache);
                         if (Date.now() < data.expire) {
-                            document.getElementById('routeOutput').value = data.text;
-                            document.getElementById('routeLogList').innerHTML = data.log;
-                            document.getElementById('routeResultBox').style.display = 'flex';
-                            document.getElementById('routeEmptyState').style.display = 'none';
                             parsedMonsters = data.monsters || [];
-                            generateSimpleRoute(); 
+                            parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; });
+                            renderRouteResult();
                         }
                     } catch(e) {}
                 }
@@ -1457,18 +1439,19 @@
 
         // 生成公告
         function generateAnnouncement() {
-            if (parsedMonsters.length === 0) { showToast('⚠️ 没有排车数据'); return; }
+            const activeMonsters = parsedMonsters.filter(m => !m.isDead);
+            if (activeMonsters.length === 0) { showToast('⚠️ 没有排车数据'); return; }
             
             const header = document.getElementById('annHeader').value || '未知';
             let station = document.getElementById('annStartStation').value.trim();
 
             if (!station) {
-                const firstM = parsedMonsters.find(m => m.version === '7.0') || parsedMonsters[0];
+                const firstM = activeMonsters[0]; // 直接取当前排好序的第一只
                 if (firstM) station = `【${firstM.server}】${firstM.area} ${firstM.coord}`;
             }
 
             let v7 = 0, v6 = 0, v5 = 0;
-            parsedMonsters.forEach(m => {
+            activeMonsters.forEach(m => {
                 if (m.version === '7.0') v7++;
                 else if (m.version === '6.0') v6++;
                 else v5++;
@@ -1725,8 +1708,37 @@
             try {
                 const { data, expire } = JSON.parse(saved);
                 if (Date.now() > expire) { localStorage.removeItem('ff14_saved_route_20m'); return false; }
-                parsedMonsters = data; isSimpleRouteLocked = false; renderRouteResult(); return true;
+                parsedMonsters = data; isSimpleRouteLocked = false; 
+                parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; });
+                renderRouteResult(); return true;
             } catch(e) { return false; }
+        }
+
+        function sortParsedMonstersDefault() {
+            const serverMap = {};
+            parsedMonsters.forEach(m => {
+                if (!serverMap[m.server]) serverMap[m.server] = [];
+                serverMap[m.server].push(m);
+            });
+            const serverStats = [];
+            for (let server in serverMap) {
+                const list = serverMap[server];
+                list.sort((a,b) => { const weights = { "7.0": 3, "6.0": 2, "5.0": 1, "未知": 0 }; return (weights[b.version] || 0) - (weights[a.version] || 0); });
+                let v7 = list.filter(m => m.version === "7.0").length;
+                let v6 = list.filter(m => m.version === "6.0").length;
+                let v5 = list.filter(m => m.version === "5.0").length;
+                serverStats.push({ server, list, count: list.length, v7, v6, v5 });
+            }
+            serverStats.sort((a, b) => { 
+                if (b.v7 !== a.v7) return b.v7 - a.v7; 
+                if (b.count !== a.count) return b.count - a.count; 
+                if (b.v6 !== a.v6) return b.v6 - a.v6; 
+                return b.v5 - a.v5; 
+            });
+            parsedMonsters = [];
+            serverStats.forEach(stat => {
+                stat.list.forEach(m => parsedMonsters.push(m));
+            });
         }
 
         function generateSimpleRoute(force = false, flatList = null) {
@@ -1737,7 +1749,11 @@
             if (parsedMonsters.length === 0) { el.value = ""; return; }
             if (!flatList) {
                 const serverMap = {};
-                parsedMonsters.forEach(m => { if (!serverMap[m.server]) serverMap[m.server] = []; serverMap[m.server].push(m); });
+                parsedMonsters.forEach(m => { 
+                    if (m.isDead) return;
+                    if (!serverMap[m.server]) serverMap[m.server] = []; 
+                    serverMap[m.server].push(m); 
+                });
                 const serverStats = [];
                 for (let server in serverMap) {
                     const list = serverMap[server];
@@ -1760,29 +1776,61 @@
         }
         function saveSimpleRoute() { isSimpleRouteLocked = true; showToast("💾 简版修改已保存"); }
         function copySimpleRoute() { navigator.clipboard.writeText(document.getElementById('simpleRouteOutput').value).then(() => showToast("📋 简版已复制")); }
-        function copyRoute() { navigator.clipboard.writeText(document.getElementById('routeOutput').value).then(() => showToast("📋 详细排车已复制")); }
         
-        function exportMonsterTriggers() {
-            if (parsedMonsters.length === 0) return;
-            let resultText = `--- S怪与触发者名单 ---\n`;
-            const serverMap = {};
-            parsedMonsters.forEach(m => { if (!serverMap[m.server]) serverMap[m.server] = []; serverMap[m.server].push(m); });
-            const serverStats = [];
-            for (let server in serverMap) {
-                const list = serverMap[server];
-                let v7 = list.filter(m => m.version === "7.0").length;
-                let v6 = list.filter(m => m.version === "6.0").length;
-                let v5 = list.filter(m => m.version === "5.0").length;
-                serverStats.push({ server, list, v7, v6, v5 });
-            }
-            serverStats.sort((a, b) => { if (b.v7 !== a.v7) return b.v7 - a.v7; if (b.count !== a.count) return b.count - a.count; if (b.v6 !== a.v6) return b.v6 - a.v6; return b.v5 - a.v5; });
-            serverStats.forEach(stat => {
-                resultText += `【${stat.server}】\n`;
-                stat.list.forEach(m => { resultText += `  ${m.name} (${m.area}) - 触发者: ${m.trigger || "未分配"}\n`; });
-                resultText += `\n`;
-            });
-            navigator.clipboard.writeText(resultText.trim()).then(() => showToast("📋 触发者名单已复制"));
+        // ====== 导出相关功能 ======
+        
+        function saveTriggers() {
+            localStorage.setItem('ff14_route_cache', JSON.stringify({ 
+                text: document.getElementById('routeOutput').value, 
+                log: document.getElementById('routeLogList').innerHTML, 
+                monsters: parsedMonsters, 
+                expire: Date.now() + 10 * 60 * 1000 
+            }));
+            showToast('✅ 触发者分配已保存！');
         }
+
+        function copyDetailedRoute() {
+            const activeMonsters = parsedMonsters.filter(m => !m.isDead);
+            if (activeMonsters.length === 0) { showToast('⚠️ 没有存活的S怪'); return; }
+            let text = "";
+            activeMonsters.forEach(m => {
+                text += `${m.server} ${m.name} ${m.area} ${m.coord} ${m.trigger || '未分配'}\n`;
+            });
+            navigator.clipboard.writeText(text.trim()).then(() => showToast("📋 详细排车已复制"));
+        }
+
+        function exportMonsterTriggers() {
+            const activeMonsters = parsedMonsters.filter(m => !m.isDead);
+            if (activeMonsters.length === 0) { showToast('⚠️ 没有存活的S怪'); return; }
+            let text = "";
+            activeMonsters.forEach(m => {
+                text += `${m.name} - ${m.trigger || '未分配'}\n`;
+            });
+            navigator.clipboard.writeText(text.trim()).then(() => showToast("📋 触发者名单已复制"));
+        }
+
+        function exportTxtWithOptions() {
+            const activeMonsters = parsedMonsters.filter(m => !m.isDead);
+            if (activeMonsters.length === 0) { showToast('⚠️ 没有存活的S怪'); return; }
+            
+            const isSimple = confirm("💾 存为TXT\n\n点击【确定】导出简易版（S怪名字 + 服务器）\n点击【取消】导出详细版（服务器 + S怪名字 + 地区 + 坐标 + 触发者）");
+            
+            let text = "";
+            if (isSimple) {
+                activeMonsters.forEach(m => { text += `${m.name} ${m.server}\n`; });
+            } else {
+                activeMonsters.forEach(m => { text += `${m.server} ${m.name} ${m.area} ${m.coord} ${m.trigger || '未分配'}\n`; });
+            }
+            
+            const blob = new Blob([text.trim()], { type: 'text/plain;charset=utf-8' }); 
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; const now = new Date();
+            a.download = `FF14排车_${isSimple?'简易':'详细'}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.txt`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); 
+            showToast("💾 排车文件已保存！");
+        }
+
+        // ====== 导出相关功能 END ======
 
         document.getElementById('focusRoutePage').addEventListener('paste', e => {
             if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -1916,10 +1964,10 @@
 
                 if (matchedMonster) {
                     let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === lastServer);
-                    if (!isDuplicate) parsedMonsters.push({ name: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: lastServer, hp: hp, trigger: "" });
+                    if (!isDuplicate) parsedMonsters.push({ name: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: lastServer, hp: hp, trigger: "", isDead: false });
                 }
             }
-            parsedMonsters.sort((a, b) => { const weights = { "7.0": 3, "6.0": 2, "5.0": 1, "未知": 0 }; return (weights[b.version] || 0) - (weights[a.version] || 0); });
+            sortParsedMonstersDefault();
             editingRouteServers.clear(); isSimpleRouteLocked = false; renderRouteResult();
         }
 
@@ -1928,11 +1976,51 @@
             renderRouteResult();
         }
 
+        function setServerAsFirst(serverName) {
+            const targetServerMonsters = parsedMonsters.filter(m => m.server === serverName);
+            const otherMonsters = parsedMonsters.filter(m => m.server !== serverName);
+            parsedMonsters = [...targetServerMonsters, ...otherMonsters];
+            renderRouteResult();
+            showToast(`✅ 已将 ${serverName} 设为始发站`);
+        }
+
+        function moveServer(serverName, direction) {
+            const serverOrder = [];
+            parsedMonsters.forEach(m => { if (!serverOrder.includes(m.server)) serverOrder.push(m.server); });
+            const currentIndex = serverOrder.indexOf(serverName);
+            const targetIndex = currentIndex + direction;
+            if (targetIndex < 0 || targetIndex >= serverOrder.length) {
+                showToast('⚠️ 已经是最前/最后的服务器了');
+                return;
+            }
+            // 交换顺序
+            const temp = serverOrder[currentIndex];
+            serverOrder[currentIndex] = serverOrder[targetIndex];
+            serverOrder[targetIndex] = temp;
+            
+            // 重建 parsedMonsters 数组，使服务器顺序改变，但同服务器内相对顺序不变
+            const newParsed = [];
+            serverOrder.forEach(srv => {
+                parsedMonsters.forEach(m => {
+                    if (m.server === srv) newParsed.push(m);
+                });
+            });
+            parsedMonsters = newParsed;
+            renderRouteResult();
+            showToast(`✅ 服务器 ${serverName} 已${direction === -1 ? '上移' : '下移'}`);
+        }
+
         function moveMonster(globalIdx, direction) {
             const currentMonster = parsedMonsters[globalIdx]; if (!currentMonster) return;
             const server = currentMonster.server; let targetIdx = -1;
-            if (direction === -1) { for (let i = globalIdx - 1; i >= 0; i--) if (parsedMonsters[i].server === server) { targetIdx = i; break; } } 
-            else { for (let i = globalIdx + 1; i < parsedMonsters.length; i++) if (parsedMonsters[i].server === server) { targetIdx = i; break; } }
+            if (direction === -1) { 
+                for (let i = globalIdx - 1; i >= 0; i--) 
+                    if (parsedMonsters[i].server === server) { targetIdx = i; break; } 
+            } 
+            else { 
+                for (let i = globalIdx + 1; i < parsedMonsters.length; i++) 
+                    if (parsedMonsters[i].server === server) { targetIdx = i; break; } 
+            }
             if (targetIdx !== -1) {
                 const temp = parsedMonsters[globalIdx]; parsedMonsters[globalIdx] = parsedMonsters[targetIdx]; parsedMonsters[targetIdx] = temp;
                 renderRouteResult(); showToast(direction === -1 ? '⬆️ 已上移' : '⬇️ 已下移');
@@ -1959,6 +2047,24 @@
                 showToast(`已移除服务器：${serverName}`);
             } else {
                 showToast(`⚠️ 没有找到该服务器的怪`);
+            }
+        }
+
+        function toggleMonsterDead(idx, isDead) {
+            if (parsedMonsters[idx]) {
+                parsedMonsters[idx].isDead = isDead;
+                renderRouteResult();
+            }
+        }
+
+        function clearDeadMonsters() {
+            const initial = parsedMonsters.length;
+            parsedMonsters = parsedMonsters.filter(m => !m.isDead);
+            if (parsedMonsters.length !== initial) {
+                renderRouteResult();
+                showToast(`🧹 已一键清理 ${initial - parsedMonsters.length} 只已去世的 S怪`);
+            } else {
+                showToast('⚠️ 没有标记为已去世的 S怪');
             }
         }
 
@@ -2006,24 +2112,9 @@
                 calculateRouteTime(); return;
             }
 
-            const serverMap = {};
-            parsedMonsters.forEach((m, idx) => { m._globalIdx = idx; if (!serverMap[m.server]) serverMap[m.server] = []; serverMap[m.server].push(m); });
-
-            const serverStats = [];
-            for (let server in serverMap) {
-                const list = serverMap[server]; const count = list.length;
-                let v7 = list.filter(m => m.version === "7.0").length;
-                let v6 = list.filter(m => m.version === "6.0").length;
-                let v5 = list.filter(m => m.version === "5.0").length;
-                serverStats.push({ server, list, count, v7, v6, v5 });
-            }
-
-            serverStats.sort((a, b) => {
-                if (b.v7 !== a.v7) return b.v7 - a.v7; if (b.count !== a.count) return b.count - a.count;
-                if (b.v6 !== a.v6) return b.v6 - a.v6; return b.v5 - a.v5;
-            });
-
-            let routeStr = "", logHtml = "", flatSortedMonsters = []; 
+            // 提取唯一的服务器顺序（按首次出现）
+            const serverOrder = [];
+            parsedMonsters.forEach(m => { if (!serverOrder.includes(m.server)) serverOrder.push(m.server); });
 
             let datalistEl = document.getElementById('trigger-datalist');
             if(!datalistEl) {
@@ -2034,32 +2125,72 @@
             datalistEl.innerHTML = '';
             allTriggers.forEach(t => { datalistEl.innerHTML += `<option value="${t}">`; });
 
-            serverStats.forEach((stat, index) => {
-                const isFirst = index === 0; const stationPrefix = isFirst ? '⭐ 首站' : `📍 第${index + 1}站`;
-                const isEditing = editingRouteServers.has(stat.server);
-                routeStr += `【${isFirst ? '⭐ 首站：' : `📍 第${index + 1}站：`}${stat.server}】\n`;
+            // 为了维持渲染的顺序并分配 _globalIdx
+            parsedMonsters.forEach((m, idx) => m._globalIdx = idx);
 
+            let routeStr = "", logHtml = "", flatSortedMonsters = []; 
+            
+            const serverStationMap = {};
+            let activeIndex = 0;
+            serverOrder.forEach(srv => {
+                const activeCount = parsedMonsters.filter(m => m.server === srv && !m.isDead).length;
+                if (activeCount > 0) {
+                    serverStationMap[srv] = activeIndex === 0 ? '⭐ 首站' : `📍 第${activeIndex + 1}站`;
+                    activeIndex++;
+                } else {
+                    serverStationMap[srv] = '💀 已全灭';
+                }
+            });
+
+            // 第一遍：收集 flatSortedMonsters 并生成文本（过滤掉 isDead）
+            serverOrder.forEach(server => {
+                const activeList = parsedMonsters.filter(m => m.server === server && !m.isDead);
+                if (activeList.length > 0) {
+                    const prefix = serverStationMap[server];
+                    if (prefix === '⭐ 首站') {
+                        routeStr += `【⭐ 首站：${server}】\n`;
+                    } else {
+                        routeStr += `【${prefix}：${server}】\n`;
+                    }
+                    activeList.forEach(m => {
+                        flatSortedMonsters.push(m);
+                        let triggerDisplay = m.trigger ? `(触发: ${m.trigger})` : '';
+                        routeStr += `S：${m.name} ${m.hp} ${m.area} ${m.coord} ${m.server} ${triggerDisplay}\n`;
+                    });
+                    routeStr += `\n`;
+                }
+            });
+
+            // 第二遍：生成 logHtml（包含所有怪物，不管死活）
+            serverOrder.forEach(server => {
+                const list = parsedMonsters.filter(m => m.server === server);
+                const activeList = list.filter(m => !m.isDead);
+                
+                const prefix = serverStationMap[server];
+                const isEditing = editingRouteServers.has(server);
+                
                 logHtml += `<div class="server-card ${isEditing ? 'show-arrows' : ''}">
                     <div class="server-card-header">
-                        <div class="server-card-title">${stationPrefix}：${stat.server} <span style="font-size:12px; color:var(--text-muted);">(总计${stat.count}只)</span></div>
+                        <div class="server-card-title">${prefix}：${server} <span style="font-size:12px; color:var(--text-muted);">(总计${list.length}只, 存活${activeList.length}只)</span></div>
                         <div class="server-card-actions">
-                            <button class="route-add-btn" onclick="handleRouteAdd('${stat.server}')">+1只</button>
-                            <button class="route-add-btn" style="background:var(--red); color:#fff;" onclick="removeLastMonsterOfServer('${stat.server}')">-1只</button>
-                            <button class="route-add-btn" style="background:var(--gold); color:var(--panel);" onclick="openCorrectionModal('${stat.server}')">+1服</button>
-                            <button class="route-add-btn" style="background:var(--red); color:#fff;" onclick="removeServer('${stat.server}')">-1服</button>
-                            <button class="route-add-btn" style="background:var(--purple); color:#fff;" onclick="toggleRouteArrows('${stat.server}')">${isEditing ? '完成调整' : '🔃 调整车序'}</button>
+                            <button class="route-add-btn" style="background:var(--purple); color:#fff;" onclick="setServerAsFirst('${server}')">🚀 设为首站</button>
+                            <button class="route-add-btn" style="background:var(--blue); color:#fff;" onclick="moveServer('${server}', -1)">⬆️ 移服</button>
+                            <button class="route-add-btn" style="background:var(--blue); color:#fff;" onclick="moveServer('${server}', 1)">⬇️ 移服</button>
+                            <button class="route-add-btn" onclick="handleRouteAdd('${server}')">+1只</button>
+                            <button class="route-add-btn" style="background:var(--red); color:#fff;" onclick="removeLastMonsterOfServer('${server}')">-1只</button>
+                            <button class="route-add-btn" style="background:var(--gold); color:var(--panel);" onclick="openCorrectionModal('${server}')">+1服</button>
+                            <button class="route-add-btn" style="background:var(--red); color:#fff;" onclick="removeServer('${server}')">-1服</button>
+                            <button class="route-add-btn" style="background:var(--purple); color:#fff;" onclick="toggleRouteArrows('${server}')">${isEditing ? '完成调整' : '🔃 调整车序'}</button>
                         </div>
                     </div>
                     <div class="monster-list">`;
 
-                stat.list.forEach(m => {
-                    flatSortedMonsters.push(m); 
-                    
+                list.forEach(m => {
                     let triggerDisplay = m.trigger ? ` <span style="color:var(--gold); font-size:11px;">[${m.trigger}]</span>` : '';
-                    routeStr += `S：${m.name} ${m.hp} ${m.area} ${m.coord} ${m.server} ${m.trigger ? '(触发: '+m.trigger+')' : ''}\n`;
                     let vClass = m.version === "7.0" ? "v7" : m.version === "6.0" ? "v6" : "v5";
+                    let deadStyle = m.isDead ? 'opacity: 0.5; text-decoration: line-through;' : '';
                     
-                    logHtml += `<div class="monster-list-item">
+                    logHtml += `<div class="monster-list-item" style="${deadStyle}">
                         <div style="display:flex; flex-direction:column; gap:4px; flex:1; margin-right:10px;">
                             <span style="font-family:monospace;">
                                 <span style="color:var(--gold); font-weight:bold; font-size: 13px;">S：${m.name}</span>
@@ -2068,16 +2199,19 @@
                             <input type="text" class="input-trigger-compact" list="trigger-datalist" placeholder="搜索或输入新触发者" value="${m.trigger || ''}" onchange="updateRouteTriggerInput(this, ${m._globalIdx})">
                         </div>
                         <div style="display:flex; align-items:center; gap: 8px;">
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:12px; color:var(--red); font-weight:bold;">
+                                <input type="checkbox" ${m.isDead ? 'checked' : ''} onchange="toggleMonsterDead(${m._globalIdx}, this.checked)"> 已去世
+                            </label>
                             <span class="${vClass}">${m.version}</span>
                             <button class="btn-order-up" onclick="moveMonster(${m._globalIdx}, -1)" title="上移">⬆️</button>
                             <button class="btn-order-down" onclick="moveMonster(${m._globalIdx}, 1)" title="下移">⬇️</button>
-                            <button class="btn-edit-small" onclick="editParsedMonster(${m._globalIdx})" title="修正此条">✏️</button>
-                            <button class="btn-delete-small" onclick="deleteParsedMonster(${m._globalIdx})" title="删除此条">🗑️</button>
+                            <button class="btn-edit-small" onclick="editParsedMonster(${m._globalIdx})" title="修正名字/信息">✏️</button>
+                            <button class="btn-edit-small" style="color:var(--gold);" onclick="changeMonsterLocation(${m._globalIdx})" title="临时变更地点/服务器">📍</button>
+                            <button class="btn-delete-small" onclick="deleteParsedMonster(${m._globalIdx})" title="彻底删除此条">🗑️</button>
                         </div>
                     </div>`;
                 });
                 logHtml += `</div></div>`; 
-                routeStr += `\n`;
             });
 
             if(outEl) outEl.value = routeStr.trim();
@@ -2097,6 +2231,18 @@
             document.getElementById('correctionModalTitle').innerText = '✏️ 修正 S怪信息';
             document.getElementById('correctionModal').style.display = 'flex';
         }
+
+        function changeMonsterLocation(idx) {
+            editingParsedIndex = idx;
+            const m = parsedMonsters[idx];
+            fixMonsterSelect.value = `${m.name}|${m.area}`; 
+            fixServerSelect.value = m.server;
+            document.getElementById('fixCoordInput').value = m.coord !== '(坐标未知)' ? m.coord : '';
+            document.getElementById('correctionModalTitle').innerText = '📍 临时变更发车地点/服务器';
+            document.getElementById('correctionModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('fixCoordInput').focus(), 100);
+        }
+
         function openCorrectionModal(defaultServer) {
             editingParsedIndex = -1; fixMonsterSelect.selectedIndex = 0;
             if(defaultServer && ALL_SERVERS.includes(defaultServer)) fixServerSelect.value = defaultServer; else fixServerSelect.selectedIndex = 0;
@@ -2112,25 +2258,19 @@
             if (!dbMonster) { alert("审核失败：词库中不存在该 S怪！"); return; }
 
             if (editingParsedIndex >= 0) {
-                parsedMonsters[editingParsedIndex] = { name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: parsedMonsters[editingParsedIndex].hp || '100.00%', trigger: parsedMonsters[editingParsedIndex].trigger || '' };
+                parsedMonsters[editingParsedIndex] = { name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: parsedMonsters[editingParsedIndex].hp || '100.00%', trigger: parsedMonsters[editingParsedIndex].trigger || '', isDead: parsedMonsters[editingParsedIndex].isDead || false };
                 showToast("✅ 修正成功！");
             } else {
                 const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === serverVal);
                 if (isDuplicate) { alert("审核提示：该服务器下已存在这只S怪，无需重复添加！"); return; }
-                parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: '100.00%', trigger: '' });
+                parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: '100.00%', trigger: '', isDead: false });
+                sortParsedMonstersDefault();
                 showToast("✅ 审核通过，已添加至排车列表！");
             }
             document.getElementById('correctionModal').style.display = 'none'; document.getElementById('fixCoordInput').value = '';
             renderRouteResult(); 
         }
-        function downloadRouteText() {
-            const text = document.getElementById('routeOutput').value; if (!text) return;
-            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; const now = new Date();
-            a.download = `FF14排车_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.txt`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("💾 排车文件已保存！");
-        }
-
+        
         const mHour = document.getElementById('mHour'), mMin = document.getElementById('mMin'), mPercent = document.getElementById('mPercent');
         const mFogGroup = document.getElementById('mFogGroup'), mFogHour = document.getElementById('mFogHour'), mFogMin = document.getElementById('mFogMin'), mFogSec = document.getElementById('mFogSec');
         const manualBox = document.getElementById('manualResultBox'), mFateGroup = document.getElementById('mFateGroup');
