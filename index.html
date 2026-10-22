@@ -36,6 +36,12 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .blink-warning { animation: blink 1s infinite; }
 
+        @keyframes ssBlink {
+            0%, 100% { background-color: rgba(243, 156, 18, 0.25); border-left: 4px solid var(--gold); }
+            50% { background-color: transparent; border-left: 4px solid transparent; }
+        }
+        .ss-highlight { animation: ssBlink 1s infinite; }
+
         * { box-sizing: border-box; }
         html, body { overflow-y: auto !important; height: auto; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: background 0.3s, color 0.3s; min-height: 100vh;}
@@ -263,6 +269,9 @@
 
         .btn-close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: var(--text-muted); font-size: 24px; line-height: 1; cursor: pointer; transition: 0.2s; padding: 0; z-index: 10;}
         .btn-close-modal:hover { color: var(--red); transform: scale(1.1); }
+
+        /* 专属高级层级调整，防止内部弹窗被覆盖 */
+        #triggerSelectModal { z-index: 25000; }
 
         #historyModal .modal-content { max-width: 700px; text-align: left; }
         .history-search { width: 100%; padding: 10px; margin-bottom: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; box-sizing: border-box; }
@@ -793,6 +802,12 @@
                 
                 <textarea id="routeInput" class="route-textarea" style="resize: vertical; min-height: 120px;" placeholder="在此粘贴聊天框文本..."></textarea>
                 
+                <!-- 新增：覆盖/追加 模式切换 -->
+                <div class="row-flex" style="margin-bottom: 15px; gap: 8px;">
+                    <button id="btnParseOverwrite" class="btn btn-accent" onclick="setParseMode('overwrite')" style="flex:1; padding: 10px 0; font-size: 14px;">📥 覆盖排车</button>
+                    <button id="btnParseAppend" class="btn btn-outline" onclick="setParseMode('append')" style="flex:1; padding: 10px 0; font-size: 14px; border-color: var(--gold); color: var(--gold);">➕ 中途加车</button>
+                </div>
+
                 <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                     <button class="btn btn-accent" onclick="generateRoute()" style="flex:1; font-size: 16px; padding: 12px 0;">🚀 开始解析排车</button>
                     <button class="btn btn-outline" onclick="document.getElementById('routeInput').value=''; document.getElementById('routeResultBox').style.display='none'; document.getElementById('viewRouteImgBtn').style.display='none'; currentRouteImageBase64 = null; document.getElementById('routeEmptyState').style.display='flex';" style="flex:1; padding: 12px 0;">🗑️ 清空输入</button>
@@ -801,6 +816,9 @@
                     <button class="btn btn-outline" onclick="saveRouteData()" style="color:var(--gold); border-color:var(--gold); flex:1; padding: 10px 0;">💾 保存排车 (20分钟)</button>
                     <button class="btn btn-outline" onclick="handleRouteAdd()" style="color:var(--accent); border-color:var(--accent); flex:1; padding: 10px 0;">🛠️ 手动补录 S怪</button>
                 </div>
+
+                <!-- 一键预设奥山 -->
+                <button class="btn btn-accent" onclick="openAomPresetModal()" style="background: var(--purple); color: #fff; font-size: 15px; padding: 12px 0; width: 100%; margin-bottom: 15px; border-radius: 8px;">⛰️ 一键预设奥山</button>
 
                 <!-- 战术宏生成器 -->
                 <details class="collapse-box" style="margin-bottom: 15px;">
@@ -891,33 +909,43 @@
                 <!-- 一键发布公告 -->
                 <div class="advanced-route-panel" style="margin-top: 15px;">
                     <div class="advanced-route-header" onclick="toggleAnnouncementPanel()">
-                        <span>📢 早车/晚车 公告生成器</span>
+                        <span>📢 早车/晚车/奥山车 公告生成器</span>
                         <span id="announcementToggleIcon" style="font-size: 12px; color: var(--text-muted);">▶</span>
                     </div>
                     <div class="advanced-route-body" id="announcementBody">
-                        <!-- 早晚车切换 -->
+                        <!-- 车辆模式切换 -->
                         <div class="row-flex" style="margin-bottom: 10px;">
-                            <button id="btnAnnMorning" class="btn btn-accent" onclick="switchAnnType('morning')" style="flex:1;">早车模式</button>
-                            <button id="btnAnnEvening" class="btn btn-outline" onclick="switchAnnType('evening')" style="flex:1;">晚车模式</button>
+                            <button id="btnAnnMorning" class="btn btn-accent" onclick="switchAnnType('morning')" style="flex:1;">早车</button>
+                            <button id="btnAnnEvening" class="btn btn-outline" onclick="switchAnnType('evening')" style="flex:1;">晚车</button>
+                            <button id="btnAnnAom" class="btn btn-outline" onclick="switchAnnType('aom')" style="flex:1; border-color:var(--purple); color:var(--purple);">⛰️ 奥山车</button>
                         </div>
                         
                         <div class="input-grid">
                             <div class="input-group">
                                 <label>车头</label>
-                                <input type="text" id="annHeader" value="一剑斩浪客">
+                                <select id="annHeaderSelect" onchange="updateAnnHeader()">
+                                    <option value="一剑斩浪客">一剑斩浪客</option>
+                                    <option value="辞绿">辞绿</option>
+                                    <option value="custom">自定义输入...</option>
+                                </select>
+                                <input type="text" id="annHeader" value="一剑斩浪客" style="margin-top:5px; display:none;">
                             </div>
                             <div class="input-group" id="annTimeGroupMorning">
-                                <label>早车时间</label>
+                                <label>时间</label>
                                 <input type="text" id="annMorningTime" value="9:30AM">
                             </div>
                             <div class="input-group" id="annTimeGroupEvening" style="display:none;">
-                                <label>晚车时间</label>
+                                <label>时间</label>
                                 <input type="text" id="annEveningTime" value="17:50">
+                            </div>
+                            <div class="input-group" id="annTimeGroupAom" style="display:none;">
+                                <label>时间</label>
+                                <input type="text" id="annAomTime" value="21:00">
                             </div>
                         </div>
                         
                         <div class="input-group" style="margin-bottom: 10px;">
-                            <label>始发站覆盖 (留空自动抓取当前车序首站)</label>
+                            <label>始发站覆盖 (留空自动抓取)</label>
                             <input type="text" id="annStartStation" placeholder="例：【梦羽宝境】树海 (21.7,28.3)">
                         </div>
 
@@ -961,6 +989,15 @@
                             <button class="btn btn-red" onclick="clearDeadMonsters()" style="padding: 6px 12px; font-size: 12px;">🧹 一键清理已死</button>
                         </span>
                     </div>
+                    
+                    <!-- 新增：SS 统计框 -->
+                    <div id="ssStatsBox" style="display:none; background: rgba(243,156,18,0.1); border: 1px dashed var(--gold); padding: 10px; border-radius: 6px; margin-bottom: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div style="font-size: 14px; color: var(--gold); font-weight: bold;">✨ 本车 SS 统计</div>
+                        <div style="font-size: 14px; color: var(--text);">
+                            共出 SS 数量: <span id="ssCountText" style="color:var(--gold); font-weight:bold;">0</span> 只 / 总规划: <span id="ssTotalText" style="font-weight:bold;">0</span> 只 (占比: <span id="ssRateText" style="color:var(--red); font-weight:bold;">0%</span>)
+                        </div>
+                    </div>
+
                     <textarea id="routeOutput" class="route-textarea route-output" readonly style="height: 200px; margin-bottom: 15px;"></textarea>
 
                     <details class="collapse-box" open style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
@@ -1087,6 +1124,26 @@
         </div>
     </div>
 
+    <!-- 一键预设奥山弹窗 -->
+    <div class="modal-overlay" id="aomPresetModal">
+        <div class="modal-content" style="max-width: 600px; text-align: left;">
+            <button class="btn-close-modal" onclick="document.getElementById('aomPresetModal').style.display='none'">×</button>
+            <div class="modal-title" style="text-align: center; color: var(--gold);">⛰️ 一键预设奥山</div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>1. 选择大区</label>
+                <select id="aomDcSelect" onchange="renderAomServerList()"></select>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>2. 勾选服务器并填写触发者 (可留空/可黑话/可内置选人)</label>
+                <div id="aomServerList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: var(--input-bg);"></div>
+            </div>
+            <div class="modal-btns">
+                <button class="btn-modal btn-cancel" onclick="document.getElementById('aomPresetModal').style.display='none'">取消</button>
+                <button class="btn-modal btn-confirm ready" onclick="executeAomPreset()" style="background: var(--accent); color: var(--panel);">✅ 确认生成</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="manualAddModal">
         <div class="modal-content" style="max-width: 600px; text-align: left;">
             <button class="btn-close-modal" onclick="closeManualAddModal()">×</button>
@@ -1206,7 +1263,7 @@
         // ============================
         const TRIGGER_ALIASES = {
             "酸梅": "牛排大王@白银乡", "栓梅": "牛排大王@白银乡", "酸梅姐": "牛排大王@白银乡",
-            "基佬之王": "辞绿@拂晓之间", "猪猪的绿": "辞绿@拂晓之间",
+            "基佬之王": "辞绿@拂晓之间", "猪猪的绿": "辞绿@拂晓之间", "猪绿": "辞绿@拂晓之间",
             "xly": "流萤成眠@潮风亭", "小流萤": "流萤成眠@潮风亭", "流眠成萤": "流萤成眠@潮风亭",
             "寒猪烟": "寒烟荼蘼雪霁@龙巢神殿", "猪烟": "寒烟荼蘼雪霁@龙巢神殿", "黑猪": "寒烟荼蘼雪霁@龙巢神殿", "黑猪烟": "寒烟荼蘼雪霁@龙巢神殿",
             "少爷": "怀瑜@白金幻象", "莱特": "怀瑜@白金幻象",
@@ -1215,11 +1272,24 @@
             "朵子": "阿馥奇朵@神拳痕", "朵肥": "阿馥奇朵@神拳痕",
             "我yes龙": "我也是龙@白银乡", "猪肝龙": "我也是龙@白银乡",
             "静师傅": "静名@白银乡",
-            "高师傅": "凯旋尸骸@潮风亭",
-            "猪猪客": "等风也在等你@潮风亭", "浪客": "等风也在等你@潮风亭",
+            "高师傅": "凯旋尸骸@潮风亭", "高": "凯旋尸骸@潮风亭",
+            "猪猪客": "一剑斩浪客@潮风亭", 
+            "浪客": "等风也在等你@潮风亭", 
             "小查找": "点击此处查找@水晶塔", "小查猪": "点击此处查找@水晶塔",
             "猪娜": "阿希娜@白银乡",
-            "道师傅": "道橘染@拂晓之间"
+            "道师傅": "道橘染@拂晓之间",
+            "猪孩子": "Aoll@神拳痕", "猪孩": "Aoll@神拳痕",
+            "猪排": "厚烧海苔@旅人栈桥", "猪苔": "厚烧海苔@旅人栈桥",
+            "草莓": "一杯草莓@晨曦王座", "莓总": "一杯草莓@晨曦王座",
+            "边肥": "边城@潮风亭",
+            "xzz": "演员新之助@白银乡", "新之猪": "演员新之助@白银乡", "心之助": "演员新之助@白银乡"
+        };
+
+        // SS 怪映射
+        const SS_MAP = {
+            "5.0": "得到宽恕的叛乱",
+            "6.0": "克尔",
+            "7.0": "水晶化身之王"
         };
 
         // 触发者翻译函数
@@ -1227,7 +1297,13 @@
             if (!id) return "";
             let cleanId = id.trim();
             if (TRIGGER_ALIASES[cleanId]) return TRIGGER_ALIASES[cleanId];
-            return cleanId;
+            
+            let parts = cleanId.split(/[+＋,，、]/);
+            let resolvedParts = parts.map(p => {
+                let trimP = p.trim();
+                return TRIGGER_ALIASES[trimP] ? TRIGGER_ALIASES[trimP] : trimP;
+            });
+            return resolvedParts.join('、');
         }
 
         // 检查是否包含黑话（用于搜索匹配）
@@ -1281,8 +1357,9 @@
             "Aoll@神拳痕", "伊沃洛l@白银乡", "点击此处查找@水晶塔", "三司绫濑@神意之地", "我也是龙@白银乡", 
             "雾海小紫@神拳痕", "天童凯伊@白银乡", "传承录@梦羽宝境", "边城@潮风亭", "浮閻舟渡@拂晓之间", 
             "风侍葬@拂晓之间", "阿馥奇朵@神拳痕", "兽鬼不是受鬼@拂晓之间", "小海豹猪猪@潮风亭", "若曦雨@白银乡", 
-            "千时@白金幻象", "静名@白银乡", "秩、阳@旅人栈桥", "厚烧猪排@旅人栈桥", "清野青@潮风亭", 
-            "等风也在等你@潮风亭", "早桜弥月@沃仙曦染", "三月兔的茶会@摩杜纳", "血红乱@柔风海湾", "依戀痛@白金幻象"
+            "千时@白金幻象", "静名@白银乡", "秩、阳@旅人栈桥", "厚烧海苔@旅人栈桥", "清野青@潮风亭", 
+            "等风也在等你@潮风亭", "早桜弥月@沃仙曦染", "三月兔的茶会@摩杜纳", "血红乱@柔风海湾", "依戀痛@白金幻象",
+            "一杯草莓@晨曦王座", "凯旋尸骸@潮风亭", "一剑斩浪客@潮风亭"
         ]));
 
         let currentActiveInvite = null;
@@ -1306,7 +1383,7 @@
             } else {
                 allTriggers = [...customTriggers];
             }
-            // 更新 datalist
+            // 更新 datalist (包含全名和黑话)
             let datalistEl = document.getElementById('trigger-datalist');
             if(!datalistEl) {
                 datalistEl = document.createElement('datalist');
@@ -1315,6 +1392,9 @@
             }
             datalistEl.innerHTML = '';
             allTriggers.forEach(t => { datalistEl.innerHTML += `<option value="${t}">`; });
+            for (let alias in TRIGGER_ALIASES) {
+                datalistEl.innerHTML += `<option value="${alias}">`;
+            }
             
             // 如果是下拉框模式，也更新一下
             document.querySelectorAll('.select-trigger').forEach(sel => {
@@ -1343,11 +1423,13 @@
         let currentRouteImageBase64 = null; 
         let editingRouteServers = new Set(); 
         let isSimpleRouteLocked = false; 
+        let currentParseMode = 'overwrite'; // 新增：解析模式
 
         let currentAnnType = 'morning';
         
         // 触发者弹窗状态
         let currentTriggerSelectIdx = -1;
+        let currentAomInput = null; // 用于记录奥山预设里当前操作的input
 
         // 折叠
         function toggleManualCard() {
@@ -1364,6 +1446,24 @@
             const body = document.getElementById('announcementBody'); const icon = document.getElementById('announcementToggleIcon');
             if (body.style.display === 'block') { body.style.display = 'none'; icon.innerText = '▶'; } 
             else { body.style.display = 'block'; icon.innerText = '▼'; }
+        }
+
+        // 新增：切换解析模式
+        function setParseMode(mode) {
+            currentParseMode = mode;
+            const btnO = document.getElementById('btnParseOverwrite');
+            const btnA = document.getElementById('btnParseAppend');
+            if (mode === 'overwrite') {
+                btnO.className = 'btn btn-accent';
+                btnA.className = 'btn btn-outline';
+                btnA.style.borderColor = 'var(--gold)';
+                btnA.style.color = 'var(--gold)';
+            } else {
+                btnO.className = 'btn btn-outline';
+                btnA.className = 'btn btn-accent';
+                btnA.style.borderColor = 'var(--accent)';
+                btnA.style.color = 'var(--panel)';
+            }
         }
 
         // 目标追踪开关
@@ -1416,22 +1516,50 @@
             showToast('✅ 布局比例已保存');
         }
 
+        function updateAnnHeader() {
+            const sel = document.getElementById('annHeaderSelect').value;
+            const input = document.getElementById('annHeader');
+            if (sel === 'custom') {
+                input.style.display = 'block';
+                input.focus();
+            } else {
+                input.style.display = 'none';
+                input.value = sel;
+            }
+        }
+
         // 公告切换
         function switchAnnType(type) {
             currentAnnType = type;
+            document.getElementById('btnAnnMorning').className = 'btn btn-outline';
+            document.getElementById('btnAnnEvening').className = 'btn btn-outline';
+            document.getElementById('btnAnnAom').className = 'btn btn-outline';
+            
+            document.getElementById('annTimeGroupMorning').style.display = 'none';
+            document.getElementById('annTimeGroupEvening').style.display = 'none';
+            document.getElementById('annTimeGroupAom').style.display = 'none';
+
             if (type === 'morning') {
                 document.getElementById('btnAnnMorning').className = 'btn btn-accent';
-                document.getElementById('btnAnnEvening').className = 'btn btn-outline';
                 document.getElementById('annTimeGroupMorning').style.display = 'flex';
-                document.getElementById('annTimeGroupEvening').style.display = 'none';
-                document.getElementById('annHeader').value = '一剑斩浪客';
-            } else {
-                document.getElementById('btnAnnMorning').className = 'btn btn-outline';
+                document.getElementById('annHeaderSelect').value = '一剑斩浪客';
+            } else if (type === 'evening') {
                 document.getElementById('btnAnnEvening').className = 'btn btn-accent';
-                document.getElementById('annTimeGroupMorning').style.display = 'none';
                 document.getElementById('annTimeGroupEvening').style.display = 'flex';
-                document.getElementById('annHeader').value = '辞绿';
+                document.getElementById('annHeaderSelect').value = '辞绿';
+            } else if (type === 'aom') {
+                document.getElementById('btnAnnAom').className = 'btn btn-accent';
+                document.getElementById('btnAnnAom').style.borderColor = 'var(--purple)';
+                document.getElementById('btnAnnAom').style.color = 'var(--panel)';
+                document.getElementById('annTimeGroupAom').style.display = 'flex';
+                document.getElementById('annHeaderSelect').value = '辞绿';
             }
+            
+            if (type !== 'aom') {
+                document.getElementById('btnAnnAom').style.borderColor = 'var(--purple)';
+                document.getElementById('btnAnnAom').style.color = 'var(--purple)';
+            }
+            updateAnnHeader();
             document.getElementById('announcementOutput').value = ''; // 清空旧文本
         }
 
@@ -1526,7 +1654,7 @@
             const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === server);
             if (isDuplicate) { showToast('⚠️ 该服务器下已有这只怪'); return; }
 
-            parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coord, server: server, hp: '100.00%', trigger: '', isDead: false, isTarget: false });
+            parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coord, server: server, hp: '100.00%', trigger: '', isDead: false, isTarget: false, isSS: false, originalName: dbMonster.name });
             sortParsedMonstersDefault();
             renderRouteResult();
             showToast(`✅ 已精准添加 ${name}`);
@@ -1625,7 +1753,12 @@
                         const data = JSON.parse(cache);
                         if (Date.now() < data.expire) {
                             parsedMonsters = data.monsters || [];
-                            parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; if(m.isTarget === undefined) m.isTarget = false; });
+                            parsedMonsters.forEach(m => { 
+                                if (m.isDead === undefined) m.isDead = false; 
+                                if (m.isTarget === undefined) m.isTarget = false; 
+                                if (m.isSS === undefined) m.isSS = false; 
+                                if (m.originalName === undefined) m.originalName = m.name; 
+                            });
                             renderRouteResult();
                         }
                     } catch(e) {}
@@ -1645,9 +1778,16 @@
             const header = document.getElementById('annHeader').value || '未知';
             let station = document.getElementById('annStartStation').value.trim();
 
+            const isPureAom = activeMonsters.every(m => m.name === "厌忌之人 奇里格");
+
             if (!station) {
-                const firstM = activeMonsters[0]; // 直接取当前排好序的第一只
-                if (firstM) station = `【${firstM.server}】${firstM.area} ${firstM.coord}`;
+                if (currentAnnType === 'aom' || isPureAom) {
+                    // 默认白金幻象
+                    station = `【白金幻象】奥阔帕恰山`;
+                } else {
+                    const firstM = activeMonsters[0]; // 直接取当前排好序的第一只
+                    if (firstM) station = `【${firstM.server}】${firstM.area} ${firstM.coord}`;
+                }
             }
 
             let v7 = 0, v6 = 0, v5 = 0, v4 = 0;
@@ -1669,12 +1809,22 @@
                 output += `始发站：${station}\n`;
                 output += `车头：${header}\n`;
                 output += `100S*${v7} 90S*${v6} 80S*${v5} 70S*${v4}`;
-            } else {
+            } else if (currentAnnType === 'evening') {
                 const eTime = document.getElementById('annEveningTime').value || '17:50';
                 output = `${dateStr} 晚车 ${eTime}\n`;
                 output += `首站 ${station.replace(/[【】]/g, '')}\n`; 
                 output += `车头 ${header}\n`;
                 output += `100s*${v7} 90s*${v6} 80s*${v5} 70s*${v4}`;
+            } else {
+                const aTime = document.getElementById('annAomTime').value || '21:00';
+                output = `${dateStr} 奥山车 ${aTime}\n`;
+                output += `首站 ${station.replace(/[【】]/g, '')}\n`; 
+                output += `车头 ${header}\n`;
+                if (isPureAom) {
+                    output += `纯奥山车，全服清空！`;
+                } else {
+                    output += `混合车：奥山(${v7 > 0 ? '包含' : '未包含'}) / 100s*${v7} 90s*${v6} 80s*${v5} 70s*${v4}`;
+                }
             }
 
             document.getElementById('announcementOutput').value = output;
@@ -1939,7 +2089,12 @@
                 const { data, expire } = JSON.parse(saved);
                 if (Date.now() > expire) { localStorage.removeItem('ff14_saved_route_20m'); return false; }
                 parsedMonsters = data; isSimpleRouteLocked = false; 
-                parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; if(m.isTarget === undefined) m.isTarget = false; });
+                parsedMonsters.forEach(m => { 
+                    if (m.isDead === undefined) m.isDead = false; 
+                    if (m.isTarget === undefined) m.isTarget = false; 
+                    if (m.isSS === undefined) m.isSS = false; 
+                    if (m.originalName === undefined) m.originalName = m.name; 
+                });
                 renderRouteResult(); return true;
             } catch(e) { return false; }
         }
@@ -1953,8 +2108,18 @@
             const serverStats = [];
             for (let server in serverMap) {
                 const list = serverMap[server];
-                // 排序优先级：7.0 > 6.0 > 5.0 > 4.0
-                list.sort((a,b) => { const weights = { "7.0": 4, "6.0": 3, "5.0": 2, "4.0": 1, "未知": 0 }; return (weights[b.version] || 0) - (weights[a.version] || 0); });
+                // 排序：奥山 > 7.0 > 6.0 > 5.0 > 4.0
+                list.sort((a,b) => { 
+                    const getWeight = (m) => {
+                        if (m.originalName === "厌忌之人 奇里格") return 5;
+                        if (m.version === "7.0") return 4;
+                        if (m.version === "6.0") return 3;
+                        if (m.version === "5.0") return 2;
+                        if (m.version === "4.0") return 1;
+                        return 0;
+                    };
+                    return getWeight(b) - getWeight(a); 
+                });
                 let v7 = list.filter(m => m.version === "7.0").length;
                 let v6 = list.filter(m => m.version === "6.0").length;
                 let v5 = list.filter(m => m.version === "5.0").length;
@@ -2169,7 +2334,11 @@
             // 统一符号
             text = text.replace(/[＜《]/g, '<').replace(/[＞》]/g, '>').replace(/[（【\[［]/g, '(').replace(/[）】\]］]/g, ')').replace(/[：]/g, ':').replace(/[，、]/g, ',');
             const lines = text.split('\n'); 
-            parsedMonsters = []; 
+            
+            if (currentParseMode === 'overwrite') {
+                parsedMonsters = []; 
+            }
+            
             let lastServer = "未知";
             
             for (let i = 0; i < lines.length; i++) {
@@ -2299,10 +2468,11 @@
                         }
                         
                         if (matchedMonster) {
-                            let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === currentServer);
-                            if (!isDuplicate) {
+                            let existingM = parsedMonsters.find(m => (m.name === matchedMonster.name || m.originalName === matchedMonster.name) && m.server === currentServer);
+                            if (!existingM) {
                                 parsedMonsters.push({
                                     name: matchedMonster.name,
+                                    originalName: matchedMonster.name,
                                     area: matchedMonster.area,
                                     version: matchedMonster.version,
                                     coord: coord,
@@ -2310,8 +2480,11 @@
                                     hp: hp,
                                     trigger: item.trigger,
                                     isDead: false,
-                                    isTarget: false
+                                    isTarget: false,
+                                    isSS: false
                                 });
+                            } else if (coord !== "(坐标未知)") {
+                                existingM.coord = coord;
                             }
                         }
                     }
@@ -2351,10 +2524,11 @@
                         let triggerId = currentLine.replace(/[\(（\)）\[\]【】\<\>\s,，]/g, '').trim();
                         triggerId = resolveTrigger(triggerId);
 
-                        let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === currentServer);
-                        if (!isDuplicate) {
+                        let existingM = parsedMonsters.find(m => (m.name === matchedMonster.name || m.originalName === matchedMonster.name) && m.server === currentServer);
+                        if (!existingM) {
                             parsedMonsters.push({ 
                                 name: matchedMonster.name, 
+                                originalName: matchedMonster.name,
                                 area: matchedMonster.area, 
                                 version: matchedMonster.version, 
                                 coord: coord, 
@@ -2362,8 +2536,11 @@
                                 hp: hp, 
                                 trigger: triggerId, 
                                 isDead: false, 
-                                isTarget: false 
+                                isTarget: false,
+                                isSS: false
                             });
+                        } else if (coord !== "(坐标未知)") {
+                            existingM.coord = coord;
                         }
                     }
                 }
@@ -2471,6 +2648,23 @@
             }
         }
 
+        function toggleSS(idx) {
+            if (parsedMonsters[idx]) {
+                const m = parsedMonsters[idx];
+                if (m.isSS) {
+                    m.isSS = false;
+                    m.name = m.originalName;
+                } else {
+                    const ssName = SS_MAP[m.version];
+                    if (ssName) {
+                        m.isSS = true;
+                        m.name = ssName;
+                    }
+                }
+                renderRouteResult();
+            }
+        }
+
         function clearDeadMonsters() {
             const initial = parsedMonsters.length;
             parsedMonsters = parsedMonsters.filter(m => !m.isDead);
@@ -2484,7 +2678,13 @@
 
         function updateRouteTriggerInput(el, idx) {
             let val = el.value.trim();
-            if (val) val = resolveTrigger(val); // 失焦自动解析黑话
+            if (val) {
+                const resolved = resolveTrigger(val);
+                if (resolved !== val) {
+                    val = resolved;
+                    showToast('✅ 黑话已转换');
+                }
+            }
             if (parsedMonsters[idx]) {
                 parsedMonsters[idx].trigger = val;
                 if (val && !allTriggers.includes(val)) {
@@ -2494,7 +2694,7 @@
                     updateGlobalTriggers();
                 }
             }
-            renderRouteResult(); // 实时更新UI展示
+            renderRouteResult(); // 重新渲染时更新UI
         }
 
         function updateRouteTrigger(val, idx) {
@@ -2514,7 +2714,17 @@
         // ======= 触发者选择弹窗逻辑 =======
         function openTriggerSelectModal(idx) {
             currentTriggerSelectIdx = idx;
+            currentAomInput = null;
             const m = parsedMonsters[idx];
+            document.getElementById('triggerSelectModal').style.display = 'flex';
+            document.getElementById('selectTriggerSearch').value = '';
+            filterSelectTriggers();
+        }
+
+        // 专用于奥山预设的选人
+        function openAomTriggerSelect(inputEl) {
+            currentAomInput = inputEl;
+            currentTriggerSelectIdx = -1;
             document.getElementById('triggerSelectModal').style.display = 'flex';
             document.getElementById('selectTriggerSearch').value = '';
             filterSelectTriggers();
@@ -2537,7 +2747,11 @@
                     }
                     
                     span.onclick = () => {
-                        if (currentTriggerSelectIdx >= 0 && parsedMonsters[currentTriggerSelectIdx]) {
+                        if (currentAomInput) {
+                            currentAomInput.value = t;
+                            document.getElementById('triggerSelectModal').style.display = 'none';
+                            showToast(`✅ 已分配触发者：${t}`);
+                        } else if (currentTriggerSelectIdx >= 0 && parsedMonsters[currentTriggerSelectIdx]) {
                             parsedMonsters[currentTriggerSelectIdx].trigger = t;
                             renderRouteResult();
                             document.getElementById('triggerSelectModal').style.display = 'none';
@@ -2551,7 +2765,11 @@
         }
 
         function clearTriggerForCurrentMonster() {
-            if (currentTriggerSelectIdx >= 0 && parsedMonsters[currentTriggerSelectIdx]) {
+            if (currentAomInput) {
+                currentAomInput.value = "";
+                document.getElementById('triggerSelectModal').style.display = 'none';
+                showToast(`🗑️ 已清空该输入框`);
+            } else if (currentTriggerSelectIdx >= 0 && parsedMonsters[currentTriggerSelectIdx]) {
                 parsedMonsters[currentTriggerSelectIdx].trigger = "";
                 renderRouteResult();
                 document.getElementById('triggerSelectModal').style.display = 'none';
@@ -2559,6 +2777,86 @@
             }
         }
         // ===================================
+
+        // ======= 一键预设奥山 =======
+        function openAomPresetModal() {
+            const dcSelect = document.getElementById('aomDcSelect');
+            if (dcSelect.options.length === 0) {
+                let html = '';
+                for (const region in SERVER_GROUPS) {
+                    html += `<option value="${region}">${region}</option>`;
+                }
+                dcSelect.innerHTML = html;
+            }
+            renderAomServerList();
+            document.getElementById('aomPresetModal').style.display = 'flex';
+        }
+
+        function renderAomServerList() {
+            const dc = document.getElementById('aomDcSelect').value;
+            const container = document.getElementById('aomServerList');
+            if (!dc) { container.innerHTML = '请先选择大区'; return; }
+            const servers = SERVER_GROUPS[dc];
+            
+            let html = '';
+            servers.forEach(s => {
+                html += `<div style="display:flex; align-items:center; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; width: 100px;">
+                        <input type="checkbox" class="aom-server-cb" value="${s}"> ${s}
+                    </label>
+                    <div class="row-flex" style="flex:1;">
+                        <input type="text" class="input-trigger-compact aom-trigger-input" list="trigger-datalist" placeholder="触发者 (黑话/全名)" style="flex:1;">
+                        <button class="btn btn-outline" style="padding:4px 8px; font-size:12px; border-color:var(--purple); color:var(--purple);" onclick="openAomTriggerSelect(this.previousElementSibling)">👤 选人</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function executeAomPreset() {
+            const cbList = document.querySelectorAll('.aom-server-cb');
+            const inputList = document.querySelectorAll('.aom-trigger-input');
+            let addedCount = 0;
+            
+            cbList.forEach((cb, idx) => {
+                if (cb.checked) {
+                    const server = cb.value;
+                    let trigger = inputList[idx].value.trim();
+                    trigger = resolveTrigger(trigger);
+                    
+                    const dbMonster = S_MONSTERS.find(m => m.name === "厌忌之人 奇里格");
+                    if (!dbMonster) return;
+                    
+                    const isDuplicate = parsedMonsters.some(m => m.name === dbMonster.name && m.server === server);
+                    if (!isDuplicate) {
+                        parsedMonsters.push({
+                            name: dbMonster.name,
+                            originalName: dbMonster.name,
+                            area: dbMonster.area,
+                            version: dbMonster.version,
+                            coord: "(坐标未知)",
+                            server: server,
+                            hp: '100.00%',
+                            trigger: trigger,
+                            isDead: false,
+                            isTarget: false,
+                            isSS: false
+                        });
+                        addedCount++;
+                    }
+                }
+            });
+            
+            if (addedCount > 0) {
+                sortParsedMonstersDefault();
+                renderRouteResult();
+                showToast(`✅ 已成功预设 ${addedCount} 个服务器的奥山 S怪`);
+                document.getElementById('aomPresetModal').style.display = 'none';
+            } else {
+                showToast('⚠️ 未勾选任何服务器或所选服务器已存在该S怪');
+            }
+        }
+        // ======= 一键预设奥山 END =======
 
         function renderTacticMacros() {
             const container = document.getElementById('tacticMacroList');
@@ -2594,15 +2892,31 @@
             const outEl = document.getElementById('routeOutput');
             const simpleOutEl = document.getElementById('simpleRouteOutput');
             const logEl = document.getElementById('routeLogList');
+            const ssStatsBox = document.getElementById('ssStatsBox');
 
             if (parsedMonsters.length === 0) {
                 if(outEl) outEl.value = ""; 
                 if(simpleOutEl) simpleOutEl.value = "";
                 if(logEl) logEl.innerHTML = `<div style="color:var(--red); text-align:center; padding:10px; font-weight:bold;">⚠️ 未能解析出有效的 S怪 信息！<br>请点击上方【修正/手动添加】补录。</div>`;
+                if(ssStatsBox) ssStatsBox.style.display = 'none';
                 calculateRouteTime(); 
                 renderTacticMacros();
                 return;
             }
+
+            // ===== 修复：SS统计逻辑 =====
+            const totalPlanned = parsedMonsters.length; 
+            const totalSS = parsedMonsters.filter(m => m.isSS).length;
+            
+            if (totalSS > 0) {
+                ssStatsBox.style.display = 'flex';
+                document.getElementById('ssCountText').innerText = totalSS;
+                document.getElementById('ssTotalText').innerText = totalPlanned;
+                document.getElementById('ssRateText').innerText = ((totalSS / totalPlanned) * 100).toFixed(1) + '%';
+            } else {
+                ssStatsBox.style.display = 'none';
+            }
+            // =========================
 
             // 提取唯一的服务器顺序（按首次出现）
             const serverOrder = [];
@@ -2616,6 +2930,10 @@
             }
             datalistEl.innerHTML = '';
             allTriggers.forEach(t => { datalistEl.innerHTML += `<option value="${t}">`; });
+            // 把黑话塞进datalist，方便输入提示
+            for (let alias in TRIGGER_ALIASES) {
+                datalistEl.innerHTML += `<option value="${alias}">`;
+            }
 
             // 为了维持渲染的顺序并分配 _globalIdx
             parsedMonsters.forEach((m, idx) => m._globalIdx = idx);
@@ -2684,10 +3002,17 @@
                     
                     let itemClass = `monster-list-item`;
                     if (isTrackingMode && m.isTarget) itemClass += ' target-highlight';
+                    if (m.isSS) itemClass += ' ss-highlight';
 
                     let targetBtn = '';
                     if (isTrackingMode) {
                         targetBtn = `<button class="btn-edit-small" style="color:${m.isTarget ? 'var(--accent)' : 'var(--text-muted)'}; font-size:16px; padding:4px 6px;" onclick="setTargetMonster(${m._globalIdx})" title="设为当前目标">🎯</button>`;
+                    }
+
+                    // 只有5/6/7可以出SS
+                    let ssBtn = '';
+                    if (SS_MAP[m.version]) {
+                        ssBtn = `<button class="btn btn-outline" style="padding:4px 8px; font-size:12px; border-color:${m.isSS ? 'var(--gold)' : 'var(--border)'}; color:${m.isSS ? 'var(--gold)' : 'var(--text-muted)'};" onclick="toggleSS(${m._globalIdx})">${m.isSS ? '🔄 复原' : '✨ 出SS'}</button>`;
                     }
 
                     logHtml += `<div class="${itemClass}" style="${deadStyle}">
@@ -2697,7 +3022,7 @@
                                 <span style="color:var(--text-muted);">${m.hp} ${m.area} ${m.coord}</span>${triggerDisplay}
                             </span>
                             <div class="row-flex">
-                                <input type="text" class="input-trigger-compact" list="trigger-datalist" placeholder="触发者 (可搜索)" value="${m.trigger || ''}" onchange="updateRouteTriggerInput(this, ${m._globalIdx})">
+                                <input type="text" class="input-trigger-compact" list="trigger-datalist" placeholder="触发者 (可搜索/黑话)" value="${m.trigger || ''}" onchange="updateRouteTriggerInput(this, ${m._globalIdx})">
                                 <button class="btn btn-outline" style="padding:4px 8px; font-size:12px; border-color:var(--purple); color:var(--purple);" onclick="openTriggerSelectModal(${m._globalIdx})">👤 选人</button>
                             </div>
                         </div>
@@ -2706,6 +3031,7 @@
                                 <input type="checkbox" ${m.isDead ? 'checked' : ''} onchange="toggleMonsterDead(${m._globalIdx}, this.checked)"> 已去世
                             </label>
                             <span class="${vClass}">${m.version}</span>
+                            ${ssBtn}
                             ${targetBtn}
                             <button class="btn-order-up" onclick="moveMonster(${m._globalIdx}, -1)" title="上移">⬆️</button>
                             <button class="btn-order-down" onclick="moveMonster(${m._globalIdx}, 1)" title="下移">⬇️</button>
@@ -2732,7 +3058,7 @@
         function deleteParsedMonster(idx) { if (confirm(`确定要删除这只怪吗？`)) { parsedMonsters.splice(idx, 1); renderRouteResult(); showToast('🗑️ 已删除'); } }
         function editParsedMonster(idx) {
             editingParsedIndex = idx; const m = parsedMonsters[idx];
-            fixMonsterSelect.value = `${m.name}|${m.area}`; fixServerSelect.value = m.server;
+            fixMonsterSelect.value = `${m.originalName}|${m.area}`; fixServerSelect.value = m.server;
             document.getElementById('fixCoordInput').value = m.coord !== '(坐标未知)' ? m.coord : '';
             document.getElementById('correctionModalTitle').innerText = '✏️ 修正 S怪信息';
             document.getElementById('correctionModal').style.display = 'flex';
@@ -2741,7 +3067,7 @@
         function changeMonsterLocation(idx) {
             editingParsedIndex = idx;
             const m = parsedMonsters[idx];
-            fixMonsterSelect.value = `${m.name}|${m.area}`; 
+            fixMonsterSelect.value = `${m.originalName}|${m.area}`; 
             fixServerSelect.value = m.server;
             document.getElementById('fixCoordInput').value = m.coord !== '(坐标未知)' ? m.coord : '';
             document.getElementById('correctionModalTitle').innerText = '📍 临时变更发车地点/服务器';
@@ -2764,12 +3090,12 @@
             if (!dbMonster) { alert("审核失败：词库中不存在该 S怪！"); return; }
 
             if (editingParsedIndex >= 0) {
-                parsedMonsters[editingParsedIndex] = { name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: parsedMonsters[editingParsedIndex].hp || '100.00%', trigger: parsedMonsters[editingParsedIndex].trigger || '', isDead: parsedMonsters[editingParsedIndex].isDead || false, isTarget: parsedMonsters[editingParsedIndex].isTarget || false };
+                parsedMonsters[editingParsedIndex] = { name: dbMonster.name, originalName: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: parsedMonsters[editingParsedIndex].hp || '100.00%', trigger: parsedMonsters[editingParsedIndex].trigger || '', isDead: parsedMonsters[editingParsedIndex].isDead || false, isTarget: parsedMonsters[editingParsedIndex].isTarget || false, isSS: false };
                 showToast("✅ 修正成功！");
             } else {
                 const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === serverVal);
                 if (isDuplicate) { alert("审核提示：该服务器下已存在这只S怪，无需重复添加！"); return; }
-                parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: '100.00%', trigger: '', isDead: false, isTarget: false });
+                parsedMonsters.push({ name: dbMonster.name, originalName: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: '100.00%', trigger: '', isDead: false, isTarget: false, isSS: false });
                 sortParsedMonstersDefault();
                 showToast("✅ 审核通过，已添加至排车列表！");
             }
