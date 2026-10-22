@@ -595,6 +595,7 @@
                         <div class="row-flex" style="margin-bottom: 10px;">
                             <input type="text" id="triggerSearch" placeholder="🔍 模糊搜索触发者..." style="flex: 1; min-width: 150px;" oninput="filterTriggers()">
                             <input type="text" id="newTriggerName" placeholder="输入新触发者名" style="flex: 1; min-width: 150px;">
+                            <input type="text" id="newTriggerAlias" placeholder="输入黑话/别名(选填)" style="flex: 1; min-width: 120px;">
                             <select id="newTriggerServer" style="flex: 1; min-width: 120px;"></select>
                             <button class="btn btn-accent" onclick="addCustomTrigger()">➕ 添加</button>
                         </div>
@@ -937,6 +938,7 @@
                             <div class="row-flex" style="margin-bottom: 10px;">
                                 <input type="text" id="routeTriggerSearch" placeholder="🔍 模糊搜索触发者..." style="flex: 1; min-width: 150px;" oninput="renderRouteTriggerList()">
                                 <input type="text" id="routeNewTriggerName" placeholder="输入新触发者名" style="flex: 1; min-width: 150px;">
+                                <input type="text" id="routeNewTriggerAlias" placeholder="输入黑话/别名(选填)" style="flex: 1; min-width: 120px;">
                                 <select id="routeNewTriggerServer" style="flex: 1; min-width: 120px;"></select>
                                 <button class="btn btn-accent" onclick="addRouteCustomTrigger()">➕ 添加</button>
                             </div>
@@ -1170,7 +1172,7 @@
 
     <div id="floatingCountdown">
         <div class="fc-header">
-            <span class="fc-title">⏱️ 手动计算倒计时</span>
+            <span class="fc-title">⏱️ 手动计算 · 倒计时</span>
             <button class="fc-close" onclick="hideFloatingCountdown()">×</button>
         </div>
         <div class="fc-body" id="floatingCountdownBody"></div>
@@ -1198,7 +1200,47 @@
             "紫水": "紫水栈桥", "yx": "延夏", "鲸鱼": "静语庄园", "海猫": "海猫茶屋", "海湾": "柔风海湾", 
             "柔风": "柔风海湾", "湖泊": "琥珀原", "琥珀": "琥珀原"
         };
-        
+
+        // ============================
+        // 🌟 专属触发者黑话映射库 🌟
+        // ============================
+        const TRIGGER_ALIASES = {
+            "酸梅": "牛排大王@白银乡", "栓梅": "牛排大王@白银乡", "酸梅姐": "牛排大王@白银乡",
+            "基佬之王": "辞绿@拂晓之间", "猪猪的绿": "辞绿@拂晓之间",
+            "xly": "流萤成眠@潮风亭", "小流萤": "流萤成眠@潮风亭", "流眠成萤": "流萤成眠@潮风亭",
+            "寒猪烟": "寒烟荼蘼雪霁@龙巢神殿", "猪烟": "寒烟荼蘼雪霁@龙巢神殿", "黑猪": "寒烟荼蘼雪霁@龙巢神殿", "黑猪烟": "寒烟荼蘼雪霁@龙巢神殿",
+            "少爷": "怀瑜@白金幻象", "莱特": "怀瑜@白金幻象",
+            "一窝螺": "伊沃洛l@白银乡", "一窝猪": "伊沃洛l@白银乡", "猪窝": "伊沃洛l@白银乡",
+            "风师傅": "风侍葬@拂晓之间",
+            "朵子": "阿馥奇朵@神拳痕", "朵肥": "阿馥奇朵@神拳痕",
+            "我yes龙": "我也是龙@白银乡", "猪肝龙": "我也是龙@白银乡",
+            "静师傅": "静名@白银乡",
+            "高师傅": "凯旋尸骸@潮风亭",
+            "猪猪客": "等风也在等你@潮风亭", "浪客": "等风也在等你@潮风亭",
+            "小查找": "点击此处查找@水晶塔", "小查猪": "点击此处查找@水晶塔",
+            "猪娜": "阿希娜@白银乡",
+            "道师傅": "道橘染@拂晓之间"
+        };
+
+        // 触发者翻译函数
+        function resolveTrigger(id) {
+            if (!id) return "";
+            let cleanId = id.trim();
+            if (TRIGGER_ALIASES[cleanId]) return TRIGGER_ALIASES[cleanId];
+            return cleanId;
+        }
+
+        // 检查是否包含黑话（用于搜索匹配）
+        function matchTriggerSearch(t, search) {
+            if (t.toLowerCase().includes(search)) return true;
+            for (let alias in TRIGGER_ALIASES) {
+                if (TRIGGER_ALIASES[alias] === t && alias.toLowerCase().includes(search)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         const S_MONSTERS = [
             // 7.0
             { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥"] }, 
@@ -1213,7 +1255,7 @@
             { name: "颇胝迦", area: "萨维奈岛", version: "6.0", alias: ["腰子", "pzj"] }, 
             { name: "阿姆斯特朗", area: "加雷马", version: "6.0", alias: ["壮壮", "胳膊壮", "gbz"] },
             { name: "沉思之物", area: "叹息海", version: "6.0", alias: ["路由器", "蘑菇"] }, 
-            { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0", alias: ["鸟蛋", "蛋仔", "俄菲"] }, 
+            { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0", alias: ["鸟蛋", "蛋仔"] }, 
             { name: "狭缝", area: "天外天垓", version: "6.0", alias: ["芒果"] },
             
             // 5.0
@@ -1229,8 +1271,8 @@
             { name: "爬骨怪龙", area: "基拉巴尼亚山区", version: "4.0", alias: ["爬爬"] },
             { name: "盐和光", area: "基拉巴尼亚湖区", version: "4.0", alias: ["基佬", "盐基佬", "扔垃圾"] },
             { name: "巨大鳐", area: "红玉海", version: "4.0", alias: ["窑子", "瑶子", "鳐子"] },
-            { name: "伽马", area: "延夏", version: "4.0", alias: ["γ", "伽马", "加马", "蜘蛛"] },
-            { name: "兀鲁忽乃朝鲁", area: "太阳神草原", version: "4.0", alias: ["石板", "门板", "板子"] }
+            { name: "伽马", area: "延夏", version: "4.0", alias: ["γ", "伽马"] },
+            { name: "兀鲁忽乃朝鲁", area: "太阳神草原", version: "4.0", alias: ["石板", "门板"] }
         ];
 
         const DEFAULT_TRIGGERS = Array.from(new Set([
@@ -1787,7 +1829,7 @@
             const search = document.getElementById('triggerSearch').value.toLowerCase();
             let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
             displayList.forEach(t => {
-                if (t.toLowerCase().includes(search)) {
+                if (matchTriggerSearch(t, search)) {
                     const span = document.createElement('span'); span.className = 'trigger-tag';
                     const parts = t.split('@');
                     if(parts.length === 2) {
@@ -1818,7 +1860,7 @@
             const search = (document.getElementById('routeTriggerSearch')?.value || '').toLowerCase();
             let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
             displayList.forEach(t => {
-                if (t.toLowerCase().includes(search)) {
+                if (matchTriggerSearch(t, search)) {
                     const span = document.createElement('span'); span.className = 'trigger-tag';
                     const parts = t.split('@');
                     if(parts.length === 2) {
@@ -1845,25 +1887,37 @@
         
         function addCustomTrigger() {
             const name = document.getElementById('newTriggerName').value.trim();
+            const alias = document.getElementById('newTriggerAlias').value.trim();
             const server = document.getElementById('newTriggerServer').value;
             if (!name) { showToast('⚠️ 请输入触发者名字'); return; }
             const val = `${name}@${server}`;
             if (!customTriggers.includes(val)) { customTriggers.push(val); localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers)); }
             if (!allTriggers.includes(val)) allTriggers.push(val);
+            if (alias) {
+                const aliasArr = alias.split(/[\/|,，]/).map(a => a.trim()).filter(a => a);
+                aliasArr.forEach(a => { TRIGGER_ALIASES[a] = val; });
+            }
             showToast('✅ 已添加自定义触发者'); 
             document.getElementById('newTriggerName').value = ''; 
+            document.getElementById('newTriggerAlias').value = ''; 
             renderTriggerList(); updateGlobalTriggers();
         }
 
         function addRouteCustomTrigger() {
             const name = document.getElementById('routeNewTriggerName').value.trim();
+            const alias = document.getElementById('routeNewTriggerAlias').value.trim();
             const server = document.getElementById('routeNewTriggerServer').value;
             if (!name) { showToast('⚠️ 请输入触发者名字'); return; }
             const val = `${name}@${server}`;
             if (!customTriggers.includes(val)) { customTriggers.push(val); localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers)); }
             if (!allTriggers.includes(val)) allTriggers.push(val);
+            if (alias) {
+                const aliasArr = alias.split(/[\/|,，]/).map(a => a.trim()).filter(a => a);
+                aliasArr.forEach(a => { TRIGGER_ALIASES[a] = val; });
+            }
             showToast('✅ 已添加自定义触发者'); 
             document.getElementById('routeNewTriggerName').value = ''; 
+            document.getElementById('routeNewTriggerAlias').value = '';
             renderRouteTriggerList(); renderTriggerList(); updateGlobalTriggers();
         }
 
@@ -2202,7 +2256,7 @@
                     let rawTrigger = match[2].trim();
                     
                     let triggersArr = rawTrigger.split(/[+＋]+/);
-                    let finalTrigger = triggersArr.filter(t => t).join('、');
+                    let finalTrigger = triggersArr.filter(t => t).map(t => resolveTrigger(t)).join('、');
                     
                     let namesArr = rawNames.split(/[+＋]+/);
                     for (let nameStr of namesArr) {
@@ -2295,6 +2349,7 @@
                         currentLine = currentLine.replace(nameStr, ' ').replace(areaStr, ' ');
 
                         let triggerId = currentLine.replace(/[\(（\)）\[\]【】\<\>\s,，]/g, '').trim();
+                        triggerId = resolveTrigger(triggerId);
 
                         let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === currentServer);
                         if (!isDuplicate) {
@@ -2428,7 +2483,8 @@
         }
 
         function updateRouteTriggerInput(el, idx) {
-            const val = el.value.trim();
+            let val = el.value.trim();
+            if (val) val = resolveTrigger(val); // 失焦自动解析黑话
             if (parsedMonsters[idx]) {
                 parsedMonsters[idx].trigger = val;
                 if (val && !allTriggers.includes(val)) {
@@ -2438,6 +2494,7 @@
                     updateGlobalTriggers();
                 }
             }
+            renderRouteResult(); // 实时更新UI展示
         }
 
         function updateRouteTrigger(val, idx) {
@@ -2470,7 +2527,7 @@
             
             let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
             displayList.forEach(t => {
-                if (t.toLowerCase().includes(search)) {
+                if (matchTriggerSearch(t, search)) {
                     const span = document.createElement('span'); span.className = 'trigger-tag';
                     const parts = t.split('@');
                     if(parts.length === 2) {
