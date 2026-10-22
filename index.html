@@ -427,6 +427,49 @@
 
         .quick-add-tag { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; user-select: none; }
         .quick-add-tag:hover { background: var(--accent); color: var(--panel); border-color: var(--accent); transform: translateY(-1px); }
+
+        /* ======= 新增：触发者名单标签美化 ======= */
+        .trigger-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        .trigger-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background: var(--panel-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .trigger-tag:hover {
+            background: var(--accent);
+            color: var(--panel);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .trigger-tag .server-part {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-left: 2px;
+        }
+        .trigger-tag:hover .server-part {
+            color: var(--panel);
+            opacity: 0.9;
+        }
+        /* ====================================== */
         
         @media (max-width: 900px) {
             .focus-container { flex-direction: column; min-height: auto; }
@@ -538,7 +581,7 @@
             <div class="input-section" style="background: transparent; border: none; padding: 0;">
                 <details class="collapse-box">
                     <summary>📋 常用触发者名单 (点击展开)</summary>
-                    <div style="padding: 15px;">
+                    <div style="padding: 15px 0;">
                         <div class="row-flex" style="margin-bottom: 10px;">
                             <input type="text" id="triggerSearch" placeholder="🔍 模糊搜索触发者..." style="flex: 1; min-width: 150px;" oninput="filterTriggers()">
                             <input type="text" id="newTriggerName" placeholder="输入新触发者名" style="flex: 1; min-width: 150px;">
@@ -852,7 +895,7 @@
                 <div class="input-section" style="background: transparent; border: none; padding: 0; margin-top: 15px;">
                     <details class="collapse-box">
                         <summary>📋 常用触发者名单 (点击展开)</summary>
-                        <div style="padding: 15px;">
+                        <div style="padding: 15px 0;">
                             <div class="row-flex" style="margin-bottom: 10px;">
                                 <input type="text" id="routeTriggerSearch" placeholder="🔍 模糊搜索触发者..." style="flex: 1; min-width: 150px;" oninput="renderRouteTriggerList()">
                                 <input type="text" id="routeNewTriggerName" placeholder="输入新触发者名" style="flex: 1; min-width: 150px;">
@@ -1629,11 +1672,21 @@
             let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
             displayList.forEach(t => {
                 if (t.toLowerCase().includes(search)) {
-                    const span = document.createElement('span'); span.className = 'trigger-tag'; span.innerText = t;
+                    const span = document.createElement('span'); span.className = 'trigger-tag';
+                    const parts = t.split('@');
+                    if(parts.length === 2) {
+                        span.innerHTML = `${parts[0]}<span class="server-part">@${parts[1]}</span>`;
+                    } else {
+                        span.innerText = t;
+                    }
+                    
                     span.onclick = () => { 
                         const parts = t.split('@');
                         if(parts.length === 2) { document.getElementById('newTriggerName').value = parts[0]; document.getElementById('newTriggerServer').value = parts[1]; } 
                         else { document.getElementById('newTriggerName').value = t; }
+                        
+                        // 加上复制功能
+                        navigator.clipboard.writeText(t).then(() => showToast('📋 触发者已复制'));
                     }; 
                     container.appendChild(span);
                 }
@@ -1650,7 +1703,14 @@
             let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
             displayList.forEach(t => {
                 if (t.toLowerCase().includes(search)) {
-                    const span = document.createElement('span'); span.className = 'trigger-tag'; span.innerText = t;
+                    const span = document.createElement('span'); span.className = 'trigger-tag';
+                    const parts = t.split('@');
+                    if(parts.length === 2) {
+                        span.innerHTML = `${parts[0]}<span class="server-part">@${parts[1]}</span>`;
+                    } else {
+                        span.innerText = t;
+                    }
+                    
                     span.onclick = () => { 
                         const parts = t.split('@');
                         if(parts.length === 2) {
@@ -1659,7 +1719,8 @@
                         } else {
                             document.getElementById('routeNewTriggerName').value = t;
                         }
-                        navigator.clipboard.writeText(parts[0] || t).then(()=> showToast('📋 触发者名字已复制'));
+                        // 修改为复制完整的 名字@服务器
+                        navigator.clipboard.writeText(t).then(()=> showToast('📋 触发者已复制'));
                     }; 
                     container.appendChild(span);
                 }
