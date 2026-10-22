@@ -386,6 +386,15 @@
         .monster-list-item:last-child { border-bottom: none; }
         .monster-list-item:hover { background: rgba(255,255,255,0.02); }
 
+        /* 带车目标闪烁 */
+        @keyframes targetBlink {
+            0%, 100% { background-color: rgba(243, 156, 18, 0.2); border-left: 4px solid var(--gold); }
+            50% { background-color: transparent; border-left: 4px solid transparent; }
+        }
+        .monster-list-item.target-highlight {
+            animation: targetBlink 1s infinite;
+        }
+
         .v7 { color: var(--red); font-weight: bold; background: rgba(255,77,77,0.1); padding: 2px 4px; border-radius: 3px;}
         .v6 { color: var(--gold); font-weight: bold; background: rgba(243,156,18,0.1); padding: 2px 4px; border-radius: 3px;}
         .v5 { color: var(--blue); font-weight: bold; background: rgba(0,191,255,0.1); padding: 2px 4px; border-radius: 3px;}
@@ -428,7 +437,7 @@
         .quick-add-tag { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; user-select: none; }
         .quick-add-tag:hover { background: var(--accent); color: var(--panel); border-color: var(--accent); transform: translateY(-1px); }
 
-        /* ======= 新增：触发者名单标签美化 ======= */
+        /* ======= 触发者名单标签美化 ======= */
         .trigger-container {
             display: flex;
             flex-wrap: wrap;
@@ -772,6 +781,15 @@
                     <button class="btn btn-outline" onclick="handleRouteAdd()" style="color:var(--accent); border-color:var(--accent); flex:1; padding: 10px 0;">🛠️ 手动补录 S怪</button>
                 </div>
 
+                <!-- 战术宏生成器 -->
+                <details class="collapse-box" style="margin-bottom: 15px;">
+                    <summary style="font-size: 14px;">📢 战术宏生成器 (点击展开)</summary>
+                    <div style="padding: 15px 0;">
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">点击下方按钮直接复制适配 FF14 游戏内的宏（本地/跨服）</div>
+                        <div id="tacticMacroList" style="max-height: 400px; overflow-y: auto;"></div>
+                    </div>
+                </details>
+
                 <!-- 新增：全局服务器锁定 -->
                 <div class="input-section" style="margin-bottom: 15px;">
                     <div class="section-title" style="color: var(--blue);">🌐 全局服务器锁定 (应用未知项)</div>
@@ -924,7 +942,12 @@
                     <textarea id="routeOutput" class="route-textarea route-output" readonly style="height: 200px; margin-bottom: 15px;"></textarea>
 
                     <details class="collapse-box" open style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
-                        <summary style="font-size: 14px; margin-bottom: 10px; cursor: pointer;">🔍 识别解析与发车明细 (可调整顺序/删除/分配触发者)</summary>
+                        <summary style="font-size: 14px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                            <span>🔍 识别解析与发车明细 (可调整顺序/删除/分配触发者)</span>
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--gold); font-size: 12px;" onclick="event.stopPropagation()">
+                                <input type="checkbox" id="trackingModeToggle" onchange="toggleTrackingMode(this.checked)"> 开启带车目标追踪
+                            </label>
+                        </summary>
                         <div class="route-log-list" id="routeLogList"></div>
                     </details>
                 </div>
@@ -1216,6 +1239,7 @@
         const LT_HOURS = 48; 
         let CD_HOURS = 84;   
         let isMaintenanceMode = false;
+        let isTrackingMode = false;
         let globalTimers = [];
         let currentKillRow = null;
         let hasAddEvidence = false;
@@ -1246,6 +1270,44 @@
             const body = document.getElementById('announcementBody'); const icon = document.getElementById('announcementToggleIcon');
             if (body.style.display === 'block') { body.style.display = 'none'; icon.innerText = '▶'; } 
             else { body.style.display = 'block'; icon.innerText = '▼'; }
+        }
+
+        // 目标追踪开关
+        function toggleTrackingMode(val) {
+            isTrackingMode = val;
+            renderRouteResult();
+            if(isTrackingMode) showToast('🎯 目标追踪已开启，点击S怪旁的🎯设为当前目标');
+        }
+
+        function setTargetMonster(idx) {
+            if(!isTrackingMode) return;
+            if (parsedMonsters[idx].isTarget) {
+                parsedMonsters[idx].isTarget = false;
+                showToast(`🎯 已取消目标`);
+            } else {
+                parsedMonsters.forEach((m, i) => { m.isTarget = (i === idx); });
+                showToast(`🎯 当前目标：${parsedMonsters[idx].name}`);
+            }
+            renderRouteResult();
+        }
+
+        function copyMonsterCoord(idx) {
+            const m = parsedMonsters[idx];
+            if(!m) return;
+            const text = `${m.server} ${m.name} ${m.coord}`;
+            navigator.clipboard.writeText(text).then(() => showToast("📋 坐标信息已复制"));
+        }
+
+        function copyTacticMacro(idx, isCrossServer) {
+            const m = parsedMonsters[idx];
+            if(!m) return;
+            let macro = "";
+            if(isCrossServer) {
+                macro = `/sh 不出SS跨服解散下一站【${m.server}】<flag>\n/y 不出SS跨服解散下一站【${m.server}】<flag> <wait.2>\n/sh 车头会在最后传送，抵达后请耐心等待，烦请不要抢开\n/y 车头会在最后传送，抵达后请耐心等待，烦请不要抢开。`;
+            } else {
+                macro = `/sh 不要解散下一站【本地】<flag>\n/y 不要解散下一站【本地】<flag>`;
+            }
+            navigator.clipboard.writeText(macro).then(() => showToast("📋 战术宏已复制，请前往游戏粘贴"));
         }
 
         // 布局调节
@@ -1370,7 +1432,7 @@
             const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === server);
             if (isDuplicate) { showToast('⚠️ 该服务器下已有这只怪'); return; }
 
-            parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coord, server: server, hp: '100.00%', trigger: '', isDead: false });
+            parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coord, server: server, hp: '100.00%', trigger: '', isDead: false, isTarget: false });
             sortParsedMonstersDefault();
             renderRouteResult();
             showToast(`✅ 已精准添加 ${name}`);
@@ -1468,7 +1530,7 @@
                         const data = JSON.parse(cache);
                         if (Date.now() < data.expire) {
                             parsedMonsters = data.monsters || [];
-                            parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; });
+                            parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; if(m.isTarget === undefined) m.isTarget = false; });
                             renderRouteResult();
                         }
                     } catch(e) {}
@@ -1719,7 +1781,6 @@
                         } else {
                             document.getElementById('routeNewTriggerName').value = t;
                         }
-                        // 修改为复制完整的 名字@服务器
                         navigator.clipboard.writeText(t).then(()=> showToast('📋 触发者已复制'));
                     }; 
                     container.appendChild(span);
@@ -1770,7 +1831,7 @@
                 const { data, expire } = JSON.parse(saved);
                 if (Date.now() > expire) { localStorage.removeItem('ff14_saved_route_20m'); return false; }
                 parsedMonsters = data; isSimpleRouteLocked = false; 
-                parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; });
+                parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; if(m.isTarget === undefined) m.isTarget = false; });
                 renderRouteResult(); return true;
             } catch(e) { return false; }
         }
@@ -2025,7 +2086,7 @@
 
                 if (matchedMonster) {
                     let isDuplicate = parsedMonsters.some(m => m.name === matchedMonster.name && m.server === lastServer);
-                    if (!isDuplicate) parsedMonsters.push({ name: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: lastServer, hp: hp, trigger: "", isDead: false });
+                    if (!isDuplicate) parsedMonsters.push({ name: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: lastServer, hp: hp, trigger: "", isDead: false, isTarget: false });
                 }
             }
             sortParsedMonstersDefault();
@@ -2114,6 +2175,16 @@
         function toggleMonsterDead(idx, isDead) {
             if (parsedMonsters[idx]) {
                 parsedMonsters[idx].isDead = isDead;
+                if (isDead && parsedMonsters[idx].isTarget && isTrackingMode) {
+                    // 自动轮换至下一只存活目标
+                    parsedMonsters[idx].isTarget = false;
+                    let nextTarget = parsedMonsters.slice(idx + 1).find(m => !m.isDead);
+                    if (!nextTarget) nextTarget = parsedMonsters.find(m => !m.isDead);
+                    if (nextTarget) {
+                        nextTarget.isTarget = true;
+                        showToast(`🎯 目标已自动切换至：${nextTarget.name}`);
+                    }
+                }
                 renderRouteResult();
             }
         }
@@ -2156,6 +2227,31 @@
             }
         }
 
+        function renderTacticMacros() {
+            const container = document.getElementById('tacticMacroList');
+            if(!container) return;
+            const activeMonsters = parsedMonsters.filter(m => !m.isDead);
+            if(activeMonsters.length === 0) {
+                container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); padding:10px;">暂无存活的S怪</div>';
+                return;
+            }
+            let html = '';
+            activeMonsters.forEach(m => {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; border-bottom: 1px solid var(--border); background: var(--panel); border-radius: 6px; margin-bottom: 8px;">
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-weight:bold; color:var(--gold); font-size:13px;">S：${m.name}</span>
+                        <span style="font-size:12px; color:var(--text-muted);">【${m.server}】 ${m.coord}</span>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                        <button class="btn btn-outline" style="padding:4px 8px; font-size:12px;" onclick="copyTacticMacro(${m._globalIdx}, false)">复制本地宏</button>
+                        <button class="btn btn-accent" style="padding:4px 8px; font-size:12px;" onclick="copyTacticMacro(${m._globalIdx}, true)">复制跨服宏</button>
+                        <button class="btn" style="background:var(--purple); color:#fff; padding:4px 8px; font-size:12px;" onclick="copyMonsterCoord(${m._globalIdx})">复制坐标</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
         function renderRouteResult() {
             const resBox = document.getElementById('routeResultBox');
             if(resBox) resBox.style.display = 'flex';
@@ -2170,7 +2266,9 @@
                 if(outEl) outEl.value = ""; 
                 if(simpleOutEl) simpleOutEl.value = "";
                 if(logEl) logEl.innerHTML = `<div style="color:var(--red); text-align:center; padding:10px; font-weight:bold;">⚠️ 未能解析出有效的 S怪 信息！<br>请点击上方【修正/手动添加】补录。</div>`;
-                calculateRouteTime(); return;
+                calculateRouteTime(); 
+                renderTacticMacros();
+                return;
             }
 
             // 提取唯一的服务器顺序（按首次出现）
@@ -2251,7 +2349,15 @@
                     let vClass = m.version === "7.0" ? "v7" : m.version === "6.0" ? "v6" : "v5";
                     let deadStyle = m.isDead ? 'opacity: 0.5; text-decoration: line-through;' : '';
                     
-                    logHtml += `<div class="monster-list-item" style="${deadStyle}">
+                    let itemClass = `monster-list-item`;
+                    if (isTrackingMode && m.isTarget) itemClass += ' target-highlight';
+
+                    let targetBtn = '';
+                    if (isTrackingMode) {
+                        targetBtn = `<button class="btn-edit-small" style="color:${m.isTarget ? 'var(--accent)' : 'var(--text-muted)'}; font-size:16px; padding:4px 6px;" onclick="setTargetMonster(${m._globalIdx})" title="设为当前目标">🎯</button>`;
+                    }
+
+                    logHtml += `<div class="${itemClass}" style="${deadStyle}">
                         <div style="display:flex; flex-direction:column; gap:4px; flex:1; margin-right:10px;">
                             <span style="font-family:monospace;">
                                 <span style="color:var(--gold); font-weight:bold; font-size: 13px;">S：${m.name}</span>
@@ -2264,10 +2370,12 @@
                                 <input type="checkbox" ${m.isDead ? 'checked' : ''} onchange="toggleMonsterDead(${m._globalIdx}, this.checked)"> 已去世
                             </label>
                             <span class="${vClass}">${m.version}</span>
+                            ${targetBtn}
                             <button class="btn-order-up" onclick="moveMonster(${m._globalIdx}, -1)" title="上移">⬆️</button>
                             <button class="btn-order-down" onclick="moveMonster(${m._globalIdx}, 1)" title="下移">⬇️</button>
                             <button class="btn-edit-small" onclick="editParsedMonster(${m._globalIdx})" title="修正名字/信息">✏️</button>
                             <button class="btn-edit-small" style="color:var(--gold);" onclick="changeMonsterLocation(${m._globalIdx})" title="临时变更地点/服务器">📍</button>
+                            <button class="btn-edit-small" style="color:var(--purple);" onclick="copyMonsterCoord(${m._globalIdx})" title="复制坐标信息">📋</button>
                             <button class="btn-delete-small" onclick="deleteParsedMonster(${m._globalIdx})" title="彻底删除此条">🗑️</button>
                         </div>
                     </div>`;
@@ -2280,6 +2388,7 @@
 
             if (!isSimpleRouteLocked) generateSimpleRoute(false, flatSortedMonsters);
             calculateRouteTime();
+            renderTacticMacros(); // 渲染战术宏
 
             localStorage.setItem('ff14_route_cache', JSON.stringify({ text: routeStr.trim(), log: logHtml, monsters: parsedMonsters, expire: Date.now() + 10 * 60 * 1000 }));
         }
@@ -2319,12 +2428,12 @@
             if (!dbMonster) { alert("审核失败：词库中不存在该 S怪！"); return; }
 
             if (editingParsedIndex >= 0) {
-                parsedMonsters[editingParsedIndex] = { name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: parsedMonsters[editingParsedIndex].hp || '100.00%', trigger: parsedMonsters[editingParsedIndex].trigger || '', isDead: parsedMonsters[editingParsedIndex].isDead || false };
+                parsedMonsters[editingParsedIndex] = { name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: parsedMonsters[editingParsedIndex].hp || '100.00%', trigger: parsedMonsters[editingParsedIndex].trigger || '', isDead: parsedMonsters[editingParsedIndex].isDead || false, isTarget: parsedMonsters[editingParsedIndex].isTarget || false };
                 showToast("✅ 修正成功！");
             } else {
                 const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === serverVal);
                 if (isDuplicate) { alert("审核提示：该服务器下已存在这只S怪，无需重复添加！"); return; }
-                parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: '100.00%', trigger: '', isDead: false });
+                parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: '100.00%', trigger: '', isDead: false, isTarget: false });
                 sortParsedMonstersDefault();
                 showToast("✅ 审核通过，已添加至排车列表！");
             }
