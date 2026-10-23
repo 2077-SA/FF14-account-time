@@ -545,6 +545,68 @@
         .route-monitor-content { display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; }
         .route-monitor-item { display: flex; flex-direction: column; gap: 4px; }
         .route-monitor-val { font-family: monospace; font-size: 16px; font-weight: bold; color: var(--text); }
+
+        /* 版本更新弹窗毛玻璃特效 */
+        .modal-overlay.glass {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background: rgba(0,0,0,0.4);
+        }
+        .update-modal-content {
+            background: rgba(26, 26, 46, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+            border-radius: 16px;
+            color: #fff;
+            max-width: 550px;
+            padding: 30px;
+            transform: translateY(20px);
+            animation: modalSlideUp 0.4s forwards;
+        }
+        [data-theme="light"] .update-modal-content { background: rgba(255,255,255,0.9); color: #333; border: 1px solid rgba(0,0,0,0.1); }
+        @keyframes modalSlideUp {
+            to { transform: translateY(0); }
+        }
+        .update-title {
+            font-size: 22px;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--accent), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .update-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 25px 0;
+            text-align: left;
+        }
+        .update-list li {
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            padding-left: 25px;
+            position: relative;
+            background: rgba(255,255,255,0.03);
+            padding: 10px 10px 10px 35px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+        }
+        .update-list li::before {
+            content: '✨';
+            position: absolute;
+            left: 10px;
+            top: 10px;
+        }
+        .update-list li:nth-child(2)::before { content: '🎯'; }
+        .update-list li:nth-child(3)::before { content: '🪟'; }
+        .update-list li:nth-child(4)::before { content: '🌦️'; }
+        .update-list strong { color: var(--gold); }
     </style>
 </head>
 <body data-layout="portrait">
@@ -707,6 +769,10 @@
                     </button>
                     <button onclick="openBatchServerModal()" style="color: var(--purple);">
                         <span>🔧 批量修正服务器</span>
+                    </button>
+                    <!-- 新增修改更新公告的按钮 -->
+                    <button onclick="openEditUpdateModal()" style="color: var(--blue);">
+                        <span>📝 修改更新公告</span>
                     </button>
                     <button onclick="toggleLayout()">
                         <span>🔄 切换 横板/竖板 布局</span>
@@ -1265,6 +1331,34 @@
         </div>
     </div>
 
+    <!-- 1.6.9 版本更新预览弹窗 (毛玻璃) -->
+    <div class="modal-overlay glass" id="updatePreviewModal">
+        <div class="modal-content update-modal-content">
+            <div class="update-title">🚀 版本更新预览</div>
+            <!-- 动态注入的内容 -->
+            <ul class="update-list" id="updateContentList">
+                <!-- 默认内容写在JS里，或者渲染时覆盖 -->
+            </ul>
+            <div style="text-align: center;">
+                <button class="btn btn-accent" onclick="closeUpdateModal()" style="padding: 12px 40px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 255, 127, 0.4);">我知道了，开始使用！</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑更新公告弹窗 -->
+    <div class="modal-overlay" id="editUpdateModal">
+        <div class="modal-content" style="max-width: 600px; text-align: left;">
+            <button class="btn-close-modal" onclick="document.getElementById('editUpdateModal').style.display='none'">×</button>
+            <div class="modal-title" style="text-align: center; color: var(--blue);">📝 修改更新公告</div>
+            <div class="modal-desc">修改后的内容将被保存，下次刷新会作为“更新公告”弹出。（如果想恢复默认，清空内容点保存即可）</div>
+            <textarea id="updateEditTextarea" class="announcement-textarea" placeholder="请输入你的更新公告内容（支持换行）：" style="height: 200px;"></textarea>
+            <div class="modal-btns">
+                <button class="btn-modal btn-cancel" onclick="document.getElementById('editUpdateModal').style.display='none'">取消</button>
+                <button class="btn-modal btn-confirm ready" onclick="saveUpdateContent()" style="background: var(--accent); color: var(--panel);">保存并预览</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 浮窗容器（用于多开） -->
     <div id="floatingWindowContainer"></div>
 
@@ -1272,6 +1366,70 @@
     <canvas id="canvas"></canvas>
 
     <script>
+        // ========== 版本更新弹窗与自定义逻辑 ==========
+        // 默认的更新内容（HTML格式）
+        const DEFAULT_UPDATE_CONTENT = `
+            <li><strong>天气系统全面进化</strong>：支持保存并开始倒计时”，临近自动闪烁，进入天气后自动监控剩余存在时间！</li>
+            <li><strong>多开悬浮窗增强</strong>：支持随意拖拽，新增天气状态监控！</li>
+            <li><strong>专注排车目标监控</strong>：开启带车目标追踪后，右上方直接展示当前目标的精确倒计时与天气状态！</li>
+            <li><strong>计算列表大扩容</strong>：从 5 条扩展到 20 条，同时展示进闸时间、强制时间和天气状态多重监控面板！</li>
+            <li><strong>新黑话适配</strong>：补齐了起立格、奥山、少爷等前置天气 S 怪，适配更加完美！</li>
+        `;
+
+        function checkUpdateModal() {
+            const isViewed = localStorage.getItem('ff14_update_169_viewed');
+            let content = localStorage.getItem('ff14_custom_update_text') || DEFAULT_UPDATE_CONTENT;
+            
+            // 如果自定义内容是纯文本，可以在这里转成 <li>，为了简单起见，直接允许输入HTML或纯文本（如果是纯文本会报错，所以我们可以用正则把纯文本转成 li）
+            // 用户如果输入的是纯文本（没有<li>等标签），我们把每一行包裹在 <li> 里。
+            if (!content.includes('<li>')) {
+                const lines = content.split('\n').filter(l => l.trim());
+                content = lines.map(line => `<li><strong>更新内容</strong>：${line}</li>`).join('');
+            }
+
+            document.getElementById('updateContentList').innerHTML = content;
+            
+            if (!isViewed) {
+                document.getElementById('updatePreviewModal').style.display = 'flex';
+            }
+        }
+
+        function closeUpdateModal() {
+            document.getElementById('updatePreviewModal').style.display = 'none';
+            localStorage.setItem('ff14_update_169_viewed', 'true');
+        }
+
+        function openEditUpdateModal() {
+            let currentText = localStorage.getItem('ff14_custom_update_raw') || '';
+            // 如果没存过纯文本，就提取一下默认的纯文本或HTML给他编辑
+            if (!currentText) {
+                currentText = DEFAULT_UPDATE_CONTENT.replace(/<[^>]+>/g, '').trim(); // 去掉标签，纯文本给用户
+            }
+            document.getElementById('updateEditTextarea').value = currentText;
+            document.getElementById('editUpdateModal').style.display = 'flex';
+        }
+
+        function saveUpdateContent() {
+            let text = document.getElementById('updateEditTextarea').value.trim();
+            if (!text) {
+                localStorage.removeItem('ff14_custom_update_text');
+                localStorage.removeItem('ff14_custom_update_raw');
+                showToast('✅ 已恢复默认公告');
+            } else {
+                // 把纯文本按行转成 HTML 存起来
+                const lines = text.split('\n').filter(l => l.trim());
+                const htmlContent = lines.map(line => `<li>${line}</li>`).join('');
+                localStorage.setItem('ff14_custom_update_text', htmlContent);
+                localStorage.setItem('ff14_custom_update_raw', text);
+                showToast('✅ 更新公告已保存');
+            }
+            // 重置已查看状态，让下次刷新能弹出来
+            localStorage.removeItem('ff14_update_169_viewed');
+            document.getElementById('editUpdateModal').style.display = 'none';
+            checkUpdateModal(); // 立即预览
+        }
+
+        // ========== 核心业务逻辑 ==========
         const SERVER_GROUPS = {
             "豆豆柴": ["水晶塔", "银泪湖", "太阳海岸", "伊修加德", "红茶川"],
             "陆行鸟": ["红玉海", "神意之地", "拉诺西亚", "幻影群岛", "萌芽池", "宇宙和音", "沃仙曦染", "晨曦王座"],
@@ -3871,6 +4029,7 @@
             updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList(); renderRouteTriggerList();
             renderRecentList(); calcManual(); updateToolboxBadges();
             initGlobalServerLock();
+            checkUpdateModal(); // 初始化版本更新弹窗
         }
 
         function addHistory(type, content) {
