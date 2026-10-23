@@ -167,14 +167,27 @@
         .counter-val { font-size: 28px; font-family: monospace; font-weight: bold; color: var(--accent); }
         .counter-btns { display: flex; gap: 10px; margin-top: 10px; }
 
+        /* 最近记录区块 */
         .recent-list { margin-top: 20px; border-top: 1px dashed var(--border); padding-top: 15px; }
+        .recent-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .recent-list-title { font-size: 14px; color: var(--accent); font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;}
+        .recent-list-title:hover { color: var(--gold); }
+        .recent-list-actions { display: flex; gap: 8px; }
+        .recent-list-content { max-height: 500px; overflow-y: auto; display: block; transition: max-height 0.3s ease; }
+        .recent-list-content.collapsed { display: none; }
+        
         .recent-item { display: flex; justify-content: space-between; align-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: 0.2s; }
         .recent-item:hover { border-color: var(--accent); transform: translateX(2px); }
         .recent-item-info { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; }
-        .recent-item-title { font-weight: bold; font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-        .recent-item-times { font-size: 13px; color: var(--text-muted); display: flex; gap: 15px; flex-wrap: wrap; background: var(--input-bg); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); }
+        .recent-item-title { font-weight: bold; font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;}
+        .recent-item-times { font-size: 13px; color: var(--text-muted); display: flex; gap: 15px; flex-wrap: wrap; background: var(--input-bg); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); align-items: center; }
         .recent-time-block { display: flex; flex-direction: column; gap: 2px; }
         .recent-time-val { font-family: monospace; font-weight: bold; font-size: 14px; }
+        
+        .recent-progress-block { display: flex; flex-direction: column; gap: 4px; width: 100px; margin-left: auto; border-left: 1px solid var(--border); padding-left: 15px; }
+        .recent-progress-bar { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .recent-progress-fill { height: 100%; background: var(--blue); width: 0%; transition: width 0.3s; }
+        .recent-progress-text { font-size: 11px; font-weight: bold; color: var(--text-muted); text-align: right; }
         
         .manual-result-box { background: var(--input-bg); padding: 15px; border-radius: 8px; font-size: 15px; line-height: 1.8; border: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 30px; min-height: 50px; margin-top: 15px; }
         .res-item { display: flex; flex-direction: column; }
@@ -284,7 +297,7 @@
         /* 专属高级层级调整，防止内部弹窗被覆盖 */
         #triggerSelectModal { z-index: 25000; }
 
-        #historyModal .modal-content { max-width: 700px; text-align: left; }
+        #historyModal .modal-content, #allKillRecordsModal .modal-content { max-width: 800px; text-align: left; }
         .history-search { width: 100%; padding: 10px; margin-bottom: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; box-sizing: border-box; }
         .history-list { max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); }
         .history-item { padding: 10px 15px; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: center;}
@@ -534,7 +547,9 @@
             .modal-btns { flex-direction: column; }
             .btn-modal { width: 100%; }
             .recent-item { flex-direction: column; align-items: flex-start; }
-            .recent-item-times { flex-direction: column; gap: 5px; }
+            .recent-item-times { flex-direction: column; gap: 5px; width: 100%;}
+            .recent-progress-block { margin-left: 0; border-left: none; border-top: 1px solid var(--border); padding-left: 0; padding-top: 8px; width: 100%; margin-top: 8px;}
+            .recent-progress-text { text-align: left; }
             .time-text-display { width: auto; justify-content: flex-end; }
             .time-edit-inputs { justify-content: flex-end; }
         }
@@ -741,8 +756,15 @@
             </div>
 
             <div class="recent-list">
-                <div class="section-title">📋 最近计算记录 (最多保留20条)</div>
-                <div id="recentListContainer" style="max-height: 400px; overflow-y: auto;"></div>
+                <div class="recent-list-header">
+                    <div class="recent-list-title" onclick="toggleRecentList()">
+                        <span id="recentToggleIcon">▶</span> 📋 最近计算记录 (最多保留50条)
+                    </div>
+                    <div class="recent-list-actions">
+                        <button class="btn btn-outline" onclick="openAllKillRecordsModal()" style="padding: 4px 10px; font-size: 12px; color: var(--gold); border-color: var(--gold);">📜 查看所有出货记录</button>
+                    </div>
+                </div>
+                <div class="recent-list-content collapsed" id="recentListContainer"></div>
             </div>
         </div>
     </div>
@@ -770,7 +792,6 @@
                     <button onclick="openBatchServerModal()" style="color: var(--purple);">
                         <span>🔧 批量修正服务器</span>
                     </button>
-                    <!-- 新增修改更新公告的按钮 -->
                     <button onclick="openEditUpdateModal()" style="color: var(--blue);">
                         <span>📝 修改更新公告</span>
                     </button>
@@ -1168,6 +1189,36 @@
         </div>
     </div>
 
+    <!-- 全量出货记录弹窗 -->
+    <div class="modal-overlay" id="allKillRecordsModal">
+        <div class="modal-content">
+            <button class="btn-close-modal" onclick="document.getElementById('allKillRecordsModal').style.display='none'">×</button>
+            <div class="modal-title" style="text-align: center; color: var(--gold);">📜 全部出货记录 (本地永久保存)</div>
+            <div class="row-flex" style="margin-bottom: 15px;">
+                <input type="text" class="history-search" id="killRecordsSearchInput" placeholder="🔍 搜索 S怪名称、服务器..." oninput="renderAllKillRecordsList()" style="margin-bottom: 0;">
+                <button class="btn btn-outline" onclick="exportKillRecords()" style="white-space: nowrap;">📋 导出记录</button>
+            </div>
+            <div class="history-list" id="allKillRecordsList" style="max-height: 500px;"></div>
+            <div class="modal-btns">
+                <button class="btn-modal btn-cancel" onclick="document.getElementById('allKillRecordsModal').style.display='none'">关闭</button>
+                <button class="btn-modal" style="background:var(--red); color:#fff;" onclick="clearAllKillRecords()">清空记录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 出货/寄了 结果弹窗 -->
+    <div class="modal-overlay" id="resultNoticeModal">
+        <div class="modal-content" style="max-width: 600px; text-align: left;">
+            <button class="btn-close-modal" onclick="document.getElementById('resultNoticeModal').style.display='none'">×</button>
+            <div class="modal-title" id="resultNoticeTitle" style="text-align: center;">🎉 恭喜出货！</div>
+            <textarea id="resultNoticeText" class="announcement-textarea" readonly style="margin-top:15px; height: 120px;"></textarea>
+            <div class="modal-btns" style="margin-top: 15px;">
+                <button class="btn-modal btn-cancel" onclick="document.getElementById('resultNoticeModal').style.display='none'">关闭</button>
+                <button class="btn-modal btn-confirm ready" onclick="copyResultNotice()" style="background: var(--accent); color: var(--panel);">📋 一键复制</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="fateManualModal">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="document.getElementById('fateManualModal').style.display='none'">×</button>
@@ -1369,19 +1420,18 @@
         // ========== 版本更新弹窗与自定义逻辑 ==========
         // 默认的更新内容（HTML格式）
         const DEFAULT_UPDATE_CONTENT = `
-            <li><strong>天气系统全面进化</strong>：支持保存并开始倒计时”，临近自动闪烁，进入天气后自动监控剩余存在时间！</li>
-            <li><strong>多开悬浮窗增强</strong>：支持随意拖拽，新增天气状态监控！</li>
+            <li><strong>天气系统全面进化</strong>：支持“保存并开始倒计时”，临近自动闪烁，进入天气后自动监控剩余存在时间！</li>
+            <li><strong>多开悬浮窗增强</strong>：支持随意拖拽，新增天气状态监控，信息更丰富，随点随看！</li>
             <li><strong>专注排车目标监控</strong>：开启带车目标追踪后，右上方直接展示当前目标的精确倒计时与天气状态！</li>
-            <li><strong>计算列表大扩容</strong>：从 5 条扩展到 20 条，同时展示进闸时间、强制时间和天气状态多重监控面板！</li>
+            <li><strong>计算列表大扩容</strong>：从 5 条扩展到 50 条，同时展示进闸时间、强制时间和天气状态多重监控面板！</li>
             <li><strong>新黑话适配</strong>：补齐了起立格、奥山、少爷等前置天气 S 怪，适配更加完美！</li>
+            <li><strong>全量出货记录与进度条</strong>：新增出货/寄了按钮，支持查询所有S怪的历史击杀记录！</li>
         `;
 
         function checkUpdateModal() {
             const isViewed = localStorage.getItem('ff14_update_169_viewed');
             let content = localStorage.getItem('ff14_custom_update_text') || DEFAULT_UPDATE_CONTENT;
             
-            // 如果自定义内容是纯文本，可以在这里转成 <li>，为了简单起见，直接允许输入HTML或纯文本（如果是纯文本会报错，所以我们可以用正则把纯文本转成 li）
-            // 用户如果输入的是纯文本（没有<li>等标签），我们把每一行包裹在 <li> 里。
             if (!content.includes('<li>')) {
                 const lines = content.split('\n').filter(l => l.trim());
                 content = lines.map(line => `<li><strong>更新内容</strong>：${line}</li>`).join('');
@@ -1401,9 +1451,8 @@
 
         function openEditUpdateModal() {
             let currentText = localStorage.getItem('ff14_custom_update_raw') || '';
-            // 如果没存过纯文本，就提取一下默认的纯文本或HTML给他编辑
             if (!currentText) {
-                currentText = DEFAULT_UPDATE_CONTENT.replace(/<[^>]+>/g, '').trim(); // 去掉标签，纯文本给用户
+                currentText = DEFAULT_UPDATE_CONTENT.replace(/<[^>]+>/g, '').trim();
             }
             document.getElementById('updateEditTextarea').value = currentText;
             document.getElementById('editUpdateModal').style.display = 'flex';
@@ -1416,17 +1465,15 @@
                 localStorage.removeItem('ff14_custom_update_raw');
                 showToast('✅ 已恢复默认公告');
             } else {
-                // 把纯文本按行转成 HTML 存起来
                 const lines = text.split('\n').filter(l => l.trim());
                 const htmlContent = lines.map(line => `<li>${line}</li>`).join('');
                 localStorage.setItem('ff14_custom_update_text', htmlContent);
                 localStorage.setItem('ff14_custom_update_raw', text);
                 showToast('✅ 更新公告已保存');
             }
-            // 重置已查看状态，让下次刷新能弹出来
             localStorage.removeItem('ff14_update_169_viewed');
             document.getElementById('editUpdateModal').style.display = 'none';
-            checkUpdateModal(); // 立即预览
+            checkUpdateModal();
         }
 
         // ========== 核心业务逻辑 ==========
@@ -1449,9 +1496,6 @@
             "柔风": "柔风海湾", "湖泊": "琥珀原", "琥珀": "琥珀原"
         };
 
-        // ============================
-        // 🌟 专属触发者黑话映射库 🌟
-        // ============================
         const TRIGGER_ALIASES = {
             "酸梅": "牛排大王@白银乡", "栓梅": "牛排大王@白银乡", "酸梅姐": "牛排大王@白银乡",
             "基佬之王": "辞绿@拂晓之间", "猪猪的绿": "辞绿@拂晓之间", "猪绿": "辞绿@拂晓之间",
@@ -1476,14 +1520,12 @@
             "xzz": "演员新之助@白银乡", "新之猪": "演员新之助@白银乡", "心之助": "演员新之助@白银乡"
         };
 
-        // SS 怪映射
         const SS_MAP = {
             "5.0": "得到宽恕的叛乱",
             "6.0": "克尔",
             "7.0": "水晶化身之王"
         };
 
-        // 触发者翻译函数
         function resolveTrigger(id) {
             if (!id) return "";
             let cleanId = id.trim();
@@ -1497,7 +1539,6 @@
             return resolvedParts.join('、');
         }
 
-        // 检查是否包含黑话（用于搜索匹配）
         function matchTriggerSearch(t, search) {
             if (t.toLowerCase().includes(search)) return true;
             for (let alias in TRIGGER_ALIASES) {
@@ -1509,31 +1550,24 @@
         }
 
         const S_MONSTERS = [
-            // 7.0
             { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥", "起立格", "奥山"] }, 
             { name: "伊努索奇", area: "克扎玛乌卡湿地", version: "7.0", alias: ["螳螂", "湿地"] }, 
             { name: "内尤佐缇", area: "亚克特尔树海", version: "7.0", alias: ["鱼粉"] },
             { name: "山谢亚", area: "夏劳尼荒野", version: "7.0", alias: ["山火", "山谢娅", "荒野"] },
             { name: "先驱勇士 阿提卡斯", area: "遗产之地", version: "7.0", alias: ["烤肉", "牛排"] }, 
             { name: "天气预报机器人", area: "活着的记忆", version: "7.0", alias: ["天气", "机器人", "预言家"] },
-            
-            // 6.0
             { name: "布弗鲁", area: "迷津", version: "6.0", alias: ["少爷", "bfl"] }, 
             { name: "颇胝迦", area: "萨维奈岛", version: "6.0", alias: ["腰子", "pzj"] }, 
             { name: "阿姆斯特朗", area: "加雷马", version: "6.0", alias: ["壮壮", "胳膊壮", "gbz"] },
             { name: "沉思之物", area: "叹息海", version: "6.0", alias: ["路由器", "蘑菇"] }, 
             { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0", alias: ["鸟蛋", "蛋仔"] }, 
             { name: "狭缝", area: "天外天垓", version: "6.0", alias: ["芒果"] },
-            
-            // 5.0
             { name: "戾虫", area: "雷克兰德", version: "5.0", alias: ["李冲"] }, 
             { name: "得到宽恕的炫学", area: "珂露西亚岛", version: "5.0", alias: ["棉花", "嫂子"] }, 
             { name: "多智兽", area: "安穆·艾兰", version: "5.0", alias: ["多汁"] }, 
             { name: "阿格拉俄珀", area: "伊尔美格", version: "5.0", alias: ["蛾子", "孔雀"] }, 
             { name: "伊休妲", area: "拉凯提卡大森林", version: "5.0", alias: ["大森", "yxd", "伊休但"] }, 
             { name: "顾尼图", area: "黑风海", version: "5.0", alias: ["图图", "船长"] },
-            
-            // 4.0
             { name: "优昙婆罗花", area: "基拉巴尼亚边区", version: "4.0", alias: ["边花", "花"] },
             { name: "爬骨怪龙", area: "基拉巴尼亚山区", version: "4.0", alias: ["爬爬"] },
             { name: "盐和光", area: "基拉巴尼亚湖区", version: "4.0", alias: ["基佬", "盐基佬", "扔垃圾"] },
@@ -1567,14 +1601,12 @@
 
         let allTriggers = [];
 
-        // 更新所有触发者下拉框/输入提示
         function updateGlobalTriggers() {
             if (isVipUnlocked) {
                 allTriggers = Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers]));
             } else {
                 allTriggers = [...customTriggers];
             }
-            // 更新 datalist (包含全名和黑话)
             let datalistEl = document.getElementById('trigger-datalist');
             if(!datalistEl) {
                 datalistEl = document.createElement('datalist');
@@ -1587,7 +1619,6 @@
                 datalistEl.innerHTML += `<option value="${alias}">`;
             }
             
-            // 如果是下拉框模式，也更新一下
             document.querySelectorAll('.select-trigger').forEach(sel => {
                 const currentVal = sel.value;
                 let html = `<option value="">-- 选择触发者 --</option>`;
@@ -1607,6 +1638,7 @@
         let hasAddEvidence = false;
 
         let recentRecords = []; 
+        let allKillRecords = []; 
         let specialCounters = { "伊休妲": 0, "颇胝迦": 0, "沉思之物": 0 };
         let currentManualCalcData = null;
         let parsedMonsters = []; 
@@ -1614,21 +1646,17 @@
         let currentRouteImageBase64 = null; 
         let editingRouteServers = new Set(); 
         let isSimpleRouteLocked = false; 
-        let currentParseMode = 'overwrite'; // 新增：解析模式
+        let currentParseMode = 'overwrite'; 
 
         let currentAnnType = 'morning';
         
-        // 触发者弹窗状态
         let currentTriggerSelectIdx = -1;
-        let currentAomInput = null; // 用于记录奥山预设里当前操作的input
+        let currentAomInput = null; 
 
-        // 悬浮窗管理数组
         let activeFloatingWindows = []; 
-        // 天气倒计时状态
         let weatherTargetEndTime = null;
-        const WEATHER_DURATION_MS = 3600 * 1000; // 天气默认持续 1 小时
+        const WEATHER_DURATION_MS = 3600 * 1000; 
 
-        // 折叠
         function toggleManualCard() {
             const body = document.getElementById('manualCardBody'); const icon = document.getElementById('manualToggleIcon');
             if (body.style.display === 'none') { body.style.display = 'block'; icon.innerText = '▼'; } 
@@ -1645,7 +1673,19 @@
             else { body.style.display = 'block'; icon.innerText = '▼'; }
         }
 
-        // 新增：切换解析模式
+        // 折叠/展开最近记录
+        function toggleRecentList() {
+            const container = document.getElementById('recentListContainer');
+            const icon = document.getElementById('recentToggleIcon');
+            if (container.classList.contains('collapsed')) {
+                container.classList.remove('collapsed');
+                icon.innerText = '▼';
+            } else {
+                container.classList.add('collapsed');
+                icon.innerText = '▶';
+            }
+        }
+
         function setParseMode(mode) {
             currentParseMode = mode;
             const btnO = document.getElementById('btnParseOverwrite');
@@ -1663,7 +1703,6 @@
             }
         }
 
-        // 目标追踪开关
         function toggleTrackingMode(val) {
             isTrackingMode = val;
             renderRouteResult();
@@ -1701,7 +1740,6 @@
             navigator.clipboard.writeText(macro).then(() => showToast("📋 战术宏已复制，请前往游戏粘贴"));
         }
 
-        // 布局调节
         function adjustLayout(val) {
             const container = document.getElementById('focusContainer');
             container.style.setProperty('--left-ratio', val);
@@ -1725,7 +1763,6 @@
             }
         }
 
-        // 公告切换
         function switchAnnType(type) {
             currentAnnType = type;
             document.getElementById('btnAnnMorning').className = 'btn btn-outline';
@@ -1757,10 +1794,9 @@
                 document.getElementById('btnAnnAom').style.color = 'var(--purple)';
             }
             updateAnnHeader();
-            document.getElementById('announcementOutput').value = ''; // 清空旧文本
+            document.getElementById('announcementOutput').value = ''; 
         }
 
-        // 全局服务器锁定
         function initGlobalServerLock() {
             const sel = document.getElementById('globalServerLock');
             let html = `<option value="">-- 选择要应用的服务器 --</option>`;
@@ -1771,7 +1807,6 @@
             }
             sel.innerHTML = html;
 
-            // 初始化新触发者的服务器下拉 (首页)
             const newTrgServer = document.getElementById('newTriggerServer');
             let trgHtml = '';
             for (const [region, servers] of Object.entries(SERVER_GROUPS)) {
@@ -1781,13 +1816,11 @@
             }
             newTrgServer.innerHTML = trgHtml;
 
-            // 初始化新触发者的服务器下拉 (专注排车页面)
             const routeNewTrgServer = document.getElementById('routeNewTriggerServer');
             if(routeNewTrgServer) {
                 routeNewTrgServer.innerHTML = trgHtml;
             }
 
-            // 初始化快捷加怪的服务器下拉
             const quickServerSelect = document.getElementById('quickServerSelect');
             if(quickServerSelect) {
                 let qHtml = '';
@@ -1799,11 +1832,9 @@
                 quickServerSelect.innerHTML = qHtml;
             }
 
-            // 初始化快捷加怪的怪物标签
             renderQuickMonsterTags(S_MONSTERS);
         }
 
-        // 渲染快捷加怪标签
         function renderQuickMonsterTags(list) {
             const container = document.getElementById('quickMonsterTags');
             if(!container) return;
@@ -1967,7 +1998,6 @@
 
         function closeFocusRoute() { document.getElementById('focusRoutePage').style.display = 'none'; }
 
-        // 生成公告
         function generateAnnouncement() {
             const activeMonsters = parsedMonsters.filter(m => !m.isDead);
             if (activeMonsters.length === 0) { showToast('⚠️ 没有排车数据'); return; }
@@ -1979,10 +2009,9 @@
 
             if (!station) {
                 if (currentAnnType === 'aom' || isPureAom) {
-                    // 默认白金幻象
                     station = `【白金幻象】奥阔帕恰山`;
                 } else {
-                    const firstM = activeMonsters[0]; // 直接取当前排好序的第一只
+                    const firstM = activeMonsters[0]; 
                     if (firstM) station = `【${firstM.server}】${firstM.area} ${firstM.coord}`;
                 }
             }
@@ -2034,7 +2063,6 @@
             navigator.clipboard.writeText(text).then(() => showToast("📋 公告已复制"));
         }
 
-        // --- 基础逻辑 ---
         const mServerSelect = document.getElementById('mServer');
         const serverDropdownPanel = document.getElementById('serverDropdownPanel');
         const serverDropdownList = document.getElementById('serverDropdownList');
@@ -2103,7 +2131,6 @@
         const quickFixMenu = document.getElementById('quickFixServerMenu');
         ALL_SERVERS.forEach(s => { quickFixMenu.innerHTML += `<button onclick="batchFixServerColumn('${s}')">${s}</button>`; });
 
-        // 工具箱绑定修复
         function toggleMaintenance() {
             isMaintenanceMode = !isMaintenanceMode; CD_HOURS = isMaintenanceMode ? 50 : 84;
             document.querySelectorAll('.calc-row').forEach(tr => { if (tr.recalculate) tr.recalculate(); });
@@ -2124,7 +2151,6 @@
             document.getElementById('switch-layout').classList.toggle('active', document.body.getAttribute('data-layout') === 'landscape');
         }
 
-        // 邀请码系统
         function openInviteModal() {
             document.getElementById('inviteModal').style.display = 'flex';
             document.getElementById('newCodeResult').style.display = 'none';
@@ -2190,7 +2216,6 @@
                         if(parts.length === 2) { document.getElementById('newTriggerName').value = parts[0]; document.getElementById('newTriggerServer').value = parts[1]; } 
                         else { document.getElementById('newTriggerName').value = t; }
                         
-                        // 加上复制功能
                         navigator.clipboard.writeText(t).then(() => showToast('📋 触发者已复制'));
                     }; 
                     container.appendChild(span);
@@ -2199,7 +2224,6 @@
             if (container.innerHTML === '') container.innerHTML = isVipUnlocked ? '<div style="color:var(--text-muted); font-size:12px;">没有找到匹配的触发者</div>' : '<div style="color:var(--gold); font-size:12px; padding: 5px;">⚠️ 预置名单已锁定，请在顶部输入邀请码查看。</div>';
         }
 
-        // 渲染专注排车页面的触发者名单
         function renderRouteTriggerList() {
             const container = document.getElementById('routeTriggerContainer'); 
             if (!container) return;
@@ -2305,7 +2329,6 @@
             const serverStats = [];
             for (let server in serverMap) {
                 const list = serverMap[server];
-                // 排序：奥山 > 7.0 > 6.0 > 5.0 > 4.0
                 list.sort((a,b) => { 
                     const getWeight = (m) => {
                         if (m.originalName === "厌忌之人 奇里格") return 5;
@@ -2373,8 +2396,6 @@
         function saveSimpleRoute() { isSimpleRouteLocked = true; showToast("💾 简版修改已保存"); }
         function copySimpleRoute() { navigator.clipboard.writeText(document.getElementById('simpleRouteOutput').value).then(() => showToast("📋 简版已复制")); }
         
-        // ====== 导出相关功能 ======
-        
         function saveTriggers() {
             localStorage.setItem('ff14_route_cache', JSON.stringify({ 
                 text: document.getElementById('routeOutput').value, 
@@ -2426,8 +2447,6 @@
             showToast("💾 排车文件已保存！");
         }
 
-        // ====== 导出相关功能 END ======
-
         document.getElementById('focusRoutePage').addEventListener('paste', e => {
             if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
             e.stopPropagation(); const items = (e.clipboardData || e.originalEvent.clipboardData).items;
@@ -2468,67 +2487,12 @@
             reader.readAsDataURL(file);
         }
 
-        function fuzzyServer(str) {
-            if (!str) return "未知"; 
-            str = str.replace(/[\s<>＜＞]/g, '');
-            
-            if (ALL_SERVERS.includes(str)) return str;
-            for (let srv of ALL_SERVERS) { if (str.includes(srv)) return srv; }
-
-            for (let alias in SERVER_ALIASES) {
-                if (["湖", "茶", "川"].includes(alias)) {
-                    if (str === alias) return SERVER_ALIASES[alias];
-                } else {
-                    if (str.includes(alias)) return SERVER_ALIASES[alias];
-                }
-            }
-
-            if (str.includes("白金") || str.includes("幻象") || str.includes("白幻")) return "白金幻象";
-            if (str.includes("龙巢") || str.includes("神殿") || str.includes("龙昌")) return "龙巢神殿";
-            if (str.includes("神拳") || str.includes("拳痕") || str.includes("神卷")) return "神拳痕";
-            if (str.includes("旅人") || str.includes("栈桥")) return "旅人栈桥";
-            if (str.includes("拂晓") || str.includes("晓之")) return "拂晓之间";
-            if (str.includes("梦羽") || str.includes("宝境")) return "梦羽宝境";
-            if (str.includes("白银") || str.includes("银乡")) return "白银乡";
-            if (str.includes("潮风") || str.includes("风亭")) return "潮风亭";
-            if (str.includes("水晶") || str.includes("晶塔")) return "水晶塔";
-            if (str.includes("银泪") || str.includes("泪湖")) return "银泪湖";
-            if (str.includes("太阳") || str.includes("海岸")) return "太阳海岸";
-            if (str.includes("伊修") || str.includes("加德")) return "伊修加德";
-            if (str.includes("红茶") || str.includes("茶川")) return "红茶川";
-            if (str.includes("红玉") || str.includes("玉海")) return "红玉海";
-            if (str.includes("神意") || str.includes("意之")) return "神意之地";
-            if (str.includes("拉诺") || str.includes("西亚")) return "拉诺西亚";
-            if (str.includes("幻影") || str.includes("影岛")) return "幻影群岛";
-            if (str.includes("萌芽") || str.includes("芽池")) return "萌芽池";
-            if (str.includes("宇宙") || str.includes("和音")) return "宇宙和音";
-            if (str.includes("沃仙") || str.includes("曦染")) return "沃仙曦染";
-            if (str.includes("晨曦") || str.includes("王座")) return "晨曦王座";
-            if (str.includes("紫水")) return "紫水栈桥";
-            if (str.includes("延夏") || str.includes("延下")) return "延夏";
-            if (str.includes("静语") || str.includes("庄园")) return "静语庄园";
-            if (str.includes("摩杜") || str.includes("杜纳")) return "摩杜纳";
-            if (str.includes("海猫") || str.includes("茶屋")) return "海猫茶屋";
-            if (str.includes("柔风") || str.includes("海湾")) return "柔风海湾";
-            if (str.includes("琥珀") || str.includes("珀原")) return "琥珀原";
-            
-            let bestMatch = null, maxMatchCount = 0;
-            for (let srv of ALL_SERVERS) {
-                if (srv.length < 2) continue;
-                let matchCount = 0, tempStr = str;
-                for (let char of srv) if (tempStr.includes(char)) { matchCount++; tempStr = tempStr.replace(char, ''); }
-                if (matchCount >= 2 && matchCount > maxMatchCount) { maxMatchCount = matchCount; bestMatch = srv; }
-            }
-            return bestMatch || "未知";
-        }
-
         function generateRoute() {
             const routeInputEl = document.getElementById('routeInput');
             if (!routeInputEl) return;
             let text = routeInputEl.value;
             if (!text.trim()) { alert("请先粘贴或识别 S怪 信息！"); return; }
             
-            // 统一符号
             text = text.replace(/[＜《]/g, '<').replace(/[＞》]/g, '>').replace(/[（【\[［]/g, '(').replace(/[）】\]］]/g, ')').replace(/[：]/g, ':').replace(/[，、]/g, ',');
             const lines = text.split('\n'); 
             
@@ -2548,14 +2512,12 @@
                 let serverFound = false;
                 let currentServer = lastServer;
 
-                // 1. 坐标提取 (优先提取，防止坐标被当做触发者的一部分)
                 let coordMatch = currentLine.match(/[\(（]?\s*(\d{1,2}\.\d{1,2})\s*[,，\s]\s*(\d{1,2}\.\d{1,2})\s*[\)）]?/);
                 if (coordMatch) { 
                     coord = `(${coordMatch[1]}, ${coordMatch[2]})`; 
                     currentLine = currentLine.replace(coordMatch[0], ' '); 
                 }
                 
-                // 2. 血量提取
                 let hpMatch = currentLine.match(/(\d+(?:\.\d+)?)\s*%/); 
                 if (hpMatch) { 
                     let hpVal = parseFloat(hpMatch[1]);
@@ -2563,7 +2525,6 @@
                     currentLine = currentLine.replace(hpMatch[0], ' '); 
                 }
                 
-                // 3. 服务器独立行判断
                 let cleanForServer = currentLine.replace(/[\s\(\)（）]/g, '');
                 let isOnlyServer = false;
                 
@@ -2586,7 +2547,6 @@
                     continue; 
                 }
 
-                // 4. 行内服务器匹配
                 if (!serverFound) {
                     for (let srv of ALL_SERVERS) {
                         if (currentLine.includes(srv)) { 
@@ -2612,7 +2572,6 @@
                 if (serverFound) lastServer = currentServer;
                 else currentServer = lastServer;
 
-                // 5. 判断是否为组合格式（带括号触发者）
                 let parsedFromGroups = [];
                 let regex = /([^()（）]+?)[（(]([^）)]*)[）)]/g;
                 let match;
@@ -2633,12 +2592,10 @@
                 }
                 
                 if (parsedFromGroups.length > 0) {
-                    // 新格式：逐一匹配怪物名
                     for (let item of parsedFromGroups) {
                         let matchedMonster = null;
                         let cleanName = item.name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9γ]/g, '');
                         
-                        // 优先匹配黑话
                         let matchLen = 0;
                         for (let sm of S_MONSTERS) {
                             if (sm.alias) {
@@ -2653,7 +2610,6 @@
                             }
                         }
                         
-                        // 如果没有黑话，匹配名字或地区名
                         if (!matchedMonster) {
                             for (let sm of S_MONSTERS) {
                                 let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, '');
@@ -2686,7 +2642,6 @@
                         }
                     }
                 } else {
-                    // 老格式（空格分隔）
                     let matchedMonster = null;
                     let matchLen = 0;
                     for (let sm of S_MONSTERS) {
@@ -2771,12 +2726,10 @@
                 showToast('⚠️ 已经是最前/最后的服务器了');
                 return;
             }
-            // 交换顺序
             const temp = serverOrder[currentIndex];
             serverOrder[currentIndex] = serverOrder[targetIndex];
             serverOrder[targetIndex] = temp;
             
-            // 重建 parsedMonsters 数组，使服务器顺序改变，但同服务器内相对顺序不变
             const newParsed = [];
             serverOrder.forEach(srv => {
                 parsedMonsters.forEach(m => {
@@ -2832,7 +2785,6 @@
             if (parsedMonsters[idx]) {
                 parsedMonsters[idx].isDead = isDead;
                 if (isDead && parsedMonsters[idx].isTarget && isTrackingMode) {
-                    // 自动轮换至下一只存活目标
                     parsedMonsters[idx].isTarget = false;
                     let nextTarget = parsedMonsters.slice(idx + 1).find(m => !m.isDead);
                     if (!nextTarget) nextTarget = parsedMonsters.find(m => !m.isDead);
@@ -2891,7 +2843,7 @@
                     updateGlobalTriggers();
                 }
             }
-            renderRouteResult(); // 重新渲染时更新UI
+            renderRouteResult(); 
         }
 
         function updateRouteTrigger(val, idx) {
@@ -2908,7 +2860,6 @@
             }
         }
 
-        // ======= 触发者选择弹窗逻辑 =======
         function openTriggerSelectModal(idx) {
             currentTriggerSelectIdx = idx;
             currentAomInput = null;
@@ -2918,7 +2869,6 @@
             filterSelectTriggers();
         }
 
-        // 专用于奥山预设的选人
         function openAomTriggerSelect(inputEl) {
             currentAomInput = inputEl;
             currentTriggerSelectIdx = -1;
@@ -2973,9 +2923,7 @@
                 showToast(`🗑️ 已清空该怪触发者`);
             }
         }
-        // ===================================
 
-        // ======= 一键预设奥山 =======
         function openAomPresetModal() {
             const dcSelect = document.getElementById('aomDcSelect');
             if (dcSelect.options.length === 0) {
@@ -3053,7 +3001,6 @@
                 showToast('⚠️ 未勾选任何服务器或所选服务器已存在该S怪');
             }
         }
-        // ======= 一键预设奥山 END =======
 
         function renderTacticMacros() {
             const container = document.getElementById('tacticMacroList');
@@ -3102,7 +3049,6 @@
                 return;
             }
 
-            // ===== 修复：SS统计逻辑 =====
             const totalPlanned = parsedMonsters.length; 
             const totalSS = parsedMonsters.filter(m => m.isSS).length;
             
@@ -3114,9 +3060,7 @@
             } else {
                 ssStatsBox.style.display = 'none';
             }
-            // =========================
 
-            // 提取唯一的服务器顺序（按首次出现）
             const serverOrder = [];
             parsedMonsters.forEach(m => { if (!serverOrder.includes(m.server)) serverOrder.push(m.server); });
 
@@ -3128,12 +3072,10 @@
             }
             datalistEl.innerHTML = '';
             allTriggers.forEach(t => { datalistEl.innerHTML += `<option value="${t}">`; });
-            // 把黑话塞进datalist，方便输入提示
             for (let alias in TRIGGER_ALIASES) {
                 datalistEl.innerHTML += `<option value="${alias}">`;
             }
 
-            // 为了维持渲染的顺序并分配 _globalIdx
             parsedMonsters.forEach((m, idx) => m._globalIdx = idx);
 
             let routeStr = "", logHtml = "", flatSortedMonsters = []; 
@@ -3150,7 +3092,6 @@
                 }
             });
 
-            // 第一遍：收集 flatSortedMonsters 并生成文本（过滤掉 isDead）
             serverOrder.forEach(server => {
                 const activeList = parsedMonsters.filter(m => m.server === server && !m.isDead);
                 if (activeList.length > 0) {
@@ -3169,7 +3110,6 @@
                 }
             });
 
-            // 第二遍：生成 logHtml（包含所有怪物，不管死活）
             serverOrder.forEach(server => {
                 const list = parsedMonsters.filter(m => m.server === server);
                 const activeList = list.filter(m => !m.isDead);
@@ -3207,7 +3147,6 @@
                         targetBtn = `<button class="btn-edit-small" style="color:${m.isTarget ? 'var(--accent)' : 'var(--text-muted)'}; font-size:16px; padding:4px 6px;" onclick="setTargetMonster(${m._globalIdx})" title="设为当前目标">🎯</button>`;
                     }
 
-                    // 只有5/6/7可以出SS
                     let ssBtn = '';
                     if (SS_MAP[m.version]) {
                         ssBtn = `<button class="btn btn-outline" style="padding:4px 8px; font-size:12px; border-color:${m.isSS ? 'var(--gold)' : 'var(--border)'}; color:${m.isSS ? 'var(--gold)' : 'var(--text-muted)'};" onclick="toggleSS(${m._globalIdx})">${m.isSS ? '🔄 复原' : '✨ 出SS'}</button>`;
@@ -3248,9 +3187,7 @@
 
             if (!isSimpleRouteLocked) generateSimpleRoute(false, flatSortedMonsters);
             calculateRouteTime();
-            renderTacticMacros(); // 渲染战术宏
-
-            // 更新监控面板
+            renderTacticMacros(); 
             updateRouteMonitor();
 
             localStorage.setItem('ff14_route_cache', JSON.stringify({ text: routeStr.trim(), log: logHtml, monsters: parsedMonsters, expire: Date.now() + 10 * 60 * 1000 }));
@@ -3334,7 +3271,6 @@
         let manualTimer = null, mSyncing = false, fateRecords = [];
 
         mMonsterSelect.addEventListener('change', () => {
-            // 包含天气前置的怪
             const isWeatherMonster = mMonsterSelect.value.includes('奇里格') || mMonsterSelect.value.includes('布弗鲁') || mMonsterSelect.value.includes('巨大鳐'); 
             const isShanxieya = mMonsterSelect.value.includes('山谢亚');
             
@@ -3357,9 +3293,29 @@
         function markManualKilled() {
             document.querySelector('input[name="mStatus"][value="red"]').checked = true;
             mHour.value = 0; mMin.value = 0; updateSpecialCounterUI(); autoCorrect();
+            
+            const server = mServerSelect.value;
+            const name = mMonsterSelect.value.split('|')[0];
+            const area = mMonsterSelect.value.split('|')[1];
+            if (name && name !== '未知' && server) {
+                addAllKillRecord(server, name, area, '手动标记击杀');
+            }
         }
 
-        // === 天气倒计时处理 ===
+        function addAllKillRecord(server, name, area, progress) {
+            const now = new Date();
+            const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            
+            allKillRecords.unshift({
+                time: timeStr,
+                server: server,
+                name: name,
+                area: area,
+                progress: progress
+            });
+            localStorage.setItem('ff14_all_kill_records', JSON.stringify(allKillRecords));
+        }
+
         function startWeatherCountdown() {
             const h = parseInt(mFogHour.value) || 0;
             const m = parseInt(mFogMin.value) || 0;
@@ -3374,8 +3330,8 @@
             weatherTargetEndTime = Date.now() + totalSec * 1000;
             document.getElementById('weatherStatusBox').style.display = 'block';
             showToast('✅ 天气倒计时已启动，进闸时间将受天气限制');
-            tickWeatherCountdown(); // 立即触发一次
-            calcManual(); // 重新计算触发时间
+            tickWeatherCountdown(); 
+            calcManual(); 
         }
 
         function tickWeatherCountdown() {
@@ -3389,12 +3345,11 @@
             const diff = weatherTargetEndTime - now;
             
             if (diff > 0) {
-                // 还没进天气
                 titleEl.innerHTML = '⏳ 距天气出现还有：';
                 textEl.innerText = formatDHMS(diff);
                 descEl.innerText = '天气存在时间通常为 1 小时';
                 
-                if (diff < 15 * 60 * 1000) { // 15分钟内闪烁
+                if (diff < 15 * 60 * 1000) { 
                     box.style.animation = 'blink 1s infinite';
                     textEl.style.color = 'var(--red)';
                 } else {
@@ -3402,15 +3357,13 @@
                     textEl.style.color = 'var(--purple)';
                 }
             } else if (diff > -WEATHER_DURATION_MS) {
-                // 天气中
-                const remain = WEATHER_DURATION_MS + diff; // diff 是负数
+                const remain = WEATHER_DURATION_MS + diff; 
                 titleEl.innerHTML = '🌫️ 当前天气持续中，剩余：';
                 textEl.innerText = formatDHMS(remain);
                 descEl.innerText = '请把握机会尽快触发！';
                 box.style.animation = 'none';
                 textEl.style.color = 'var(--gold)';
             } else {
-                // 天气结束
                 titleEl.innerHTML = '❌ 天气已结束';
                 textEl.innerText = '00:00:00';
                 descEl.innerText = '本次天气前置已失效';
@@ -3419,7 +3372,6 @@
             }
         }
 
-        // === 彻底反转 CD 期的进度条，使其符合直觉 ===
         function autoCorrect() {
             if (mSyncing) return; mSyncing = true;
             let h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0, p = parseInt(mPercent.value) || 0;
@@ -3429,16 +3381,13 @@
             let isGreen = document.querySelector('input[name="mStatus"]:checked').value === 'green';
             
             if (isGreen) {
-                // 存活状态：正计时（0% -> 100%）
                 const totalMin = LT_HOURS * 60;
                 if (h === 0 && m === 0 && p > 0) { const calcMin = Math.floor(totalMin * (p / 100)); h = Math.floor(calcMin / 60); m = calcMin % 60; } 
                 else if (h > 0 || m > 0) { p = Math.floor(((h * 60 + m) / totalMin) * 100); }
                 if (p > 100) p = 100;
             } else {
-                // CD状态：倒计时（100% -> 0%）
                 const totalMin = CD_HOURS * 60;
                 if (h === 0 && m === 0 && p > 0 && p < 100) { 
-                    // 进度条剩余的比例，反推已经过去的时间
                     const remainMin = Math.floor(totalMin * (p / 100)); 
                     const passedMin = totalMin - remainMin;
                     h = Math.floor(passedMin / 60); m = passedMin % 60; 
@@ -3459,7 +3408,6 @@
         mFogMin.addEventListener('input', () => { weatherTargetEndTime = null; document.getElementById('weatherStatusBox').style.display = 'none'; calcManual(); });
         mFogSec.addEventListener('input', () => { weatherTargetEndTime = null; document.getElementById('weatherStatusBox').style.display = 'none'; calcManual(); });
 
-        // === 修复状态显示与时间描述优化 ===
         function calcManual() {
             if (manualTimer) clearInterval(manualTimer);
             const h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0;
@@ -3477,7 +3425,6 @@
             let gateDesc = '';
             let forceDesc = '';
             
-            // 1. 先计算基础的时间
             let baseGateTimeMs, baseForceTimeMs;
             if (isGreenRadio) {
                 const remainSec = LT_HOURS * 3600 - timeSec; 
@@ -3489,10 +3436,8 @@
                 baseForceTimeMs = baseGateTimeMs + LT_HOURS * 3600 * 1000;
             }
 
-            // 2. 天气介入判定 (重点修复)
             let isWeatherOverride = false;
             if (isWeatherMonster && weatherTargetEndTime) {
-                // 如果设置了天气，且天气出现时间比基础进闸时间还要晚
                 if (weatherTargetEndTime > baseGateTimeMs) {
                     baseGateTimeMs = weatherTargetEndTime;
                     baseForceTimeMs = baseGateTimeMs + LT_HOURS * 3600 * 1000;
@@ -3503,12 +3448,10 @@
             targetGateTime = new Date(baseGateTimeMs);
             targetForceTime = new Date(baseForceTimeMs);
 
-            // 3. 状态判定
             const nowMs = now.getTime();
-            let isActuallyGreen = false; // 实际是否处于存活期
+            let isActuallyGreen = false; 
 
             if (nowMs < targetGateTime.getTime()) {
-                // 还没进闸
                 isActuallyGreen = false;
                 if (isWeatherOverride) {
                     stateText = `等待天气进闸`;
@@ -3521,14 +3464,12 @@
                 }
                 forceDesc = `强制倒计时: <span class="fc-timer" data-target="${targetForceTime.getTime()}"></span>`;
             } else if (nowMs >= targetGateTime.getTime() && nowMs < targetForceTime.getTime()) {
-                // 已进闸，存活中
                 isActuallyGreen = true;
                 stateText = `存活中`;
                 stateColor = 'var(--blue)';
                 gateDesc = `已进闸: <span class="fc-timer-neg" data-target="${targetGateTime.getTime()}"></span>`;
                 forceDesc = `强制倒计时: <span class="fc-timer" data-target="${targetForceTime.getTime()}"></span>`;
             } else {
-                // 已强制
                 isActuallyGreen = true;
                 stateText = `已强制消失`;
                 stateColor = 'var(--red)';
@@ -3537,7 +3478,7 @@
             }
             
             currentManualCalcData = { 
-                isGreen: isActuallyGreen, // 保存真实状态
+                isGreen: isActuallyGreen,
                 isShanxieya, h, m, targetGateTime, targetForceTime, isDynamicGate, isWeatherMonster,
                 weatherTargetEndTime, WEATHER_DURATION_MS
             };
@@ -3564,12 +3505,11 @@
                         </div>
                         <button class="btn-copy-manual" onclick="copyManualResult()">📋 复制手动结果</button>${warnHtml}`;
                 }
-                tickTimers(); // 手动触发一次全局倒计时刷新
+                tickTimers(); 
             };
             updateDisplay(); manualTimer = setInterval(updateDisplay, 1000);
         }
 
-        // ================= 全局倒计时刷新机制 =================
         function tickTimers() {
             const now = Date.now();
             document.querySelectorAll('.fc-timer').forEach(el => {
@@ -3593,11 +3533,34 @@
                 }
             });
             
-            // 刷新天气倒计时
+            document.querySelectorAll('.cooldown-timer').forEach(el => {
+                const target = parseInt(el.getAttribute('data-target'));
+                const diff = target - Date.now();
+                const span = el.querySelector('span');
+                if (diff > 0) {
+                    const m = Math.floor(diff / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    if(span) span.innerText = `${m}分${s}秒`;
+                } else {
+                    if(span) span.innerText = `已就绪`;
+                }
+            });
+
+            // 检查冷却是否过期并刷新列表
+            let hasExpiredCooldown = false;
+            recentRecords.forEach(r => {
+                if (r.cooldownEndTime && r.cooldownEndTime <= Date.now()) {
+                    r.cooldownEndTime = 0;
+                    hasExpiredCooldown = true;
+                }
+            });
+            if (hasExpiredCooldown) {
+                renderRecentList();
+            }
+
             tickWeatherCountdown();
         }
         setInterval(tickTimers, 1000); 
-        // ========================================================
 
         function formatDHMS(ms) {
             if (ms < 0) ms = 0;
@@ -3633,12 +3596,16 @@
                 isDynamicGate, 
                 gateTimeMs: targetGateTime ? targetGateTime.getTime() : null, 
                 forceTimeMs: targetForceTime.getTime(),
-                weatherTargetEndTime: weatherTargetEndTime // 保存天气状态
+                weatherTargetEndTime: weatherTargetEndTime,
+                cooldownEndTime: 0
             };
             
             recentRecords.unshift(record); 
-            // 扩展到 20 个
-            if (recentRecords.length > 20) recentRecords.pop();
+            if (recentRecords.length > 50) recentRecords.pop();
+            
+            document.getElementById('recentListContainer').classList.remove('collapsed');
+            document.getElementById('recentToggleIcon').innerText = '▼';
+            
             renderRecentList(); saveLocalState(); showToast("✅ 已添加到计算记录");
         }
 
@@ -3652,9 +3619,34 @@
                 let gateTimerHtml = '';
                 let forceTimerHtml = '';
                 let weatherHtml = '';
+                let progressVal = 0;
+                let progressColor = 'var(--blue)';
                 
                 gateTimerHtml = `<div class="recent-time-block"><span class="res-label">进闸时间</span><span class="recent-time-val" style="color:var(--blue)">${r.gateTimeMs ? formatDateObj(new Date(r.gateTimeMs)) : '-'}</span></div>`;
                 forceTimerHtml = `<div class="recent-time-block"><span class="res-label">强制时间</span><span class="recent-time-val" style="color:var(--gold)">${formatDateObj(new Date(r.forceTimeMs))}</span></div>`;
+                
+                // 计算进度
+                let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
+                let passedMin = r.h * 60 + r.m;
+                if (r.isGreen) {
+                    progressVal = Math.min(100, Math.floor((passedMin / totalMin) * 100));
+                    progressColor = 'var(--blue)';
+                } else {
+                    progressVal = Math.min(100, Math.floor((passedMin / totalMin) * 100));
+                    progressColor = 'var(--red)';
+                }
+                
+                let progressHtml = `
+                    <div class="recent-progress-block">
+                        <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
+                            <span>进度</span>
+                            <span class="recent-progress-text">${progressVal}%</span>
+                        </div>
+                        <div class="recent-progress-bar">
+                            <div class="recent-progress-fill" style="width: ${progressVal}%; background: ${progressColor};"></div>
+                        </div>
+                    </div>
+                `;
                 
                 if (r.weatherTargetEndTime) {
                     const wDiff = r.weatherTargetEndTime - now;
@@ -3666,33 +3658,143 @@
                     }
                 }
 
+                let isCooldown = r.cooldownEndTime && Date.now() < r.cooldownEndTime;
+                let cooldownHtml = isCooldown ? `<div style="font-size:12px; color:var(--red); font-weight:bold; margin-top:5px;" class="cooldown-timer" data-target="${r.cooldownEndTime}">冷却中: <span></span></div>` : '';
+                let btnDisabledAttr = isCooldown ? 'disabled style="opacity:0.5; cursor:not-allowed; background:var(--text-muted);"' : '';
+
                 html += `
                 <div class="recent-item">
                     <div class="recent-item-info">
-                        <div class="recent-item-title">[${r.server}] ${r.name} (${r.area}) <span style="font-size:12px; color:${r.isGreen?'var(--accent)':'var(--red)'}">${r.isGreen?'🟢存活':'🔴CD中'}</span></div>
+                        <div class="recent-item-title">
+                            [${r.server}] <span style="color:var(--gold); font-weight:bold;">${r.name}</span> (${r.area}) 
+                            <span style="font-size:12px; color:${r.isGreen?'var(--accent)':'var(--red)'}">${r.isGreen?'🟢存活':'🔴CD中'}</span>
+                        </div>
                         <div class="recent-item-times">
                             ${gateTimerHtml}
                             ${forceTimerHtml}
                             ${weatherHtml}
+                            ${progressHtml}
                         </div>
+                        ${cooldownHtml}
                     </div>
                     <div style="display:flex; flex-direction:column; gap:5px;">
-                        <button class="btn btn-outline" onclick="summonFloatingCountdownFromRecord(${idx})">⏱️ 召唤浮窗</button>
-                        <button class="btn btn-red" onclick="removeRecent(${idx})" style="padding:6px 10px;">✕</button>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-accent" onclick="reportShipment(${idx})" style="padding:6px 10px; font-size:12px;">🎉 出货了</button>
+                            <button class="btn btn-red" onclick="reportFail(${idx})" ${btnDisabledAttr} style="padding:6px 10px; font-size:12px;">💀 寄了</button>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-outline" onclick="summonFloatingCountdownFromRecord(${idx})" style="flex:1; padding:6px 10px; font-size:12px;">⏱️ 召唤浮窗</button>
+                            <button class="btn btn-red" onclick="removeRecent(${idx})" style="padding:6px 10px;">✕</button>
+                        </div>
                     </div>
                 </div>`;
             });
             container.innerHTML = html;
-            tickTimers(); // 立即刷新列表里的倒计时
+            tickTimers(); 
         }
         
+        function reportShipment(idx) {
+            const r = recentRecords[idx];
+            let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
+            let pct = ((r.h * 60 + r.m) / totalMin * 100).toFixed(2);
+            let remainMs = r.forceTimeMs - Date.now();
+            let remainMins = remainMs > 0 ? (remainMs / 60000).toFixed(2) : 0;
+            
+            let text = `${r.server}-${r.area}-${r.name}-出货啦！当前进度为：${pct}%/100.00%，当前进闸时间距离强制还有：${remainMins}分。`;
+            showResultNotice("🎉 恭喜出货！", text, "success");
+            
+            addAllKillRecord(r.server, r.name, r.area, '点击出货');
+        }
+
+        function reportFail(idx) {
+            const r = recentRecords[idx];
+            let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
+            let pct = ((r.h * 60 + r.m) / totalMin * 100).toFixed(2);
+            let remainMs = r.forceTimeMs - Date.now();
+            let remainMins = remainMs > 0 ? (remainMs / 60000).toFixed(2) : 0;
+            
+            let text = `${r.server}-${r.area}-${r.name} 很遗憾没有东西哎。当前进度为：${pct}%/100.00%，当前进闸时间距离强制还有：${remainMins}分。请在5分钟后再次尝试哦`;
+            showResultNotice("💀 触发失败", text, "danger");
+            
+            r.cooldownEndTime = Date.now() + 5 * 60 * 1000;
+            renderRecentList();
+        }
+
+        function showResultNotice(title, text, type) {
+            document.getElementById('resultNoticeTitle').innerText = title;
+            document.getElementById('resultNoticeTitle').style.color = type === 'success' ? 'var(--accent)' : 'var(--red)';
+            document.getElementById('resultNoticeText').value = text;
+            document.getElementById('resultNoticeModal').style.display = 'flex';
+        }
+
+        function copyResultNotice() {
+            navigator.clipboard.writeText(document.getElementById('resultNoticeText').value).then(() => showToast('📋 结果已复制'));
+        }
+
         function formatDateObj(d) {
             return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
         }
 
         function removeRecent(idx) { recentRecords.splice(idx, 1); renderRecentList(); saveLocalState(); }
+
+        function openAllKillRecordsModal() {
+            document.getElementById('allKillRecordsModal').style.display = 'flex';
+            document.getElementById('killRecordsSearchInput').value = '';
+            renderAllKillRecordsList();
+        }
+
+        function renderAllKillRecordsList() {
+            const keyword = document.getElementById('killRecordsSearchInput').value.toLowerCase();
+            const list = document.getElementById('allKillRecordsList');
+            list.innerHTML = '';
+            
+            const filtered = allKillRecords.filter(r => r.name.toLowerCase().includes(keyword) || r.server.toLowerCase().includes(keyword));
+            
+            if (filtered.length === 0) {
+                list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">没有找到记录</div>`;
+                return;
+            }
+            
+            filtered.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div>
+                        <span class="history-type" style="background:var(--accent); color:var(--panel);">${r.progress}</span>
+                        <strong>[${r.server}]</strong> ${r.name} <span style="color:var(--text-muted); font-size:12px;">(${r.area})</span>
+                    </div>
+                    <div style="color:var(--text-muted); font-size:12px; font-family:monospace;">
+                        ${r.time}
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function exportKillRecords() {
+            if (allKillRecords.length === 0) { showToast('⚠️ 没有可导出的记录'); return; }
+            let text = "时间,服务器,S怪名称,地区,备注\n";
+            allKillRecords.forEach(r => {
+                text += `${r.time},${r.server},${r.name},${r.area},${r.progress}\n`;
+            });
+            const blob = new Blob([text], { type: 'text/csv;charset=utf-8' }); 
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; 
+            const now = new Date();
+            a.download = `FF14出货记录_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); 
+            showToast("💾 出货记录已导出！");
+        }
+
+        function clearAllKillRecords() {
+            if(confirm("确定要清空所有出货记录吗？此操作不可恢复！")) {
+                allKillRecords = [];
+                localStorage.removeItem('ff14_all_kill_records');
+                renderAllKillRecordsList();
+                showToast("🗑️ 记录已清空");
+            }
+        }
         
-        // ================== 多开悬浮窗逻辑 ==================
         function summonFloatingCountdownFromRecord(idx) {
             const r = recentRecords[idx]; 
             let existingWin = activeFloatingWindows.find(w => w.recordId === r.id);
@@ -3837,7 +3939,6 @@
                 valEl.className = 'fc-timer-val ' + colorClass;
                 div.querySelector('.fc-timer-desc').innerText = descText;
                 
-                // 天气状态
                 const wRow = div.querySelector(`#fc-weather-row-${winId}`);
                 const wVal = div.querySelector(`#fc-weather-val-${winId}`);
                 if (weatherTargetEndTime) {
@@ -3872,7 +3973,6 @@
                 rServer: server
             });
         }
-        // =======================================================
 
         function formatFateTime(d) { return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; }
         function renderFateRecords() {
@@ -4029,7 +4129,12 @@
             updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList(); renderRouteTriggerList();
             renderRecentList(); calcManual(); updateToolboxBadges();
             initGlobalServerLock();
-            checkUpdateModal(); // 初始化版本更新弹窗
+            checkUpdateModal(); 
+            
+            try {
+                const savedKillRecords = localStorage.getItem('ff14_all_kill_records');
+                if (savedKillRecords) allKillRecords = JSON.parse(savedKillRecords);
+            } catch(e) {}
         }
 
         function addHistory(type, content) {
