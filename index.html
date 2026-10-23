@@ -1417,6 +1417,164 @@
     <canvas id="canvas"></canvas>
 
     <script>
+        // ==================================================================
+        // ✨ 【新增模块】S怪 出货时间预估引擎 v1.0（只做新增，不改动任何原有逻辑）
+        // ------------------------------------------------------------------
+        // 原理：从历史"出货记录"里学习【进闸 → 出货】的真实存活时长，
+        //       用「时间衰减加权均值 + 中位数 + 版本先验」四层融合，
+        //       产出「预估出货时刻」与「出货进度（%）」。
+        // ==================================================================
+        const PredictorConfig = {
+            // 无历史样本时的版本先验（单位：小时）
+            PRIOR_LIVING_HOURS: { '7.0': 1.5, '6.0': 3.0, '5.0': 8.0, '4.0': 15.0 },
+            PRIOR_WEIGHT: 2,                 // 先验等效虚拟样本数
+            DECAY_HALF_LIFE_DAYS: 30,        // 时间衰减半衰期（30天前的记录权重减半）
+            MIN_VALID_LIVING_MIN: 10,        // 有效存活下限（分钟）过滤抢开/异常数据
+            MAX_VALID_LIVING_MIN: 48 * 60,   // 有效存活上限（分钟）
+            MAX_RECORDS: 2000                // 出货记录上限（防止 localStorage 爆掉）
+        };
+
+        class SMonsterPredictor {
+            constructor(getRecords) {
+                this._getRecords = getRecords;   // () => allKillRecords
+                this._cache = {};
+            }
+            invalidate() { this._cache = {}; }
+
+            /** 时间衰减权重：每 30 天权重减半 */
+            _weight(killTimeMs) {
+                if (!killTimeMs) return 0.1;
+                const days = (Date.now() - killTimeMs) / 86400000;
+                return Math.pow(0.5, Math.max(0, days) / PredictorConfig.DECAY_HALF_LIFE_DAYS);
+            }
+
+            /** 提取某S怪的历史有效样本（含 livingMin 才可用） */
+            _samples(name) {
+                const recs = (this._getRecords() || []);
+                return recs
+                    .filter(r => r && r.name === name && r.livingMin != null)
+                    .filter(r => r.livingMin >= PredictorConfig.MIN_VALID_LIVING_MIN
+                              && r.livingMin <= PredictorConfig.MAX_VALID_LIVING_MIN)
+                    .map(r => ({ livingMin: r.livingMin, weight: this._weight(r.killTimeMs) }));
+            }
+
+            /** 核心：预估期望存活时长（分钟）—— 四层融合 */
+            expectedLivingMinutes(name, version) {
+                const key = name + '|' + version;
+                if (this._cache[key]) return this._cache[key];
+
+                const samples = this._samples(name);
+                const prior = (PredictorConfig.PRIOR_LIVING_HOURS[version] || 6) * 60;
+                const pw = PredictorConfig.PRIOR_WEIGHT;
+
+                // ① 加权均值（含先验）
+                let sumW = pw, sumWV = prior * pw;
+                samples.forEach(s => { sumW += s.weight; sumWV += s.weight * s.livingMin; });
+                const mean = sumWV / sumW;
+
+                // ② 中位数
+                const sorted = samples.map(s => s.livingMin).sort((a, b) => a - b);
+                const median = sorted.length === 0 ? prior
+                    : (sorted.length % 2
+                        ? sorted[(sorted.length - 1) >> 1]
+                        : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2);
+
+                // ③ 均值与中位数混合（样本越多越信中位数，抗异常值）
+                const n = samples.length;
+                const blendW = Math.min(0.7, n / (n + 3));
+                const expected = mean * (1 - blendW) + median * blendW;
+
+                // ④ 标准差估计
+                let stddev = prior * 0.5;
+                if (n >= 2) {
+                    let vW = 0, vWV = 0;
+                    samples.forEach(s => { vW += s.weight; vWV += s.weight * Math.pow(s.livingMin - mean, 2); });
+                    stddev = vW > 0 ? Math.sqrt(vWV / vW) : prior * 0.5;
+                }
+
+                const result = {
+                    expectedLivingMin: expected,
+                    stddev,
+                    sampleCount: n,
+                    confidence: Math.min(1, n / 5),
+                    prior, median, mean
+                };
+                this._cache[key] = result;
+                return result;
+            }
+
+            /**
+             * 综合预估
+             * @param {Object} ctx { name, version, gateTimeMs, forceTimeMs, isGreen }
+             */
+            predict(ctx) {
+                const { name, version, gateTimeMs, forceTimeMs, isGreen } = ctx || {};
+                const nowMs = Date.now();
+                const ver = version || '6.0';
+                const stats = this.expectedLivingMinutes(name, ver);
+
+                // 预估出货时刻 = 进闸时间 + 期望存活时长，并 clamp 到强制时间
+                const baseGate = gateTimeMs || nowMs;
+                let predictedKillMs = baseGate + stats.expectedLivingMin * 60000;
+                if (forceTimeMs) predictedKillMs = Math.min(predictedKillMs, forceTimeMs);
+
+                // 出货进度 = 已存活 / 期望存活（仅在已进闸时计算）
+                let progressPct = 0;
+                let elapsedLivingMin = 0;
+                if (isGreen && gateTimeMs && nowMs > gateTimeMs) {
+                    elapsedLivingMin = (nowMs - gateTimeMs) / 60000;
+                    progressPct = Math.min(200, (elapsedLivingMin / stats.expectedLivingMin) * 100);
+                    if (progressPct < 0) progressPct = 0;
+                }
+
+                return {
+                    stats,
+                    predictedKillMs,
+                    predictedKillTime: new Date(predictedKillMs),
+                    progressPct,
+                    elapsedLivingMin,
+                    remainingMs: Math.max(0, predictedKillMs - nowMs),
+                    isOverdue: nowMs > predictedKillMs,
+                    isTail: progressPct >= 150   // 超过期望 1.5 倍：强烈建议转场
+                };
+            }
+        }
+
+        /**
+         * 【新增】为出货记录补齐预估值所需字段（version / killTimeMs / triggerTimeMs / livingMin）
+         * 该方法只"追加字段"，绝不修改 addAllKillRecord 已有的 time/server/name/area/progress
+         */
+        function enrichKillRecordForPredictor(record, monsterName, extra) {
+            if (!record) return;
+            extra = extra || {};
+
+            // 1) 版本
+            const dbMonster = S_MONSTERS.find(m => m.name === monsterName);
+            record.version = (dbMonster && dbMonster.version) || extra.version || '6.0';
+
+            // 2) 出货时刻
+            record.killTimeMs = record.killTimeMs || Date.now();
+
+            // 3) 进闸时刻：优先取显式传入，其次取当前手动计算的进闸时间
+            let triggerTimeMs = extra.triggerTimeMs || null;
+            if (!triggerTimeMs && typeof currentManualCalcData !== 'undefined' && currentManualCalcData && currentManualCalcData.targetGateTime) {
+                triggerTimeMs = currentManualCalcData.targetGateTime.getTime();
+            }
+            record.triggerTimeMs = triggerTimeMs;
+
+            // 4) 存活时长（进闸→出货），仅当进闸早于出货且落在有效区间才采纳
+            let livingMin = null;
+            if (triggerTimeMs && triggerTimeMs < record.killTimeMs) {
+                livingMin = (record.killTimeMs - triggerTimeMs) / 60000;
+                if (livingMin < PredictorConfig.MIN_VALID_LIVING_MIN ||
+                    livingMin > PredictorConfig.MAX_VALID_LIVING_MIN) {
+                    livingMin = null;
+                }
+            }
+            record.livingMin = livingMin;
+            record.isWeather = ['奇里格', '布弗鲁', '巨大鳐'].some(k => monsterName.indexOf(k) !== -1);
+        }
+
         // ========== 版本更新弹窗与自定义逻辑 ==========
         // 默认的更新内容（HTML格式）
         const DEFAULT_UPDATE_CONTENT = `
@@ -3291,18 +3449,34 @@
         document.querySelectorAll('input[name="mStatus"]').forEach(el => el.addEventListener('change', () => { updateSpecialCounterUI(); autoCorrect(); }));
 
         function markManualKilled() {
-            document.querySelector('input[name="mStatus"][value="red"]').checked = true;
-            mHour.value = 0; mMin.value = 0; updateSpecialCounterUI(); autoCorrect();
-            
             const server = mServerSelect.value;
             const name = mMonsterSelect.value.split('|')[0];
             const area = mMonsterSelect.value.split('|')[1];
-            if (name && name !== '未知' && server) {
-                addAllKillRecord(server, name, area, '手动标记击杀');
-            }
+            if (!name || name === '未知' || !server) { showToast('⚠️ 请先选择有效的S怪和服务器'); return; }
+
+            const h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0;
+            const livingMin = h * 60 + m;
+            
+            // 1. 记录出货
+            addAllKillRecord(server, name, area, '手动标记击杀', {
+                triggerTimeMs: Date.now() - livingMin * 60000,
+                isGreen: false
+            });
+
+            // 2. 重置为 CD 状态
+            document.querySelector('input[name="mStatus"][value="red"]').checked = true;
+            mHour.value = 0; 
+            mMin.value = 0;
+            updateSpecialCounterUI(); 
+            autoCorrect(); 
+
+            // 3. 自动加进最近列表并保存本地
+            addToRecentList(); 
+            
+            showToast("🔪 已记录击杀，该S怪进入 84h CD 并加入追踪列表");
         }
 
-        function addAllKillRecord(server, name, area, progress) {
+        function addAllKillRecord(server, name, area, progress, extra) {
             const now = new Date();
             const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
             
@@ -3314,6 +3488,14 @@
                 progress: progress
             });
             localStorage.setItem('ff14_all_kill_records', JSON.stringify(allKillRecords));
+
+            // ✨ 【新增】为出货记录补齐预估引擎所需字段（只追加，不改动上面已有字段）
+            enrichKillRecordForPredictor(allKillRecords[0], name, extra);
+            if (allKillRecords.length > PredictorConfig.MAX_RECORDS) {
+                allKillRecords.length = PredictorConfig.MAX_RECORDS;
+            }
+            localStorage.setItem('ff14_all_kill_records', JSON.stringify(allKillRecords));
+            if (window.__predictor) window.__predictor.invalidate();
         }
 
         function startWeatherCountdown() {
@@ -3549,8 +3731,8 @@
             // 检查冷却是否过期并刷新列表
             let hasExpiredCooldown = false;
             recentRecords.forEach(r => {
-                if (r.cooldownEndTime && r.cooldownEndTime <= Date.now()) {
-                    r.cooldownEndTime = 0;
+                if (r.actionCooldownEndTime && r.actionCooldownEndTime <= Date.now()) {
+                    r.actionCooldownEndTime = 0;
                     hasExpiredCooldown = true;
                 }
             });
@@ -3597,7 +3779,11 @@
                 gateTimeMs: targetGateTime ? targetGateTime.getTime() : null, 
                 forceTimeMs: targetForceTime.getTime(),
                 weatherTargetEndTime: weatherTargetEndTime,
-                cooldownEndTime: 0
+                cooldownEndTime: 0,
+                actionCooldownEndTime: 0,
+                shipped: false,
+                failed: false,
+                isAutoFailed: false
             };
             
             recentRecords.unshift(record); 
@@ -3647,7 +3833,71 @@
                         </div>
                     </div>
                 `;
+
+                // ✨ 【新增】出货预估区块：预估出货时刻 + 出货进度（纯追加，不影响上面原有 progressHtml）
+                let estHtml = '';
+                try {
+                    if (window.__predictor) {
+                        const _dbM = S_MONSTERS.find(sm => sm.name === r.name);
+                        const _ver = (_dbM && _dbM.version) || '6.0';
+                        const pred = window.__predictor.predict({
+                            name: r.name,
+                            version: _ver,
+                            gateTimeMs: r.gateTimeMs,
+                            forceTimeMs: r.forceTimeMs,
+                            isGreen: r.isGreen
+                        });
+
+                        // 系统直接判定：若已超过预估出货时间，且没有手动点过出货或寄了，自动判定为寄了！
+                        if (pred.isOverdue && !r.shipped && !r.failed) {
+                            r.failed = true;
+                            r.isAutoFailed = true;
+                            r.actionCooldownEndTime = Date.now() + 5 * 60 * 1000;
+                        }
+
+                        const cColor = pred.isTail ? 'var(--red)' : (pred.isOverdue ? 'var(--gold)' : 'var(--accent)');
+                        // 样本太少时给个更好看的名字，避免用户觉得不准
+                        const confText = pred.stats.sampleCount >= 5 ? `样本×${pred.stats.sampleCount}` : `版本先验预估`;
+                        const pctShow = pred.progressPct > 100 ? `>100%` : `${pred.progressPct.toFixed(0)}%`;
+                        
+                        estHtml = `
+                            <div class="recent-time-block">
+                                <span class="res-label">🎯 预估出货</span>
+                                <span class="recent-time-val" style="color:${cColor}">${formatDateObj(pred.predictedKillTime)}</span>
+                            </div>
+                            <div class="recent-progress-block" style="border-left:1px solid var(--border); padding-left:15px; width:130px;">
+                                <div style="display:flex; justify-content:space-between; font-size:11px;">
+                                    <span style="color:var(--text-muted);">出货进度</span>
+                                    <span style="font-weight:bold; color:${cColor};">${pctShow}${pred.isTail ? ' ⚠️' : ''}</span>
+                                </div>
+                                <div class="recent-progress-bar">
+                                    <div class="recent-progress-fill" style="width:${Math.min(100, pred.progressPct)}%; background:linear-gradient(90deg, var(--gold), var(--red));"></div>
+                                </div>
+                                <div style="font-size:10px; color:var(--text-muted); text-align:right; margin-top:2px;">
+                                    ${r.isGreen ? ('剩余 ' + formatDHMS(pred.remainingMs)) : '等待进闸'} · ${confText}
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch(e) { estHtml = ''; }
+
+                let isCooldown = r.actionCooldownEndTime && Date.now() < r.actionCooldownEndTime;
+                let cooldownHtml = isCooldown ? `<div style="font-size:12px; color:var(--red); font-weight:bold; margin-top:5px;" class="cooldown-timer" data-target="${r.actionCooldownEndTime}">操作冷却: <span></span></div>` : '';
                 
+                // 按钮状态互斥逻辑
+                let disableShip = r.shipped || r.failed || isCooldown;
+                let disableFail = r.shipped || r.failed || isCooldown;
+                
+                let shipClass = r.shipped ? 'btn btn-outline' : 'btn btn-accent';
+                let shipText = r.shipped ? '🎉 已出货' : '🎉 出货了';
+                let shipStyle = 'padding:6px 10px; font-size:12px;';
+                if (disableShip) shipStyle += ' opacity:0.5; cursor:not-allowed;';
+
+                let failClass = r.failed ? 'btn btn-outline' : 'btn btn-red';
+                let failText = r.failed ? (r.isAutoFailed ? '💀 超时已寄' : '💀 已寄了') : '💀 寄了';
+                let failStyle = 'padding:6px 10px; font-size:12px;';
+                if (disableFail) failStyle += ' opacity:0.5; cursor:not-allowed;';
+
                 if (r.weatherTargetEndTime) {
                     const wDiff = r.weatherTargetEndTime - now;
                     if (wDiff > 0) {
@@ -3657,10 +3907,6 @@
                         weatherHtml = `<div class="recent-time-block"><span class="res-label">天气状态</span><span class="recent-time-val" style="color:var(--gold)">天气剩余 <span class="fc-timer" data-target="${wEnd}"></span></span></div>`;
                     }
                 }
-
-                let isCooldown = r.cooldownEndTime && Date.now() < r.cooldownEndTime;
-                let cooldownHtml = isCooldown ? `<div style="font-size:12px; color:var(--red); font-weight:bold; margin-top:5px;" class="cooldown-timer" data-target="${r.cooldownEndTime}">冷却中: <span></span></div>` : '';
-                let btnDisabledAttr = isCooldown ? 'disabled style="opacity:0.5; cursor:not-allowed; background:var(--text-muted);"' : '';
 
                 html += `
                 <div class="recent-item">
@@ -3674,13 +3920,14 @@
                             ${forceTimerHtml}
                             ${weatherHtml}
                             ${progressHtml}
+                            ${estHtml}
                         </div>
                         ${cooldownHtml}
                     </div>
                     <div style="display:flex; flex-direction:column; gap:5px;">
                         <div style="display:flex; gap:5px;">
-                            <button class="btn btn-accent" onclick="reportShipment(${idx})" style="padding:6px 10px; font-size:12px;">🎉 出货了</button>
-                            <button class="btn btn-red" onclick="reportFail(${idx})" ${btnDisabledAttr} style="padding:6px 10px; font-size:12px;">💀 寄了</button>
+                            <button class="${shipClass}" onclick="reportShipment(${idx})" style="${shipStyle}" ${disableShip ? 'disabled' : ''}>${shipText}</button>
+                            <button class="${failClass}" onclick="reportFail(${idx})" style="${failStyle}" ${disableFail ? 'disabled' : ''}>${failText}</button>
                         </div>
                         <div style="display:flex; gap:5px;">
                             <button class="btn btn-outline" onclick="summonFloatingCountdownFromRecord(${idx})" style="flex:1; padding:6px 10px; font-size:12px;">⏱️ 召唤浮窗</button>
@@ -3695,6 +3942,13 @@
         
         function reportShipment(idx) {
             const r = recentRecords[idx];
+            if (r.shipped) { showToast('⚠️ 该记录已经点击过出货了'); return; }
+            if (r.failed) { showToast('⚠️ 该记录已被判定为寄了，无法出货'); return; }
+            if (r.actionCooldownEndTime && Date.now() < r.actionCooldownEndTime) {
+                showToast(`⚠️ 操作太频繁，请等待 ${Math.ceil((r.actionCooldownEndTime - Date.now()) / 1000)} 秒`); 
+                return;
+            }
+            
             let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
             let pct = ((r.h * 60 + r.m) / totalMin * 100).toFixed(2);
             let remainMs = r.forceTimeMs - Date.now();
@@ -3703,11 +3957,22 @@
             let text = `${r.server}-${r.area}-${r.name}-出货啦！当前进度为：${pct}%/100.00%，当前进闸时间距离强制还有：${remainMins}分。`;
             showResultNotice("🎉 恭喜出货！", text, "success");
             
-            addAllKillRecord(r.server, r.name, r.area, '点击出货');
+            r.shipped = true;
+            r.actionCooldownEndTime = Date.now() + 5 * 60 * 1000;
+
+            addAllKillRecord(r.server, r.name, r.area, '点击出货', { triggerTimeMs: r.gateTimeMs, isGreen: r.isGreen });
+            renderRecentList();
         }
 
         function reportFail(idx) {
             const r = recentRecords[idx];
+            if (r.shipped) { showToast('⚠️ 已经出货，无法标记寄了'); return; }
+            if (r.failed) { showToast('⚠️ 该记录已经标记为寄了'); return; }
+            if (r.actionCooldownEndTime && Date.now() < r.actionCooldownEndTime) {
+                showToast(`⚠️ 操作太频繁，请等待 ${Math.ceil((r.actionCooldownEndTime - Date.now()) / 1000)} 秒`); 
+                return;
+            }
+            
             let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
             let pct = ((r.h * 60 + r.m) / totalMin * 100).toFixed(2);
             let remainMs = r.forceTimeMs - Date.now();
@@ -3716,7 +3981,9 @@
             let text = `${r.server}-${r.area}-${r.name} 很遗憾没有东西哎。当前进度为：${pct}%/100.00%，当前进闸时间距离强制还有：${remainMins}分。请在5分钟后再次尝试哦`;
             showResultNotice("💀 触发失败", text, "danger");
             
-            r.cooldownEndTime = Date.now() + 5 * 60 * 1000;
+            r.failed = true;
+            r.isAutoFailed = false;
+            r.actionCooldownEndTime = Date.now() + 5 * 60 * 1000;
             renderRecentList();
         }
 
@@ -3791,6 +4058,8 @@
                 allKillRecords = [];
                 localStorage.removeItem('ff14_all_kill_records');
                 renderAllKillRecordsList();
+                // ✨ 【新增】清空后让预估缓存失效
+                if (window.__predictor) window.__predictor.invalidate();
                 showToast("🗑️ 记录已清空");
             }
         }
@@ -3863,6 +4132,7 @@
                         <div class="fc-timer-val" style="font-size:18px;"></div>
                         <div class="fc-timer-desc" style="font-size:12px; color:var(--text-muted); margin-top:5px;"></div>
                     </div>
+                    <div id="fc-est-${winId}"></div>
                 </div>
             `;
 
@@ -3905,6 +4175,10 @@
                 const text = div.querySelector('.fc-body').innerText;
                 navigator.clipboard.writeText(`[${server}] ${monsterName}\n${text}`).then(() => showToast("📋 浮窗信息已复制"));
             };
+
+            // ✨ 【新增】浮窗预估所需的版本信息（只读，不改变浮窗已有行为）
+            const _floatDbMonster = S_MONSTERS.find(sm => sm.name === monsterName);
+            const _floatVersion = (_floatDbMonster && _floatDbMonster.version) || '6.0';
 
             const updateWin = () => {
                 if (!div.parentElement) return;
@@ -3958,6 +4232,45 @@
                     }
                 } else {
                     wRow.style.display = 'none';
+                }
+
+                // ✨ 【新增】浮窗内展示"预估出货时刻 + 出货进度"（追加，不影响上面的倒计时逻辑）
+                const estBox = div.querySelector(`#fc-est-${winId}`);
+                if (estBox) {
+                    try {
+                        if (window.__predictor) {
+                            const pred = window.__predictor.predict({
+                                name: monsterName,
+                                version: _floatVersion,
+                                gateTimeMs: gateTime ? gateTime.getTime() : null,
+                                forceTimeMs: forceTime.getTime(),
+                                isGreen: isGreen
+                            });
+                            const cColor = pred.isTail ? 'var(--red)' : (pred.isOverdue ? 'var(--gold)' : 'var(--accent)');
+                            const confText = pred.stats.sampleCount >= 5 ? `样本×${pred.stats.sampleCount}` : `版本先验预估`;
+                            const pctShow = pred.progressPct > 100 ? `>100%` : `${pred.progressPct.toFixed(0)}%`;
+                            
+                            estBox.innerHTML = `
+                                <div class="fc-row" style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--border);">
+                                    <span class="fc-label">🎯 预估出货</span>
+                                    <span class="fc-val" style="color:${cColor}; font-size:12px;">
+                                        ${formatDateObj(pred.predictedKillTime)} (${pctShow})
+                                    </span>
+                                </div>
+                                <div class="fc-row" style="margin-bottom:0;">
+                                    <span class="fc-label" style="font-size:11px;">出货进度条</span>
+                                    <span class="fc-val" style="color:var(--text-muted); font-size:11px;">
+                                        ${confText}
+                                    </span>
+                                </div>
+                                <div style="width:100%; height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:4px;">
+                                    <div style="height:100%; width:${Math.min(100, pred.progressPct)}%; background:linear-gradient(90deg, var(--gold), var(--red)); transition:width 0.3s;"></div>
+                                </div>
+                            `;
+                        } else {
+                            estBox.innerHTML = '';
+                        }
+                    } catch (e) { estBox.innerHTML = ''; }
                 }
             };
 
@@ -4135,6 +4448,25 @@
                 const savedKillRecords = localStorage.getItem('ff14_all_kill_records');
                 if (savedKillRecords) allKillRecords = JSON.parse(savedKillRecords);
             } catch(e) {}
+
+            // ✨ 【新增】补齐历史出货记录字段 + 让预估缓存重新计算
+            try {
+                if (Array.isArray(allKillRecords)) {
+                    allKillRecords.forEach(r => {
+                        if (!r) return;
+                        if (!r.version) {
+                            const _m = S_MONSTERS.find(sm => sm.name === r.name);
+                            r.version = _m ? _m.version : '6.0';
+                        }
+                        if (!r.killTimeMs && r.time) {
+                            const _d = new Date(r.time.replace(/-/g, '/'));
+                            if (!isNaN(_d.getTime())) r.killTimeMs = _d.getTime();
+                        }
+                    });
+                }
+                if (window.__predictor) window.__predictor.invalidate();
+                renderRecentList();
+            } catch(e) {}
         }
 
         function addHistory(type, content) {
@@ -4182,6 +4514,9 @@
         }
         function addCounter() { const name = mMonsterSelect.value.split('|')[0]; if (specialCounters.hasOwnProperty(name)) { specialCounters[name] += 100; updateSpecialCounterUI(); saveLocalState(); showToast(`✅ 计数已增加`); } }
         function resetCounter() { const name = mMonsterSelect.value.split('|')[0]; if (specialCounters.hasOwnProperty(name)) { specialCounters[name] = 0; updateSpecialCounterUI(); saveLocalState(); showToast(`🗑️ 计数已重置`); } }
+
+        // ✨ 【新增】初始化出货预估引擎单例（延迟取 allKillRecords，避免作用域问题）
+        window.__predictor = new SMonsterPredictor(function () { return allKillRecords; });
 
         window.addEventListener('load', () => { setTimeout(() => { loadLocalState(); }, 100); });
     </script>
