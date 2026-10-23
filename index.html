@@ -168,21 +168,31 @@
         .counter-btns { display: flex; gap: 10px; margin-top: 10px; }
 
         .recent-list { margin-top: 20px; border-top: 1px dashed var(--border); padding-top: 15px; }
-        .recent-item { display: flex; justify-content: space-between; align-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 15px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-        .recent-item-info { display: flex; flex-direction: column; gap: 4px; }
-        .recent-item-title { font-weight: bold; font-size: 15px; color: var(--accent); }
-        .recent-item-times { font-size: 13px; color: var(--text-muted); display: flex; gap: 15px; flex-wrap: wrap;}
-        .recent-item-times span { color: var(--text); font-family: monospace; }
+        .recent-item { display: flex; justify-content: space-between; align-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: 0.2s; }
+        .recent-item:hover { border-color: var(--accent); transform: translateX(2px); }
+        .recent-item-info { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; }
+        .recent-item-title { font-weight: bold; font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        .recent-item-times { font-size: 13px; color: var(--text-muted); display: flex; gap: 15px; flex-wrap: wrap; background: var(--input-bg); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); }
+        .recent-time-block { display: flex; flex-direction: column; gap: 2px; }
+        .recent-time-val { font-family: monospace; font-weight: bold; font-size: 14px; }
         
         .manual-result-box { background: var(--input-bg); padding: 15px; border-radius: 8px; font-size: 15px; line-height: 1.8; border: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 30px; min-height: 50px; margin-top: 15px; }
         .res-item { display: flex; flex-direction: column; }
         .res-label { font-size: 12px; color: var(--text-muted); }
         .res-val { font-family: monospace; font-size: 18px; font-weight: bold; }
+        .res-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-family: monospace; display: flex; align-items: center; gap: 5px; }
         .btn-copy-manual { background: var(--input-border); color: var(--accent); border: 1px solid var(--accent); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-left: auto;}
         .btn-copy-manual:hover { background: var(--accent); color: var(--panel); }
         .manual-warn { color: var(--gold); font-size: 12px; width: 100%; margin-top: 5px;}
 
         .extra-area { margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px; display: none; }
+        
+        /* 天气状态指示器 */
+        .weather-status-box { background: rgba(155,89,182,0.1); border: 1px solid var(--purple); border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
+        .weather-status-title { font-size: 13px; color: var(--purple); font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+        .weather-countdown-val { font-family: monospace; font-size: 20px; font-weight: bold; color: var(--gold); }
+        .weather-countdown-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
         .fate-records-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .fate-record-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
         .fate-record-item .fate-time { font-family: monospace; font-weight: bold; color: var(--accent); }
@@ -239,6 +249,7 @@
         
         .countdown-red { color: var(--red); }
         .countdown-blue { color: var(--blue); }
+        .countdown-gold { color: var(--gold); }
         .countdown-green { color: var(--accent); }
         
         .status-text-col { font-size: 13px; font-weight: bold; color: var(--text-muted); }
@@ -294,17 +305,20 @@
         .theme-btn.pink { background: #ffcce0; }
         .theme-btn.sky { background: #4fc3f7; }
 
-        #floatingCountdown { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--panel); border: 1px solid var(--accent); border-radius: 10px; padding: 16px 18px; box-shadow: 0 6px 24px rgba(0,0,0,0.4); z-index: 999; min-width: 280px; max-width: 360px; }
-        #floatingCountdown .fc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-        #floatingCountdown .fc-title { font-size: 13px; color: var(--text-muted); font-weight: bold; }
-        #floatingCountdown .fc-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px; }
-        #floatingCountdown .fc-close:hover { color: var(--red); }
-        #floatingCountdown .fc-body { font-size: 13px; line-height: 1.8; }
-        #floatingCountdown .fc-row { display: flex; justify-content: space-between; gap: 10px; }
-        #floatingCountdown .fc-label { color: var(--text-muted); }
-        #floatingCountdown .fc-val { font-family: monospace; font-weight: bold; }
-        #floatingCountdown .fc-countdown { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-family: monospace; font-size: 15px; font-weight: bold; text-align: center; }
-        #floatingCountdown .fc-tip { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+        /* ============ 多开浮窗样式 ============ */
+        .floating-window { display: none; position: fixed; background: var(--panel); border: 2px solid var(--gold); border-radius: 10px; padding: 15px; box-shadow: 0 6px 24px rgba(0,0,0,0.6); z-index: 9999; min-width: 320px; max-width: 400px; cursor: move; user-select: none; }
+        .floating-window .fc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); cursor: move; }
+        .floating-window .fc-title { font-size: 14px; color: var(--gold); font-weight: bold; }
+        .floating-window .fc-btns { display: flex; gap: 10px; align-items: center; }
+        .floating-window .fc-copy, .floating-window .fc-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px; }
+        .floating-window .fc-copy:hover { color: var(--accent); }
+        .floating-window .fc-close:hover { color: var(--red); }
+        .floating-window .fc-body { font-size: 13px; line-height: 1.8; }
+        .floating-window .fc-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
+        .floating-window .fc-label { color: var(--text-muted); }
+        .floating-window .fc-val { font-family: monospace; font-weight: bold; }
+        .floating-window .fc-countdown { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-family: monospace; font-size: 16px; font-weight: bold; text-align: center; }
+        .floating-window .fc-desc { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 5px; }
 
         /* ============================
            专注排车 全屏页面
@@ -516,7 +530,7 @@
             td { border: none; border-bottom: 1px solid var(--border); position: relative; padding-left: 50%; text-align: right; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; padding-bottom: 15px; padding-right: 15px; }
             td:last-child { border-bottom: none; }
             td::before { content: attr(data-label); position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; color: var(--accent); }
-            #floatingCountdown { left: 10px; right: 10px; max-width: none; }
+            .floating-window { left: 10px !important; right: 10px !important; max-width: none; top: auto !important; bottom: 10px !important; position: relative !important; margin-bottom: 10px; }
             .modal-btns { flex-direction: column; }
             .btn-modal { width: 100%; }
             .recent-item { flex-direction: column; align-items: flex-start; }
@@ -524,6 +538,13 @@
             .time-text-display { width: auto; justify-content: flex-end; }
             .time-edit-inputs { justify-content: flex-end; }
         }
+
+        /* 排车监控面板样式 */
+        .route-monitor-box { background: rgba(243, 156, 18, 0.1); border: 2px solid var(--gold); border-radius: 8px; padding: 15px; margin-bottom: 15px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .route-monitor-title { font-size: 14px; color: var(--gold); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .route-monitor-content { display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; }
+        .route-monitor-item { display: flex; flex-direction: column; gap: 4px; }
+        .route-monitor-val { font-family: monospace; font-size: 16px; font-weight: bold; color: var(--text); }
     </style>
 </head>
 <body data-layout="portrait">
@@ -580,7 +601,7 @@
                         </div>
                     </div>
                     <div class="input-group">
-                        <label>存活时长 / 已进入CD时长 (时 : 分)</label>
+                        <label>存活时长 / 距上次击杀已过多久 (时 : 分)</label>
                         <div class="row-flex">
                             <input type="number" id="mHour" min="0" max="99" value="0"> : <input type="number" id="mMin" min="0" max="59" value="0">
                             <button class="btn btn-red" style="margin-left:auto; padding:6px 10px;" onclick="markManualKilled()">🔪 一键标记已击杀</button>
@@ -614,11 +635,17 @@
             </div>
 
             <div class="input-section extra-area" id="mFogGroup">
-                <div class="section-title" style="color: var(--purple);">🌫️ 大雾天气倒计时 (时:分:秒)</div>
-                <div class="row-flex">
+                <div class="section-title" style="color: var(--purple);">🌫️ 前置天气时间监控</div>
+                <div class="row-flex" style="margin-bottom: 10px;">
                     <input type="number" id="mFogHour" min="0" max="99" value="0"> : 
                     <input type="number" id="mFogMin" min="0" max="59" value="0"> : 
                     <input type="number" id="mFogSec" min="0" max="59" value="0">
+                    <button class="btn btn-accent" onclick="startWeatherCountdown()">⏱️ 保存并开始倒计时</button>
+                </div>
+                <div class="weather-status-box" id="weatherStatusBox">
+                    <div class="weather-status-title" id="weatherStatusTitle">⏳ 距天气出现还有：</div>
+                    <div class="weather-countdown-val" id="weatherCountdownText">00:00:00</div>
+                    <div class="weather-countdown-desc" id="weatherStatusDesc">天气存在时间通常为 1 小时</div>
                 </div>
             </div>
 
@@ -652,8 +679,8 @@
             </div>
 
             <div class="recent-list">
-                <div class="section-title">📋 最近计算记录 (最多保留5条)</div>
-                <div id="recentListContainer"></div>
+                <div class="section-title">📋 最近计算记录 (最多保留20条)</div>
+                <div id="recentListContainer" style="max-height: 400px; overflow-y: auto;"></div>
             </div>
         </div>
     </div>
@@ -978,6 +1005,17 @@
 
             <!-- 右侧：输出与结果 -->
             <div class="focus-col-right">
+                <!-- 实时目标监控面板 -->
+                <div class="route-monitor-box" id="routeMonitorBox">
+                    <div class="route-monitor-title">
+                        <span>🎯 当前带车目标监控</span>
+                        <span id="monitorTargetName" style="color:var(--text); font-size:13px;">未设置目标</span>
+                    </div>
+                    <div class="route-monitor-content" id="monitorContent">
+                        <!-- 动态注入 -->
+                    </div>
+                </div>
+
                 <div id="routeResultBox" class="route-result-box">
                     <div class="section-title" style="color: var(--gold); display: flex; justify-content: space-between; align-items: center; font-size: 16px; flex-wrap: wrap; gap: 10px;">
                         <span>📋 最终发车顺序 (详细版)</span>
@@ -1227,13 +1265,8 @@
         </div>
     </div>
 
-    <div id="floatingCountdown">
-        <div class="fc-header">
-            <span class="fc-title">⏱️ 手动计算 · 倒计时</span>
-            <button class="fc-close" onclick="hideFloatingCountdown()">×</button>
-        </div>
-        <div class="fc-body" id="floatingCountdownBody"></div>
-    </div>
+    <!-- 浮窗容器（用于多开） -->
+    <div id="floatingWindowContainer"></div>
 
     <div id="toast">✅ 操作成功</div>
     <canvas id="canvas"></canvas>
@@ -1319,7 +1352,7 @@
 
         const S_MONSTERS = [
             // 7.0
-            { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥"] }, 
+            { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥", "起立格", "奥山"] }, 
             { name: "伊努索奇", area: "克扎玛乌卡湿地", version: "7.0", alias: ["螳螂", "湿地"] }, 
             { name: "内尤佐缇", area: "亚克特尔树海", version: "7.0", alias: ["鱼粉"] },
             { name: "山谢亚", area: "夏劳尼荒野", version: "7.0", alias: ["山火", "山谢娅", "荒野"] },
@@ -1346,7 +1379,7 @@
             { name: "优昙婆罗花", area: "基拉巴尼亚边区", version: "4.0", alias: ["边花", "花"] },
             { name: "爬骨怪龙", area: "基拉巴尼亚山区", version: "4.0", alias: ["爬爬"] },
             { name: "盐和光", area: "基拉巴尼亚湖区", version: "4.0", alias: ["基佬", "盐基佬", "扔垃圾"] },
-            { name: "巨大鳐", area: "红玉海", version: "4.0", alias: ["窑子", "瑶子", "鳐子"] },
+            { name: "巨大鳐", area: "红玉海", version: "4.0", alias: ["窑子", "瑶子", "鳐子", "巨大瑶"] },
             { name: "伽马", area: "延夏", version: "4.0", alias: ["γ", "伽马"] },
             { name: "兀鲁忽乃朝鲁", area: "太阳神草原", version: "4.0", alias: ["石板", "门板"] }
         ];
@@ -1430,6 +1463,12 @@
         // 触发者弹窗状态
         let currentTriggerSelectIdx = -1;
         let currentAomInput = null; // 用于记录奥山预设里当前操作的input
+
+        // 悬浮窗管理数组
+        let activeFloatingWindows = []; 
+        // 天气倒计时状态
+        let weatherTargetEndTime = null;
+        const WEATHER_DURATION_MS = 3600 * 1000; // 天气默认持续 1 小时
 
         // 折叠
         function toggleManualCard() {
@@ -2899,6 +2938,7 @@
                 if(simpleOutEl) simpleOutEl.value = "";
                 if(logEl) logEl.innerHTML = `<div style="color:var(--red); text-align:center; padding:10px; font-weight:bold;">⚠️ 未能解析出有效的 S怪 信息！<br>请点击上方【修正/手动添加】补录。</div>`;
                 if(ssStatsBox) ssStatsBox.style.display = 'none';
+                document.getElementById('routeMonitorBox').style.display = 'none';
                 calculateRouteTime(); 
                 renderTacticMacros();
                 return;
@@ -3052,7 +3092,34 @@
             calculateRouteTime();
             renderTacticMacros(); // 渲染战术宏
 
+            // 更新监控面板
+            updateRouteMonitor();
+
             localStorage.setItem('ff14_route_cache', JSON.stringify({ text: routeStr.trim(), log: logHtml, monsters: parsedMonsters, expire: Date.now() + 10 * 60 * 1000 }));
+        }
+
+        function updateRouteMonitor() {
+            const box = document.getElementById('routeMonitorBox');
+            if (!isTrackingMode || parsedMonsters.length === 0) { box.style.display = 'none'; return; }
+            
+            const target = parsedMonsters.find(m => m.isTarget && !m.isDead);
+            if (!target) { box.style.display = 'none'; return; }
+            
+            box.style.display = 'block';
+            document.getElementById('monitorTargetName').innerText = `[${target.server}] ${target.name}`;
+            
+            const content = document.getElementById('monitorContent');
+            let html = '';
+            
+            html += `<div class="route-monitor-item"><span class="res-label">地区</span><span class="route-monitor-val" style="color:var(--text-muted); font-size:14px;">${target.area}</span></div>`;
+            html += `<div class="route-monitor-item"><span class="res-label">坐标</span><span class="route-monitor-val" style="color:var(--purple); font-size:14px;">${target.coord}</span></div>`;
+            
+            const isWeather = target.name.includes('奇里格') || target.name.includes('布弗鲁') || target.name.includes('巨大鳐');
+            if (isWeather) {
+                html += `<div class="route-monitor-item"><span class="res-label">天气前置</span><span class="route-monitor-val" style="color:var(--gold); font-size:14px;">是（请使用手动计算开启天气监控）</span></div>`;
+            }
+
+            content.innerHTML = html;
         }
 
         function deleteParsedMonster(idx) { if (confirm(`确定要删除这只怪吗？`)) { parsedMonsters.splice(idx, 1); renderRouteResult(); showToast('🗑️ 已删除'); } }
@@ -3109,9 +3176,21 @@
         let manualTimer = null, mSyncing = false, fateRecords = [];
 
         mMonsterSelect.addEventListener('change', () => {
-            const isQilige = mMonsterSelect.value.includes('奇里格'); const isShanxieya = mMonsterSelect.value.includes('山谢亚');
-            if (isQilige) mFogGroup.style.display = 'block'; else { mFogGroup.style.display = 'none'; mFogHour.value = 0; mFogMin.value = 0; mFogSec.value = 0; }
-            if (isShanxieya) { mFateGroup.style.display = 'block'; renderFateRecords(); } else mFateGroup.style.display = 'none';
+            // 包含天气前置的怪
+            const isWeatherMonster = mMonsterSelect.value.includes('奇里格') || mMonsterSelect.value.includes('布弗鲁') || mMonsterSelect.value.includes('巨大鳐'); 
+            const isShanxieya = mMonsterSelect.value.includes('山谢亚');
+            
+            if (isWeatherMonster) mFogGroup.style.display = 'block'; 
+            else { 
+                mFogGroup.style.display = 'none'; 
+                mFogHour.value = 0; mFogMin.value = 0; mFogSec.value = 0; 
+                document.getElementById('weatherStatusBox').style.display = 'none';
+                weatherTargetEndTime = null;
+            }
+            
+            if (isShanxieya) { mFateGroup.style.display = 'block'; renderFateRecords(); } 
+            else mFateGroup.style.display = 'none';
+            
             updateSpecialCounterUI(); autoCorrect();
         });
 
@@ -3122,51 +3201,257 @@
             mHour.value = 0; mMin.value = 0; updateSpecialCounterUI(); autoCorrect();
         }
 
+        // === 天气倒计时处理 ===
+        function startWeatherCountdown() {
+            const h = parseInt(mFogHour.value) || 0;
+            const m = parseInt(mFogMin.value) || 0;
+            const s = parseInt(mFogSec.value) || 0;
+            const totalSec = h * 3600 + m * 60 + s;
+            
+            if (totalSec <= 0) {
+                showToast('⚠️ 请设置未来的天气等待时间');
+                return;
+            }
+            
+            weatherTargetEndTime = Date.now() + totalSec * 1000;
+            document.getElementById('weatherStatusBox').style.display = 'block';
+            showToast('✅ 天气倒计时已启动，进闸时间将受天气限制');
+            tickWeatherCountdown(); // 立即触发一次
+            calcManual(); // 重新计算触发时间
+        }
+
+        function tickWeatherCountdown() {
+            if (!weatherTargetEndTime) return;
+            const box = document.getElementById('weatherStatusBox');
+            const textEl = document.getElementById('weatherCountdownText');
+            const titleEl = document.getElementById('weatherStatusTitle');
+            const descEl = document.getElementById('weatherStatusDesc');
+            
+            const now = Date.now();
+            const diff = weatherTargetEndTime - now;
+            
+            if (diff > 0) {
+                // 还没进天气
+                titleEl.innerHTML = '⏳ 距天气出现还有：';
+                textEl.innerText = formatDHMS(diff);
+                descEl.innerText = '天气存在时间通常为 1 小时';
+                
+                if (diff < 15 * 60 * 1000) { // 15分钟内闪烁
+                    box.style.animation = 'blink 1s infinite';
+                    textEl.style.color = 'var(--red)';
+                } else {
+                    box.style.animation = 'none';
+                    textEl.style.color = 'var(--purple)';
+                }
+            } else if (diff > -WEATHER_DURATION_MS) {
+                // 天气中
+                const remain = WEATHER_DURATION_MS + diff; // diff 是负数
+                titleEl.innerHTML = '🌫️ 当前天气持续中，剩余：';
+                textEl.innerText = formatDHMS(remain);
+                descEl.innerText = '请把握机会尽快触发！';
+                box.style.animation = 'none';
+                textEl.style.color = 'var(--gold)';
+            } else {
+                // 天气结束
+                titleEl.innerHTML = '❌ 天气已结束';
+                textEl.innerText = '00:00:00';
+                descEl.innerText = '本次天气前置已失效';
+                box.style.animation = 'none';
+                textEl.style.color = 'var(--text-muted)';
+            }
+        }
+
+        // === 彻底反转 CD 期的进度条，使其符合直觉 ===
         function autoCorrect() {
             if (mSyncing) return; mSyncing = true;
             let h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0, p = parseInt(mPercent.value) || 0;
             if (m > 59) { h += Math.floor(m / 60); m = m % 60; }
             if (h < 0) h = 0; if (h > 99) h = 99; if (m < 0) m = 0; if (p < 0) p = 0; if (p > 100) p = 100;
-            const isGreen = document.querySelector('input[name="mStatus"]:checked').value === 'green';
-            const totalMin = isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
-            if (h === 0 && m === 0 && p > 0) { const calcMin = Math.floor(totalMin * (p / 100)); h = Math.floor(calcMin / 60); m = calcMin % 60; } 
-            else if (h > 0 || m > 0) p = Math.floor(((h * 60 + m) / totalMin) * 100);
+            
+            let isGreen = document.querySelector('input[name="mStatus"]:checked').value === 'green';
+            
+            if (isGreen) {
+                // 存活状态：正计时（0% -> 100%）
+                const totalMin = LT_HOURS * 60;
+                if (h === 0 && m === 0 && p > 0) { const calcMin = Math.floor(totalMin * (p / 100)); h = Math.floor(calcMin / 60); m = calcMin % 60; } 
+                else if (h > 0 || m > 0) { p = Math.floor(((h * 60 + m) / totalMin) * 100); }
+                if (p > 100) p = 100;
+            } else {
+                // CD状态：倒计时（100% -> 0%）
+                const totalMin = CD_HOURS * 60;
+                if (h === 0 && m === 0 && p > 0 && p < 100) { 
+                    // 进度条剩余的比例，反推已经过去的时间
+                    const remainMin = Math.floor(totalMin * (p / 100)); 
+                    const passedMin = totalMin - remainMin;
+                    h = Math.floor(passedMin / 60); m = passedMin % 60; 
+                } 
+                else if (h > 0 || m > 0) { 
+                    const passedMin = h * 60 + m;
+                    const remainMin = Math.max(0, totalMin - passedMin);
+                    p = Math.floor((remainMin / totalMin) * 100); 
+                }
+                if (h * 60 + m >= totalMin) p = 0;
+            }
+            
             mHour.value = h; mMin.value = m; mPercent.value = p; mSyncing = false; calcManual(); saveLocalState();
         }
 
         [mHour, mMin, mPercent].forEach(el => { el.addEventListener('blur', autoCorrect); el.addEventListener('keydown', (e) => { if(e.key === 'Enter') autoCorrect(); }); el.addEventListener('input', calcManual); });
-        mFogHour.addEventListener('input', autoCorrect); mFogMin.addEventListener('input', autoCorrect); mFogSec.addEventListener('input', autoCorrect);
+        mFogHour.addEventListener('input', () => { weatherTargetEndTime = null; document.getElementById('weatherStatusBox').style.display = 'none'; calcManual(); });
+        mFogMin.addEventListener('input', () => { weatherTargetEndTime = null; document.getElementById('weatherStatusBox').style.display = 'none'; calcManual(); });
+        mFogSec.addEventListener('input', () => { weatherTargetEndTime = null; document.getElementById('weatherStatusBox').style.display = 'none'; calcManual(); });
 
+        // === 修复状态显示与时间描述优化 ===
         function calcManual() {
             if (manualTimer) clearInterval(manualTimer);
             const h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0;
-            const isGreen = document.querySelector('input[name="mStatus"]:checked').value === 'green';
-            const isQilige = mMonsterSelect.value.includes('奇里格'); const isShanxieya = mMonsterSelect.value.includes('山谢亚');
-            let fogSec = 0; if (isQilige) fogSec = (parseInt(mFogHour.value) || 0) * 3600 + (parseInt(mFogMin.value) || 0) * 60 + (parseInt(mFogSec.value) || 0);
-            const now = new Date(); const timeSec = h * 3600 + m * 60;
-            let targetGateTime, targetForceTime; let isDynamicGate = false;
-            if (isGreen) {
-                const remainSec = Math.max(0, LT_HOURS * 3600 - timeSec); targetForceTime = new Date(now.getTime() + remainSec * 1000);
-                if (fogSec === 0) { targetGateTime = null; isDynamicGate = true; } else targetGateTime = new Date(now.getTime() + fogSec * 1000);
+            const isGreenRadio = document.querySelector('input[name="mStatus"]:checked').value === 'green';
+            const isWeatherMonster = mMonsterSelect.value.includes('奇里格') || mMonsterSelect.value.includes('布弗鲁') || mMonsterSelect.value.includes('巨大鳐');
+            const isShanxieya = mMonsterSelect.value.includes('山谢亚');
+            
+            const now = new Date(); 
+            const timeSec = h * 3600 + m * 60;
+            
+            let targetGateTime, targetForceTime; 
+            let isDynamicGate = false;
+            let stateText = '';
+            let stateColor = '';
+            let gateDesc = '';
+            let forceDesc = '';
+            
+            // 1. 先计算基础的时间
+            let baseGateTimeMs, baseForceTimeMs;
+            if (isGreenRadio) {
+                const remainSec = LT_HOURS * 3600 - timeSec; 
+                baseForceTimeMs = now.getTime() + remainSec * 1000;
+                baseGateTimeMs = now.getTime() - timeSec * 1000;
             } else {
-                const remainCdSec = Math.max(0, CD_HOURS * 3600 - timeSec); const waitSec = Math.max(remainCdSec, fogSec);
-                targetGateTime = new Date(now.getTime() + waitSec * 1000); targetForceTime = new Date(targetGateTime.getTime() + LT_HOURS * 3600 * 1000);
+                const waitSec = Math.max(0, CD_HOURS * 3600 - timeSec); 
+                baseGateTimeMs = now.getTime() + waitSec * 1000;
+                baseForceTimeMs = baseGateTimeMs + LT_HOURS * 3600 * 1000;
             }
-            currentManualCalcData = { isGreen, isShanxieya, h, m, targetGateTime, targetForceTime, isDynamicGate };
+
+            // 2. 天气介入判定 (重点修复)
+            let isWeatherOverride = false;
+            if (isWeatherMonster && weatherTargetEndTime) {
+                // 如果设置了天气，且天气出现时间比基础进闸时间还要晚
+                if (weatherTargetEndTime > baseGateTimeMs) {
+                    baseGateTimeMs = weatherTargetEndTime;
+                    baseForceTimeMs = baseGateTimeMs + LT_HOURS * 3600 * 1000;
+                    isWeatherOverride = true;
+                }
+            }
+
+            targetGateTime = new Date(baseGateTimeMs);
+            targetForceTime = new Date(baseForceTimeMs);
+
+            // 3. 状态判定
+            const nowMs = now.getTime();
+            let isActuallyGreen = false; // 实际是否处于存活期
+
+            if (nowMs < targetGateTime.getTime()) {
+                // 还没进闸
+                isActuallyGreen = false;
+                if (isWeatherOverride) {
+                    stateText = `等待天气进闸`;
+                    stateColor = 'var(--purple)';
+                    gateDesc = `距天气进闸: <span class="fc-timer" data-target="${targetGateTime.getTime()}"></span>`;
+                } else {
+                    stateText = `CD中`;
+                    stateColor = 'var(--red)';
+                    gateDesc = `进闸倒计时: <span class="fc-timer" data-target="${targetGateTime.getTime()}"></span>`;
+                }
+                forceDesc = `强制倒计时: <span class="fc-timer" data-target="${targetForceTime.getTime()}"></span>`;
+            } else if (nowMs >= targetGateTime.getTime() && nowMs < targetForceTime.getTime()) {
+                // 已进闸，存活中
+                isActuallyGreen = true;
+                stateText = `存活中`;
+                stateColor = 'var(--blue)';
+                gateDesc = `已进闸: <span class="fc-timer-neg" data-target="${targetGateTime.getTime()}"></span>`;
+                forceDesc = `强制倒计时: <span class="fc-timer" data-target="${targetForceTime.getTime()}"></span>`;
+            } else {
+                // 已强制
+                isActuallyGreen = true;
+                stateText = `已强制消失`;
+                stateColor = 'var(--red)';
+                gateDesc = `已进闸: <span class="fc-timer-neg" data-target="${targetGateTime.getTime()}"></span>`;
+                forceDesc = `超时: <span class="fc-timer-neg" data-target="${targetForceTime.getTime()}"></span>`;
+            }
+            
+            currentManualCalcData = { 
+                isGreen: isActuallyGreen, // 保存真实状态
+                isShanxieya, h, m, targetGateTime, targetForceTime, isDynamicGate, isWeatherMonster,
+                weatherTargetEndTime, WEATHER_DURATION_MS
+            };
             const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
 
             const updateDisplay = () => {
                 const cNow = new Date(); let displayGate = targetGateTime; if (isDynamicGate) displayGate = cNow;
-                let warnHtml = !isGreen ? `<div class="manual-warn">💡 已击杀状态请确保已上传击杀截图作为证据。</div>` : '';
+                let warnHtml = !isActuallyGreen ? `<div class="manual-warn">💡 已击杀状态请确保已上传击杀截图作为证据。</div>` : '';
                 if (manualBox) {
                     manualBox.innerHTML = `
-                        <div class="res-item"><span class="res-label">绝对进闸时间</span><span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span></div>
-                        <div class="res-item"><span class="res-label">预计强制时间</span><span class="res-val" style="color:var(--gold)">${fmtDate(targetForceTime)}</span></div>
-                        <div class="res-item" style="flex:1;"><span class="res-label">状态提示</span><span class="res-val countdown-big" style="color:${isGreen ? 'var(--blue)' : 'var(--red)'}">${isGreen ? '存活中' : 'CD中'}</span></div>
+                        <div class="res-item" style="flex:1;">
+                            <span class="res-label">绝对进闸时间</span>
+                            <span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span>
+                            <span class="res-desc">${gateDesc}</span>
+                        </div>
+                        <div class="res-item" style="flex:1;">
+                            <span class="res-label">预计强制时间</span>
+                            <span class="res-val" style="color:var(--gold)">${fmtDate(targetForceTime)}</span>
+                            <span class="res-desc">${forceDesc}</span>
+                        </div>
+                        <div class="res-item" style="flex:1;">
+                            <span class="res-label">状态提示</span>
+                            <span class="res-val countdown-big" style="color:${stateColor}">${stateText}</span>
+                        </div>
                         <button class="btn-copy-manual" onclick="copyManualResult()">📋 复制手动结果</button>${warnHtml}`;
                 }
+                tickTimers(); // 手动触发一次全局倒计时刷新
             };
             updateDisplay(); manualTimer = setInterval(updateDisplay, 1000);
+        }
+
+        // ================= 全局倒计时刷新机制 =================
+        function tickTimers() {
+            const now = Date.now();
+            document.querySelectorAll('.fc-timer').forEach(el => {
+                const target = parseInt(el.getAttribute('data-target'));
+                const diff = target - now;
+                if (diff > 0) {
+                    el.innerText = formatDHMS(diff);
+                    if (diff < 3600000) el.classList.add('countdown-red', 'blink-warning');
+                    else el.classList.remove('countdown-red', 'blink-warning');
+                } else {
+                    el.innerText = "00:00:00";
+                }
+            });
+            document.querySelectorAll('.fc-timer-neg').forEach(el => {
+                const target = parseInt(el.getAttribute('data-target'));
+                const diff = now - target;
+                if (diff > 0) {
+                    el.innerText = formatDHMS(diff);
+                } else {
+                    el.innerText = "00:00:00";
+                }
+            });
+            
+            // 刷新天气倒计时
+            tickWeatherCountdown();
+        }
+        setInterval(tickTimers, 1000); 
+        // ========================================================
+
+        function formatDHMS(ms) {
+            if (ms < 0) ms = 0;
+            const sec = Math.floor(ms / 1000);
+            const d = Math.floor(sec / 86400);
+            const h = Math.floor((sec % 86400) / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            let res = "";
+            if (d > 0) res += `${d}天 `;
+            res += `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            return res;
         }
 
         function copyManualResult() {
@@ -3178,84 +3463,258 @@
         function addToRecentList() {
             if (!currentManualCalcData) calcManual();
             const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
-            const { isGreen, h, m, targetGateTime, targetForceTime, isDynamicGate } = currentManualCalcData;
-            const record = { id: Date.now(), server: mServerSelect.value, name: mMonsterSelect.value.split('|')[0], area: mMonsterSelect.value.split('|')[1], isGreen, h, m, forceStr: fmtDate(targetForceTime), isDynamicGate, gateTimeMs: targetGateTime ? targetGateTime.getTime() : null, forceTimeMs: targetForceTime.getTime() };
-            recentRecords.unshift(record); if (recentRecords.length > 5) recentRecords.pop();
+            const { isGreen, h, m, targetGateTime, targetForceTime, isDynamicGate, weatherTargetEndTime } = currentManualCalcData;
+            
+            const record = { 
+                id: Date.now(), 
+                server: mServerSelect.value, 
+                name: mMonsterSelect.value.split('|')[0], 
+                area: mMonsterSelect.value.split('|')[1], 
+                isGreen, h, m, 
+                forceStr: fmtDate(targetForceTime), 
+                isDynamicGate, 
+                gateTimeMs: targetGateTime ? targetGateTime.getTime() : null, 
+                forceTimeMs: targetForceTime.getTime(),
+                weatherTargetEndTime: weatherTargetEndTime // 保存天气状态
+            };
+            
+            recentRecords.unshift(record); 
+            // 扩展到 20 个
+            if (recentRecords.length > 20) recentRecords.pop();
             renderRecentList(); saveLocalState(); showToast("✅ 已添加到计算记录");
         }
 
         function renderRecentList() {
             const container = document.getElementById('recentListContainer');
             if (recentRecords.length === 0) { container.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:10px;">暂无记录</div>`; return; }
-            container.innerHTML = recentRecords.map((r, idx) => `
+            
+            let html = '';
+            recentRecords.forEach((r, idx) => {
+                const now = Date.now();
+                let gateTimerHtml = '';
+                let forceTimerHtml = '';
+                let weatherHtml = '';
+                
+                gateTimerHtml = `<div class="recent-time-block"><span class="res-label">进闸时间</span><span class="recent-time-val" style="color:var(--blue)">${r.gateTimeMs ? formatDateObj(new Date(r.gateTimeMs)) : '-'}</span></div>`;
+                forceTimerHtml = `<div class="recent-time-block"><span class="res-label">强制时间</span><span class="recent-time-val" style="color:var(--gold)">${formatDateObj(new Date(r.forceTimeMs))}</span></div>`;
+                
+                if (r.weatherTargetEndTime) {
+                    const wDiff = r.weatherTargetEndTime - now;
+                    if (wDiff > 0) {
+                        weatherHtml = `<div class="recent-time-block"><span class="res-label">天气状态</span><span class="recent-time-val" style="color:var(--purple)">距天气 <span class="fc-timer" data-target="${r.weatherTargetEndTime}"></span></span></div>`;
+                    } else if (wDiff > -WEATHER_DURATION_MS) {
+                        const wEnd = r.weatherTargetEndTime + WEATHER_DURATION_MS;
+                        weatherHtml = `<div class="recent-time-block"><span class="res-label">天气状态</span><span class="recent-time-val" style="color:var(--gold)">天气剩余 <span class="fc-timer" data-target="${wEnd}"></span></span></div>`;
+                    }
+                }
+
+                html += `
                 <div class="recent-item">
                     <div class="recent-item-info">
                         <div class="recent-item-title">[${r.server}] ${r.name} (${r.area}) <span style="font-size:12px; color:${r.isGreen?'var(--accent)':'var(--red)'}">${r.isGreen?'🟢存活':'🔴CD中'}</span></div>
-                        <div class="recent-item-times"><div>强制预计时间: <span style="color:var(--gold)">${r.forceStr}</span></div></div>
+                        <div class="recent-item-times">
+                            ${gateTimerHtml}
+                            ${forceTimerHtml}
+                            ${weatherHtml}
+                        </div>
                     </div>
-                    <div>
-                        <button class="btn btn-outline" onclick="summonFloatingCountdownFromRecord(${idx})">⏱️ 召唤</button>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <button class="btn btn-outline" onclick="summonFloatingCountdownFromRecord(${idx})">⏱️ 召唤浮窗</button>
                         <button class="btn btn-red" onclick="removeRecent(${idx})" style="padding:6px 10px;">✕</button>
                     </div>
-                </div>`).join('');
+                </div>`;
+            });
+            container.innerHTML = html;
+            tickTimers(); // 立即刷新列表里的倒计时
+        }
+        
+        function formatDateObj(d) {
+            return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
         }
 
         function removeRecent(idx) { recentRecords.splice(idx, 1); renderRecentList(); saveLocalState(); }
+        
+        // ================== 多开悬浮窗逻辑 ==================
         function summonFloatingCountdownFromRecord(idx) {
-            const r = recentRecords[idx]; const gateTime = r.isDynamicGate ? new Date() : new Date(r.gateTimeMs);
-            updateFloatingCountdown(gateTime, new Date(r.forceTimeMs), r.isGreen, false, r.h, r.m); showToast('⏱️ 倒计时浮窗已召唤');
+            const r = recentRecords[idx]; 
+            let existingWin = activeFloatingWindows.find(w => w.recordId === r.id);
+            if (existingWin) {
+                existingWin.el.style.border = '3px solid var(--accent)';
+                setTimeout(() => { existingWin.el.style.border = '2px solid var(--gold)'; }, 500);
+                return;
+            }
+            
+            const gateTime = r.isDynamicGate ? null : new Date(r.gateTimeMs);
+            createFloatingWindow(r.id, gateTime, new Date(r.forceTimeMs), r.isGreen, false, r.h, r.m, r.name, r.server, r.weatherTargetEndTime);
+            showToast('⏱️ 倒计时浮窗已召唤');
         }
 
-        let _currentFcData = null; let _fcHideTimer = null;
-        function updateFloatingCountdown(gateTime, forceTime, isGreen, isShanxieya, h, m) { _currentFcData = { gateTime, forceTime, isGreen, isShanxieya, h, m }; _showFloatingCountdown(); }
-
-        function _showFloatingCountdown() {
-            if (!_currentFcData) return;
-            const { gateTime, forceTime, isGreen, isShanxieya, h, m } = _currentFcData;
-            const fc = document.getElementById('floatingCountdown'); const body = document.getElementById('floatingCountdownBody');
-            const tick = () => {
-                const now = new Date(); let actualGateTime = gateTime; if (isGreen && gateTime === null) actualGateTime = now;
-                const diffGate = actualGateTime - now; const diffForce = forceTime - now;
-                let title = isGreen ? '🟢 存活倒计时' : '🔴 CD 倒计时'; let countdownHtml = '';
-                if (isGreen) {
-                    if (diffForce <= 0) countdownHtml = `<span class="countdown-red">❌ 已强制消失</span>`;
-                    else if (diffForce < 7200000) countdownHtml = `<span class="countdown-red blink-warning">距强制时间: ${formatDHMS(diffForce)}</span>`;
-                    else countdownHtml = `<span class="countdown-blue">距强制时间: ${formatDHMS(diffForce)}</span>`;
-                } else {
-                    if (diffGate <= 0) {
-                        if (diffForce <= 0) countdownHtml = `<span class="countdown-red">❌ 已强制消失</span>`;
-                        else if (diffForce < 7200000) countdownHtml = `<span class="countdown-red blink-warning">距强制时间: ${formatDHMS(diffForce)}</span>`;
-                        else countdownHtml = `<span class="countdown-blue">距强制时间: ${formatDHMS(diffForce)}</span>`;
-                    } else {
-                        if (diffGate < 3600000) countdownHtml = `<span class="countdown-red blink-warning">距进闸: ${formatDHMS(diffGate)}</span>`;
-                        else countdownHtml = `<span class="countdown-red">距进闸: ${formatDHMS(diffGate)}</span>`;
-                    }
-                }
-                let fateHtml = isShanxieya ? `<div class="fc-row" style="margin-top:6px;"><span class="fc-label">🌾 Fate 完成</span><span class="fc-val" style="color:var(--gold)">${fateRecords.length} / 5</span></div>` : '';
-                body.innerHTML = `
-                    <div class="fc-row" style="margin-bottom:8px;"><span class="fc-label">${title}</span></div>
-                    <div class="fc-row"><span class="fc-label">基准时长</span><span class="fc-val">${h}h ${m}m</span></div>
-                    ${fateHtml}
-                    <div class="fc-countdown">${countdownHtml}</div>
-                    <div class="fc-tip">⏳ 10秒后自动隐藏</div>`;
-            };
-            fc.style.display = 'block'; if (window._fcTickTimer) clearInterval(window._fcTickTimer); tick(); window._fcTickTimer = setInterval(tick, 1000);
-            if (_fcHideTimer) clearTimeout(_fcHideTimer); _fcHideTimer = setTimeout(() => { hideFloatingCountdown(); }, 10000);
-        }
-
-        function hideFloatingCountdown() {
-            document.getElementById('floatingCountdown').style.display = 'none';
-            if (_fcHideTimer) { clearTimeout(_fcHideTimer); _fcHideTimer = null; }
-            if (window._fcTickTimer) { clearInterval(window._fcTickTimer); window._fcTickTimer = null; }
-        }
         function summonFloatingCountdown() {
             if (!currentManualCalcData) calcManual(); 
             if(currentManualCalcData) {
-                const { isGreen, isShanxieya, h, m, targetGateTime, targetForceTime } = currentManualCalcData;
-                updateFloatingCountdown(targetGateTime ? targetGateTime : new Date(), targetForceTime, isGreen, isShanxieya, h, m);
+                const { isGreen, isShanxieya, h, m, targetGateTime, targetForceTime, weatherTargetEndTime } = currentManualCalcData;
+                const rName = mMonsterSelect.value.split('|')[0];
+                const rServer = mServerSelect.value;
+                const tempId = 'temp_' + Date.now();
+                
+                let existing = activeFloatingWindows.find(w => w.isTemp && w.rName === rName && w.rServer === rServer);
+                if (existing) {
+                    existing.el.style.border = '3px solid var(--accent)';
+                    setTimeout(() => { existing.el.style.border = '2px solid var(--gold)'; }, 500);
+                    return;
+                }
+
+                createFloatingWindow(tempId, targetGateTime, targetForceTime, isGreen, isShanxieya, h, m, rName, rServer, weatherTargetEndTime);
                 showToast('⏱️ 倒计时浮窗已召唤');
             }
         }
+
+        function createFloatingWindow(recordId, gateTime, forceTime, isGreen, isShanxieya, h, m, monsterName, server, weatherTargetEndTime) {
+            const container = document.getElementById('floatingWindowContainer');
+            const winId = 'win_' + recordId;
+            
+            const div = document.createElement('div');
+            div.className = 'floating-window';
+            div.id = winId;
+            
+            const offset = activeFloatingWindows.length * 20;
+            div.style.bottom = (20 + offset) + 'px';
+            div.style.right = (20 + offset) + 'px';
+            div.style.display = 'block';
+
+            div.innerHTML = `
+                <div class="fc-header">
+                    <span class="fc-title">⏱️ ${server} - ${monsterName}</span>
+                    <div class="fc-btns">
+                        <button class="fc-copy" title="复制信息">📋</button>
+                        <button class="fc-close" title="关闭">×</button>
+                    </div>
+                </div>
+                <div class="fc-body">
+                    <div class="fc-row"><span class="fc-label">基准状态</span><span class="fc-val" style="color:${isGreen?'var(--accent)':'var(--red)'}">${isGreen?'存活':'CD中'}</span></div>
+                    <div class="fc-row"><span class="fc-label">进闸时间</span><span class="fc-val" style="color:var(--accent); font-size:12px;">${gateTime ? gateTime.toLocaleTimeString('zh-CN', {hour12:false}) : '-'}</span></div>
+                    <div class="fc-row"><span class="fc-label">强制时间</span><span class="fc-val" style="color:var(--gold); font-size:12px;">${forceTime.toLocaleTimeString('zh-CN', {hour12:false})}</span></div>
+                    ${isShanxieya ? `<div class="fc-row" style="margin-top:6px;"><span class="fc-label">🌾 Fate 完成</span><span class="fc-val" style="color:var(--gold)">${fateRecords.length} / 5</span></div>` : ''}
+                    <div class="fc-row" id="fc-weather-row-${winId}" style="display:none; margin-top:6px; border-top:1px dashed var(--border); padding-top:6px;">
+                        <span class="fc-label" style="color:var(--purple);">🌫️ 天气状态</span>
+                        <span class="fc-val" id="fc-weather-val-${winId}" style="color:var(--purple); font-size:12px;">-</span>
+                    </div>
+                    <div class="fc-countdown">
+                        <div class="fc-timer-val" style="font-size:18px;"></div>
+                        <div class="fc-timer-desc" style="font-size:12px; color:var(--text-muted); margin-top:5px;"></div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(div);
+
+            let isDragging = false;
+            let dragOffsetX = 0, dragOffsetY = 0;
+            
+            div.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'BUTTON') return; 
+                isDragging = true;
+                const rect = div.getBoundingClientRect();
+                dragOffsetX = e.clientX - rect.left;
+                dragOffsetY = e.clientY - rect.top;
+                
+                div.style.bottom = 'auto';
+                div.style.right = 'auto';
+                div.style.left = rect.left + 'px';
+                div.style.top = rect.top + 'px';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                let newLeft = e.clientX - dragOffsetX;
+                let newTop = e.clientY - dragOffsetY;
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - div.offsetWidth));
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - div.offsetHeight));
+                div.style.left = newLeft + 'px';
+                div.style.top = newTop + 'px';
+            });
+
+            document.addEventListener('mouseup', () => { isDragging = false; });
+
+            div.querySelector('.fc-close').onclick = () => {
+                div.remove();
+                activeFloatingWindows = activeFloatingWindows.filter(w => w.recordId !== recordId);
+            };
+            
+            div.querySelector('.fc-copy').onclick = () => {
+                const text = div.querySelector('.fc-body').innerText;
+                navigator.clipboard.writeText(`[${server}] ${monsterName}\n${text}`).then(() => showToast("📋 浮窗信息已复制"));
+            };
+
+            const updateWin = () => {
+                if (!div.parentElement) return;
+                const now = new Date();
+                let actualGateTime = gateTime; if (isGreen && gateTime === null) actualGateTime = now;
+                const diffGate = actualGateTime - now; 
+                const diffForce = forceTime - now;
+                
+                let countdownText = '';
+                let descText = '';
+                let colorClass = '';
+
+                if (isGreen) {
+                    if (diffForce <= 0) { countdownText = '❌ 已强制消失'; colorClass = 'countdown-red'; }
+                    else if (diffForce < 7200000) { countdownText = `距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-red blink-warning'; }
+                    else { countdownText = `距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-blue'; }
+                    descText = `已存活 ${h}时${m}分`;
+                } else {
+                    if (diffGate > 0) {
+                        countdownText = `距进闸: ${formatDHMS(diffGate)}`; colorClass = 'countdown-red'; descText = `进闸后需存活 48时`;
+                    } else if (diffForce > 0) {
+                        if (diffForce < 7200000) { countdownText = `已进闸！距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-red blink-warning'; }
+                        else { countdownText = `已进闸！距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-gold'; }
+                        descText = `已进闸 ${formatDHMS(-diffGate)}`;
+                    } else {
+                        countdownText = '❌ 已强制消失'; colorClass = 'countdown-red'; descText = `已超时 ${formatDHMS(-diffForce)}`;
+                    }
+                }
+
+                const valEl = div.querySelector('.fc-timer-val');
+                valEl.innerText = countdownText;
+                valEl.className = 'fc-timer-val ' + colorClass;
+                div.querySelector('.fc-timer-desc').innerText = descText;
+                
+                // 天气状态
+                const wRow = div.querySelector(`#fc-weather-row-${winId}`);
+                const wVal = div.querySelector(`#fc-weather-val-${winId}`);
+                if (weatherTargetEndTime) {
+                    wRow.style.display = 'flex';
+                    const nowMs = Date.now();
+                    const wDiff = weatherTargetEndTime - nowMs;
+                    if (wDiff > 0) {
+                        wVal.innerText = `距天气 ${formatDHMS(wDiff)}`;
+                        wVal.style.color = wDiff < 15*60000 ? 'var(--red)' : 'var(--purple)';
+                    } else if (wDiff > -WEATHER_DURATION_MS) {
+                        const remain = WEATHER_DURATION_MS + wDiff;
+                        wVal.innerText = `存在剩余 ${formatDHMS(remain)}`;
+                        wVal.style.color = 'var(--gold)';
+                    } else {
+                        wVal.innerText = `已结束`;
+                        wVal.style.color = 'var(--text-muted)';
+                    }
+                } else {
+                    wRow.style.display = 'none';
+                }
+            };
+
+            updateWin();
+            const timer = setInterval(updateWin, 1000);
+            
+            activeFloatingWindows.push({
+                recordId: recordId,
+                el: div,
+                timer: timer,
+                isTemp: String(recordId).startsWith('temp_'),
+                rName: monsterName,
+                rServer: server
+            });
+        }
+        // =======================================================
 
         function formatFateTime(d) { return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; }
         function renderFateRecords() {
@@ -3447,6 +3906,9 @@
             mHour.value = 0; mMin.value = 0; mPercent.value = 0; mFogHour.value = 0; mFogMin.value = 0; mFogSec.value = 0;
             mMonsterSelect.selectedIndex = 0; document.querySelector('input[name="mStatus"][value="green"]').checked = true;
             mFogGroup.style.display = 'none'; mFateGroup.style.display = 'none'; fateRecords = []; updateSpecialCounterUI(); autoCorrect(); showToast("🗑️ 输入已清空");
+            
+            weatherTargetEndTime = null;
+            document.getElementById('weatherStatusBox').style.display = 'none';
         }
 
         function updateSpecialCounterUI() {
