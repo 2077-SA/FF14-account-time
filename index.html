@@ -202,7 +202,7 @@
         
         /* 天气状态指示器 */
         .weather-status-box { background: rgba(155,89,182,0.1); border: 1px solid var(--purple); border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
-        .weather-status-title { font-size: 13px; color: var(--purple); font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+        .weather-status-title { font-size: 13px; color: var(--purple); font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 5px; }
         .weather-countdown-val { font-family: monospace; font-size: 20px; font-weight: bold; color: var(--gold); }
         .weather-countdown-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
@@ -622,6 +622,46 @@
         .update-list li:nth-child(3)::before { content: '🪟'; }
         .update-list li:nth-child(4)::before { content: '🌦️'; }
         .update-list strong { color: var(--gold); }
+
+        /* ✨ 全新出货结果播报弹窗 */
+        .marquee-container {
+            background: rgba(20, 20, 35, 0.65) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5) !important;
+            color: #fff !important;
+            max-width: 650px !important;
+            padding: 40px !important;
+            overflow: hidden;
+        }
+        .marquee-title {
+            font-size: 36px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 30px;
+            animation: dropDown 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            letter-spacing: 2px;
+        }
+        .marquee-text {
+            font-size: 20px;
+            line-height: 1.8;
+            text-align: center;
+            font-family: monospace;
+            font-weight: bold;
+            margin: 30px 0;
+            animation: dropDown 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            white-space: pre-wrap;
+            text-shadow: 0 0 10px currentColor;
+            word-break: break-all;
+        }
+        @keyframes dropDown {
+            0% { transform: translateY(-50px); opacity: 0; filter: blur(5px); }
+            100% { transform: translateY(0); opacity: 1; filter: blur(0); }
+        }
+        .marquee-container .btn-modal { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+        .marquee-container .btn-modal:hover { background: rgba(255,255,255,0.2); }
+        .marquee-container .btn-copy-result { background: var(--accent) !important; color: var(--panel) !important; border: none !important; }
     </style>
 </head>
 <body data-layout="portrait">
@@ -713,16 +753,39 @@
 
             <div class="input-section extra-area" id="mFogGroup">
                 <div class="section-title" style="color: var(--purple);">🌫️ 前置天气时间监控</div>
-                <div class="row-flex" style="margin-bottom: 10px;">
-                    <input type="number" id="mFogHour" min="0" max="99" value="0"> : 
-                    <input type="number" id="mFogMin" min="0" max="59" value="0"> : 
-                    <input type="number" id="mFogSec" min="0" max="59" value="0">
-                    <button class="btn btn-accent" onclick="startWeatherCountdown()">⏱️ 保存并开始倒计时</button>
+                <div class="row-flex" style="margin-bottom: 10px; flex-wrap: wrap; gap: 5px;">
+                    <span style="font-size:12px; color:var(--text-muted);">距出现:</span>
+                    <input type="number" id="mFogHour" min="0" max="99" value="0" style="width: 50px; padding: 4px; font-size:14px; text-align:center;"> : 
+                    <input type="number" id="mFogMin" min="0" max="59" value="0" style="width: 50px; padding: 4px; font-size:14px; text-align:center;"> : 
+                    <input type="number" id="mFogSec" min="0" max="59" value="0" style="width: 50px; padding: 4px; font-size:14px; text-align:center;">
+                    
+                    <span style="font-size:12px; color:var(--text-muted); margin-left: 10px;">持续:</span>
+                    <input type="number" id="mFogDurHour" min="0" max="23" value="1" style="width: 50px; padding: 4px; font-size:14px; text-align:center;"> 时
+                    <input type="number" id="mFogDurMin" min="0" max="59" value="0" style="width: 50px; padding: 4px; font-size:14px; text-align:center;"> 分
+
+                    <button class="btn btn-accent" style="margin-left:auto; padding: 6px 12px;" onclick="startWeatherCountdown()">⏱️ 保存并开始</button>
                 </div>
                 <div class="weather-status-box" id="weatherStatusBox">
-                    <div class="weather-status-title" id="weatherStatusTitle">⏳ 距天气出现还有：</div>
+                    <div class="weather-status-title" id="weatherStatusTitle">
+                        <span id="weatherTitleText">⏳ 距天气出现还有：</span>
+                        <button class="btn btn-outline" style="padding: 2px 8px; font-size: 11px; margin-left: auto;" onclick="toggleEditWeather()">✏️ 修正设置</button>
+                    </div>
                     <div class="weather-countdown-val" id="weatherCountdownText">00:00:00</div>
                     <div class="weather-countdown-desc" id="weatherStatusDesc">天气存在时间通常为 1 小时</div>
+                    <div id="weatherEditPanel" style="display:none; margin-top:10px; border-top:1px dashed var(--border); padding-top:10px; text-align: left;">
+                        <div class="row-flex" style="margin-bottom: 8px; gap: 5px; flex-wrap: nowrap;">
+                            <span style="font-size:12px; color:var(--text-muted); white-space:nowrap; width: 65px;">距/剩余:</span>
+                            <input type="number" id="wRemHour" min="0" max="99" value="0" style="width: 45px; padding:4px; font-size:12px; text-align:center;"> : 
+                            <input type="number" id="wRemMin" min="0" max="59" value="0" style="width: 45px; padding:4px; font-size:12px; text-align:center;"> : 
+                            <input type="number" id="wRemSec" min="0" max="59" value="0" style="width: 45px; padding:4px; font-size:12px; text-align:center;">
+                        </div>
+                        <div class="row-flex" style="margin-bottom: 8px; gap: 5px; flex-wrap: nowrap;">
+                            <span style="font-size:12px; color:var(--text-muted); white-space:nowrap; width: 65px;">总持续时间:</span>
+                            <input type="number" id="wDurHour" min="0" max="23" value="1" style="width: 45px; padding:4px; font-size:12px; text-align:center;"> 时 
+                            <input type="number" id="wDurMin" min="0" max="59" value="0" style="width: 45px; padding:4px; font-size:12px; text-align:center;"> 分
+                        </div>
+                        <button class="btn btn-accent" style="padding: 4px 10px; font-size: 12px; width: 100%;" onclick="applyWeatherRemainTime()">保存设置</button>
+                    </div>
                 </div>
             </div>
 
@@ -1206,15 +1269,15 @@
         </div>
     </div>
 
-    <!-- 出货/寄了 结果弹窗 -->
-    <div class="modal-overlay" id="resultNoticeModal">
-        <div class="modal-content" style="max-width: 600px; text-align: left;">
+    <!-- ✨ 全新出货/寄了 结果播报弹窗 (磨砂+滚动字幕) -->
+    <div class="modal-overlay glass" id="resultNoticeModal">
+        <div class="modal-content marquee-container" id="resultMarqueeBox">
             <button class="btn-close-modal" onclick="document.getElementById('resultNoticeModal').style.display='none'">×</button>
-            <div class="modal-title" id="resultNoticeTitle" style="text-align: center;">🎉 恭喜出货！</div>
-            <textarea id="resultNoticeText" class="announcement-textarea" readonly style="margin-top:15px; height: 120px;"></textarea>
-            <div class="modal-btns" style="margin-top: 15px;">
+            <div class="marquee-title" id="resultMarqueeTitle">🎉 恭喜出货！</div>
+            <div class="marquee-text" id="resultMarqueeText"></div>
+            <div class="modal-btns" style="margin-top: 30px;">
                 <button class="btn-modal btn-cancel" onclick="document.getElementById('resultNoticeModal').style.display='none'">关闭</button>
-                <button class="btn-modal btn-confirm ready" onclick="copyResultNotice()" style="background: var(--accent); color: var(--panel);">📋 一键复制</button>
+                <button class="btn-modal btn-copy-result" onclick="copyResultNotice()">📋 一键复制</button>
             </div>
         </div>
     </div>
@@ -1814,6 +1877,7 @@
         let activeFloatingWindows = []; 
         let weatherTargetEndTime = null;
         const WEATHER_DURATION_MS = 3600 * 1000; 
+        let weatherDurationMs = WEATHER_DURATION_MS; // ✨ 允许动态修改天气持续时间
 
         function toggleManualCard() {
             const body = document.getElementById('manualCardBody'); const icon = document.getElementById('manualToggleIcon');
@@ -1829,6 +1893,79 @@
             const body = document.getElementById('announcementBody'); const icon = document.getElementById('announcementToggleIcon');
             if (body.style.display === 'block') { body.style.display = 'none'; icon.innerText = '▶'; } 
             else { body.style.display = 'block'; icon.innerText = '▼'; }
+        }
+
+        // ✨ 天气编辑相关
+        function toggleEditWeather() {
+            const panel = document.getElementById('weatherEditPanel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                // 初始化输入框的值
+                const now = Date.now();
+                if (weatherTargetEndTime) {
+                    let remMs = 0;
+                    if (now < weatherTargetEndTime) {
+                        remMs = weatherTargetEndTime - now;
+                    } else if (now < weatherTargetEndTime + weatherDurationMs) {
+                        remMs = weatherTargetEndTime + weatherDurationMs - now;
+                    }
+                    
+                    const h = Math.floor(remMs / 3600000);
+                    const m = Math.floor((remMs % 3600000) / 60000);
+                    const s = Math.floor((remMs % 60000) / 1000);
+                    document.getElementById('wRemHour').value = h;
+                    document.getElementById('wRemMin').value = m;
+                    document.getElementById('wRemSec').value = s;
+                    
+                    const durH = Math.floor(weatherDurationMs / 3600000);
+                    const durM = Math.floor((weatherDurationMs % 3600000) / 60000);
+                    document.getElementById('wDurHour').value = durH;
+                    document.getElementById('wDurMin').value = durM;
+                }
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function applyWeatherRemainTime() {
+            if (!weatherTargetEndTime) { showToast('⚠️ 请先启动天气倒计时'); return; }
+            
+            const remH = parseInt(document.getElementById('wRemHour').value) || 0;
+            const remM = parseInt(document.getElementById('wRemMin').value) || 0;
+            const remS = parseInt(document.getElementById('wRemSec').value) || 0;
+            const remMs = (remH * 3600 + remM * 60 + remS) * 1000;
+            
+            const durH = parseInt(document.getElementById('wDurHour').value) || 0;
+            const durM = parseInt(document.getElementById('wDurMin').value) || 0;
+            let newDurMs = (durH * 3600 + durM * 60) * 1000;
+            if (newDurMs <= 0) newDurMs = WEATHER_DURATION_MS;
+            
+            const now = Date.now();
+            
+            if (now < weatherTargetEndTime) {
+                // 还在等待阶段
+                weatherTargetEndTime = now + remMs;
+                weatherDurationMs = newDurMs;
+                showToast('✅ 已修正距天气出现的时间及总时长');
+            } else {
+                // 已经在天气持续阶段
+                const oldEnd = weatherTargetEndTime + weatherDurationMs;
+                const oldRem = oldEnd - now;
+                
+                // 如果用户修改了剩余时间，或者剩余时间没变但总时长也没变，默认按剩余时间算
+                if (remMs !== oldRem && remMs > 0) {
+                    const passedMs = now - weatherTargetEndTime;
+                    weatherDurationMs = passedMs + remMs;
+                    showToast('✅ 已修正天气剩余时间');
+                } else {
+                    weatherDurationMs = newDurMs;
+                    showToast('✅ 已修正天气总持续时间');
+                }
+            }
+            
+            document.getElementById('weatherEditPanel').style.display = 'none';
+            tickWeatherCountdown();
+            calcManual();
         }
 
         // 折叠/展开最近记录
@@ -3436,8 +3573,12 @@
             else { 
                 mFogGroup.style.display = 'none'; 
                 mFogHour.value = 0; mFogMin.value = 0; mFogSec.value = 0; 
+                document.getElementById('mFogDurHour').value = 1;
+                document.getElementById('mFogDurMin').value = 0;
                 document.getElementById('weatherStatusBox').style.display = 'none';
+                document.getElementById('weatherEditPanel').style.display = 'none';
                 weatherTargetEndTime = null;
+                weatherDurationMs = WEATHER_DURATION_MS;
             }
             
             if (isShanxieya) { mFateGroup.style.display = 'block'; renderFateRecords(); } 
@@ -3504,13 +3645,20 @@
             const s = parseInt(mFogSec.value) || 0;
             const totalSec = h * 3600 + m * 60 + s;
             
+            const durH = parseInt(document.getElementById('mFogDurHour').value) || 0;
+            const durM = parseInt(document.getElementById('mFogDurMin').value) || 0;
+            let newDurMs = (durH * 3600 + durM * 60) * 1000;
+            if (newDurMs <= 0) newDurMs = WEATHER_DURATION_MS; // 默认1小时
+            
             if (totalSec <= 0) {
                 showToast('⚠️ 请设置未来的天气等待时间');
                 return;
             }
             
             weatherTargetEndTime = Date.now() + totalSec * 1000;
+            weatherDurationMs = newDurMs;
             document.getElementById('weatherStatusBox').style.display = 'block';
+            document.getElementById('weatherEditPanel').style.display = 'none';
             showToast('✅ 天气倒计时已启动，进闸时间将受天气限制');
             tickWeatherCountdown(); 
             calcManual(); 
@@ -3520,16 +3668,16 @@
             if (!weatherTargetEndTime) return;
             const box = document.getElementById('weatherStatusBox');
             const textEl = document.getElementById('weatherCountdownText');
-            const titleEl = document.getElementById('weatherStatusTitle');
+            const titleTextEl = document.getElementById('weatherTitleText');
             const descEl = document.getElementById('weatherStatusDesc');
             
             const now = Date.now();
             const diff = weatherTargetEndTime - now;
             
             if (diff > 0) {
-                titleEl.innerHTML = '⏳ 距天气出现还有：';
+                titleTextEl.innerHTML = '⏳ 距天气出现还有：';
                 textEl.innerText = formatDHMS(diff);
-                descEl.innerText = '天气存在时间通常为 1 小时';
+                descEl.innerText = '天气存在时间通常为 1 小时 (可点击右上角修正)';
                 
                 if (diff < 15 * 60 * 1000) { 
                     box.style.animation = 'blink 1s infinite';
@@ -3538,17 +3686,17 @@
                     box.style.animation = 'none';
                     textEl.style.color = 'var(--purple)';
                 }
-            } else if (diff > -WEATHER_DURATION_MS) {
-                const remain = WEATHER_DURATION_MS + diff; 
-                titleEl.innerHTML = '🌫️ 当前天气持续中，剩余：';
+            } else if (diff > -weatherDurationMs) {
+                const remain = weatherDurationMs + diff; 
+                titleTextEl.innerHTML = '🌫️ 当前天气持续中，剩余：';
                 textEl.innerText = formatDHMS(remain);
-                descEl.innerText = '请把握机会尽快触发！';
+                descEl.innerText = '请把握机会尽快触发！ (可点击右上角修正)';
                 box.style.animation = 'none';
                 textEl.style.color = 'var(--gold)';
             } else {
-                titleEl.innerHTML = '❌ 天气已结束';
+                titleTextEl.innerHTML = '❌ 天气已结束';
                 textEl.innerText = '00:00:00';
-                descEl.innerText = '本次天气前置已失效';
+                descEl.innerText = '本次天气前置已失效 (可点击右上角重新输入)';
                 box.style.animation = 'none';
                 textEl.style.color = 'var(--text-muted)';
             }
@@ -3586,9 +3734,9 @@
         }
 
         [mHour, mMin, mPercent].forEach(el => { el.addEventListener('blur', autoCorrect); el.addEventListener('keydown', (e) => { if(e.key === 'Enter') autoCorrect(); }); el.addEventListener('input', calcManual); });
-        mFogHour.addEventListener('input', () => { weatherTargetEndTime = null; document.getElementById('weatherStatusBox').style.display = 'none'; calcManual(); });
-        mFogMin.addEventListener('input', () => { weatherTargetEndTime = null; document.getElementById('weatherStatusBox').style.display = 'none'; calcManual(); });
-        mFogSec.addEventListener('input', () => { weatherTargetEndTime = null; document.getElementById('weatherStatusBox').style.display = 'none'; calcManual(); });
+        mFogHour.addEventListener('input', () => { weatherTargetEndTime = null; weatherDurationMs = WEATHER_DURATION_MS; document.getElementById('weatherStatusBox').style.display = 'none'; document.getElementById('weatherEditPanel').style.display = 'none'; calcManual(); });
+        mFogMin.addEventListener('input', () => { weatherTargetEndTime = null; weatherDurationMs = WEATHER_DURATION_MS; document.getElementById('weatherStatusBox').style.display = 'none'; document.getElementById('weatherEditPanel').style.display = 'none'; calcManual(); });
+        mFogSec.addEventListener('input', () => { weatherTargetEndTime = null; weatherDurationMs = WEATHER_DURATION_MS; document.getElementById('weatherStatusBox').style.display = 'none'; document.getElementById('weatherEditPanel').style.display = 'none'; calcManual(); });
 
         function calcManual() {
             if (manualTimer) clearInterval(manualTimer);
@@ -3662,7 +3810,7 @@
             currentManualCalcData = { 
                 isGreen: isActuallyGreen,
                 isShanxieya, h, m, targetGateTime, targetForceTime, isDynamicGate, isWeatherMonster,
-                weatherTargetEndTime, WEATHER_DURATION_MS
+                weatherTargetEndTime, weatherDurationMs
             };
             const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
 
@@ -3766,7 +3914,7 @@
         function addToRecentList() {
             if (!currentManualCalcData) calcManual();
             const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
-            const { isGreen, h, m, targetGateTime, targetForceTime, isDynamicGate, weatherTargetEndTime } = currentManualCalcData;
+            const { isGreen, h, m, targetGateTime, targetForceTime, isDynamicGate, weatherTargetEndTime, weatherDurationMs } = currentManualCalcData;
             
             const record = { 
                 id: Date.now(), 
@@ -3779,6 +3927,7 @@
                 gateTimeMs: targetGateTime ? targetGateTime.getTime() : null, 
                 forceTimeMs: targetForceTime.getTime(),
                 weatherTargetEndTime: weatherTargetEndTime,
+                weatherDurationMs: weatherDurationMs,
                 cooldownEndTime: 0,
                 actionCooldownEndTime: 0,
                 shipped: false,
@@ -3807,6 +3956,7 @@
                 let weatherHtml = '';
                 let progressVal = 0;
                 let progressColor = 'var(--blue)';
+                let statusHtml = '';
                 
                 gateTimerHtml = `<div class="recent-time-block"><span class="res-label">进闸时间</span><span class="recent-time-val" style="color:var(--blue)">${r.gateTimeMs ? formatDateObj(new Date(r.gateTimeMs)) : '-'}</span></div>`;
                 forceTimerHtml = `<div class="recent-time-block"><span class="res-label">强制时间</span><span class="recent-time-val" style="color:var(--gold)">${formatDateObj(new Date(r.forceTimeMs))}</span></div>`;
@@ -3814,12 +3964,23 @@
                 // 计算进度
                 let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
                 let passedMin = r.h * 60 + r.m;
+                
+                let isForced = now >= r.forceTimeMs;
+                
                 if (r.isGreen) {
                     progressVal = Math.min(100, Math.floor((passedMin / totalMin) * 100));
                     progressColor = 'var(--blue)';
+                    statusHtml = `<span style="font-size:12px; color:var(--accent)">🟢 存活</span>`;
                 } else {
                     progressVal = Math.min(100, Math.floor((passedMin / totalMin) * 100));
                     progressColor = 'var(--red)';
+                    statusHtml = `<span style="font-size:12px; color:var(--red)">🔴 CD中</span>`;
+                }
+                
+                if (isForced) {
+                    progressVal = 100;
+                    progressColor = 'var(--red)';
+                    statusHtml = `<span style="font-size:12px; color:var(--red)">💀 已强制</span>`;
                 }
                 
                 let progressHtml = `
@@ -3834,7 +3995,7 @@
                     </div>
                 `;
 
-                // ✨ 【新增】出货预估区块：预估出货时刻 + 出货进度（纯追加，不影响上面原有 progressHtml）
+                // 出货预估区块
                 let estHtml = '';
                 try {
                     if (window.__predictor) {
@@ -3848,7 +4009,6 @@
                             isGreen: r.isGreen
                         });
 
-                        // 系统直接判定：若已超过预估出货时间，且没有手动点过出货或寄了，自动判定为寄了！
                         if (pred.isOverdue && !r.shipped && !r.failed) {
                             r.failed = true;
                             r.isAutoFailed = true;
@@ -3856,7 +4016,6 @@
                         }
 
                         const cColor = pred.isTail ? 'var(--red)' : (pred.isOverdue ? 'var(--gold)' : 'var(--accent)');
-                        // 样本太少时给个更好看的名字，避免用户觉得不准
                         const confText = pred.stats.sampleCount >= 5 ? `样本×${pred.stats.sampleCount}` : `版本先验预估`;
                         const pctShow = pred.progressPct > 100 ? `>100%` : `${pred.progressPct.toFixed(0)}%`;
                         
@@ -3884,8 +4043,7 @@
                 let isCooldown = r.actionCooldownEndTime && Date.now() < r.actionCooldownEndTime;
                 let cooldownHtml = isCooldown ? `<div style="font-size:12px; color:var(--red); font-weight:bold; margin-top:5px;" class="cooldown-timer" data-target="${r.actionCooldownEndTime}">操作冷却: <span></span></div>` : '';
                 
-                // 按钮状态互斥逻辑
-                let disableShip = r.shipped || r.failed || isCooldown;
+                let disableShip = r.shipped || r.failed || isCooldown || isForced;
                 let disableFail = r.shipped || r.failed || isCooldown;
                 
                 let shipClass = r.shipped ? 'btn btn-outline' : 'btn btn-accent';
@@ -3900,10 +4058,11 @@
 
                 if (r.weatherTargetEndTime) {
                     const wDiff = r.weatherTargetEndTime - now;
+                    const wDur = r.weatherDurationMs || WEATHER_DURATION_MS;
                     if (wDiff > 0) {
                         weatherHtml = `<div class="recent-time-block"><span class="res-label">天气状态</span><span class="recent-time-val" style="color:var(--purple)">距天气 <span class="fc-timer" data-target="${r.weatherTargetEndTime}"></span></span></div>`;
-                    } else if (wDiff > -WEATHER_DURATION_MS) {
-                        const wEnd = r.weatherTargetEndTime + WEATHER_DURATION_MS;
+                    } else if (wDiff > -wDur) {
+                        const wEnd = r.weatherTargetEndTime + wDur;
                         weatherHtml = `<div class="recent-time-block"><span class="res-label">天气状态</span><span class="recent-time-val" style="color:var(--gold)">天气剩余 <span class="fc-timer" data-target="${wEnd}"></span></span></div>`;
                     }
                 }
@@ -3913,7 +4072,7 @@
                     <div class="recent-item-info">
                         <div class="recent-item-title">
                             [${r.server}] <span style="color:var(--gold); font-weight:bold;">${r.name}</span> (${r.area}) 
-                            <span style="font-size:12px; color:${r.isGreen?'var(--accent)':'var(--red)'}">${r.isGreen?'🟢存活':'🔴CD中'}</span>
+                            ${statusHtml}
                         </div>
                         <div class="recent-item-times">
                             ${gateTimerHtml}
@@ -3951,10 +4110,17 @@
             
             let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
             let pct = ((r.h * 60 + r.m) / totalMin * 100).toFixed(2);
-            let remainMs = r.forceTimeMs - Date.now();
-            let remainMins = remainMs > 0 ? (remainMs / 60000).toFixed(2) : 0;
+            if (Date.now() >= r.forceTimeMs) pct = "100.00";
             
-            let text = `${r.server}-${r.area}-${r.name}-出货啦！当前进度为：${pct}%/100.00%，当前进闸时间距离强制还有：${remainMins}分。`;
+            let remainMs = r.forceTimeMs - Date.now();
+            let timeStatusText = '';
+            if (remainMs > 0) {
+                timeStatusText = `距离强制还有：${(remainMs / 60000).toFixed(2)}分。`;
+            } else {
+                timeStatusText = `已强制，距强制已过：${Math.abs(remainMs / 60000).toFixed(2)}分。`;
+            }
+            
+            let text = `${r.server}-${r.area}-${r.name} 出货啦！\n当前进度为：${pct}%/100.00%。\n${timeStatusText}`;
             showResultNotice("🎉 恭喜出货！", text, "success");
             
             r.shipped = true;
@@ -3975,10 +4141,17 @@
             
             let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60);
             let pct = ((r.h * 60 + r.m) / totalMin * 100).toFixed(2);
-            let remainMs = r.forceTimeMs - Date.now();
-            let remainMins = remainMs > 0 ? (remainMs / 60000).toFixed(2) : 0;
+            if (Date.now() >= r.forceTimeMs) pct = "100.00";
             
-            let text = `${r.server}-${r.area}-${r.name} 很遗憾没有东西哎。当前进度为：${pct}%/100.00%，当前进闸时间距离强制还有：${remainMins}分。请在5分钟后再次尝试哦`;
+            let remainMs = r.forceTimeMs - Date.now();
+            let timeStatusText = '';
+            if (remainMs > 0) {
+                timeStatusText = `距离强制还有：${(remainMs / 60000).toFixed(2)}分。`;
+            } else {
+                timeStatusText = `已强制，距强制已过：${Math.abs(remainMs / 60000).toFixed(2)}分。`;
+            }
+            
+            let text = `${r.server}-${r.area}-${r.name} 很遗憾没有东西哎。\n当前进度为：${pct}%/100.00%。\n${timeStatusText} 请在5分钟后再次尝试哦。`;
             showResultNotice("💀 触发失败", text, "danger");
             
             r.failed = true;
@@ -3988,14 +4161,39 @@
         }
 
         function showResultNotice(title, text, type) {
-            document.getElementById('resultNoticeTitle').innerText = title;
-            document.getElementById('resultNoticeTitle').style.color = type === 'success' ? 'var(--accent)' : 'var(--red)';
-            document.getElementById('resultNoticeText').value = text;
+            const titleEl = document.getElementById('resultMarqueeTitle');
+            const textEl = document.getElementById('resultMarqueeText');
+            const boxEl = document.getElementById('resultMarqueeBox');
+            
+            titleEl.innerText = title;
+            textEl.innerText = text;
+            
+            // 重新触发动画
+            titleEl.style.animation = 'none';
+            textEl.style.animation = 'none';
+            void titleEl.offsetWidth; // 触发重绘
+            void textEl.offsetWidth;
+            titleEl.style.animation = 'dropDown 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+            textEl.style.animation = 'dropDown 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+
+            if (type === 'success') {
+                titleEl.style.color = 'var(--accent)';
+                titleEl.style.textShadow = '0 0 20px var(--accent)';
+                textEl.style.color = '#e0ffe0';
+                boxEl.style.boxShadow = '0 0 50px rgba(0, 255, 127, 0.4)';
+                boxEl.style.borderColor = 'rgba(0, 255, 127, 0.3)';
+            } else {
+                titleEl.style.color = 'var(--red)';
+                titleEl.style.textShadow = '0 0 20px var(--red)';
+                textEl.style.color = '#ffcccc';
+                boxEl.style.boxShadow = '0 0 50px rgba(255, 77, 77, 0.4)';
+                boxEl.style.borderColor = 'rgba(255, 77, 77, 0.3)';
+            }
             document.getElementById('resultNoticeModal').style.display = 'flex';
         }
 
         function copyResultNotice() {
-            navigator.clipboard.writeText(document.getElementById('resultNoticeText').value).then(() => showToast('📋 结果已复制'));
+            navigator.clipboard.writeText(document.getElementById('resultMarqueeText').innerText).then(() => showToast('📋 结果已复制'));
         }
 
         function formatDateObj(d) {
@@ -4058,7 +4256,6 @@
                 allKillRecords = [];
                 localStorage.removeItem('ff14_all_kill_records');
                 renderAllKillRecordsList();
-                // ✨ 【新增】清空后让预估缓存失效
                 if (window.__predictor) window.__predictor.invalidate();
                 showToast("🗑️ 记录已清空");
             }
@@ -4074,14 +4271,14 @@
             }
             
             const gateTime = r.isDynamicGate ? null : new Date(r.gateTimeMs);
-            createFloatingWindow(r.id, gateTime, new Date(r.forceTimeMs), r.isGreen, false, r.h, r.m, r.name, r.server, r.weatherTargetEndTime);
+            createFloatingWindow(r.id, gateTime, new Date(r.forceTimeMs), r.isGreen, false, r.h, r.m, r.name, r.server, r.weatherTargetEndTime, r.weatherDurationMs);
             showToast('⏱️ 倒计时浮窗已召唤');
         }
 
         function summonFloatingCountdown() {
             if (!currentManualCalcData) calcManual(); 
             if(currentManualCalcData) {
-                const { isGreen, isShanxieya, h, m, targetGateTime, targetForceTime, weatherTargetEndTime } = currentManualCalcData;
+                const { isGreen, isShanxieya, h, m, targetGateTime, targetForceTime, weatherTargetEndTime, weatherDurationMs } = currentManualCalcData;
                 const rName = mMonsterSelect.value.split('|')[0];
                 const rServer = mServerSelect.value;
                 const tempId = 'temp_' + Date.now();
@@ -4093,14 +4290,15 @@
                     return;
                 }
 
-                createFloatingWindow(tempId, targetGateTime, targetForceTime, isGreen, isShanxieya, h, m, rName, rServer, weatherTargetEndTime);
+                createFloatingWindow(tempId, targetGateTime, targetForceTime, isGreen, isShanxieya, h, m, rName, rServer, weatherTargetEndTime, weatherDurationMs);
                 showToast('⏱️ 倒计时浮窗已召唤');
             }
         }
 
-        function createFloatingWindow(recordId, gateTime, forceTime, isGreen, isShanxieya, h, m, monsterName, server, weatherTargetEndTime) {
+        function createFloatingWindow(recordId, gateTime, forceTime, isGreen, isShanxieya, h, m, monsterName, server, weatherTargetEndTime, wDurMs) {
             const container = document.getElementById('floatingWindowContainer');
             const winId = 'win_' + recordId;
+            if (!wDurMs) wDurMs = WEATHER_DURATION_MS;
             
             const div = document.createElement('div');
             div.className = 'floating-window';
@@ -4176,7 +4374,6 @@
                 navigator.clipboard.writeText(`[${server}] ${monsterName}\n${text}`).then(() => showToast("📋 浮窗信息已复制"));
             };
 
-            // ✨ 【新增】浮窗预估所需的版本信息（只读，不改变浮窗已有行为）
             const _floatDbMonster = S_MONSTERS.find(sm => sm.name === monsterName);
             const _floatVersion = (_floatDbMonster && _floatDbMonster.version) || '6.0';
 
@@ -4192,10 +4389,19 @@
                 let colorClass = '';
 
                 if (isGreen) {
-                    if (diffForce <= 0) { countdownText = '❌ 已强制消失'; colorClass = 'countdown-red'; }
-                    else if (diffForce < 7200000) { countdownText = `距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-red blink-warning'; }
-                    else { countdownText = `距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-blue'; }
-                    descText = `已存活 ${h}时${m}分`;
+                    if (diffForce <= 0) { 
+                        countdownText = `💀 已强制`; 
+                        colorClass = 'countdown-red'; 
+                        descText = `距已强制已过 ${formatDHMS(-diffForce)}`;
+                    } else if (diffForce < 7200000) { 
+                        countdownText = `距强制: ${formatDHMS(diffForce)}`; 
+                        colorClass = 'countdown-red blink-warning'; 
+                        descText = `已存活 ${h}时${m}分`;
+                    } else { 
+                        countdownText = `距强制: ${formatDHMS(diffForce)}`; 
+                        colorClass = 'countdown-blue'; 
+                        descText = `已存活 ${h}时${m}分`;
+                    }
                 } else {
                     if (diffGate > 0) {
                         countdownText = `距进闸: ${formatDHMS(diffGate)}`; colorClass = 'countdown-red'; descText = `进闸后需存活 48时`;
@@ -4204,7 +4410,7 @@
                         else { countdownText = `已进闸！距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-gold'; }
                         descText = `已进闸 ${formatDHMS(-diffGate)}`;
                     } else {
-                        countdownText = '❌ 已强制消失'; colorClass = 'countdown-red'; descText = `已超时 ${formatDHMS(-diffForce)}`;
+                        countdownText = `💀 已强制`; colorClass = 'countdown-red'; descText = `距已强制已过 ${formatDHMS(-diffForce)}`;
                     }
                 }
 
@@ -4222,8 +4428,8 @@
                     if (wDiff > 0) {
                         wVal.innerText = `距天气 ${formatDHMS(wDiff)}`;
                         wVal.style.color = wDiff < 15*60000 ? 'var(--red)' : 'var(--purple)';
-                    } else if (wDiff > -WEATHER_DURATION_MS) {
-                        const remain = WEATHER_DURATION_MS + wDiff;
+                    } else if (wDiff > -wDurMs) {
+                        const remain = wDurMs + wDiff;
                         wVal.innerText = `存在剩余 ${formatDHMS(remain)}`;
                         wVal.style.color = 'var(--gold)';
                     } else {
@@ -4234,7 +4440,6 @@
                     wRow.style.display = 'none';
                 }
 
-                // ✨ 【新增】浮窗内展示"预估出货时刻 + 出货进度"（追加，不影响上面的倒计时逻辑）
                 const estBox = div.querySelector(`#fc-est-${winId}`);
                 if (estBox) {
                     try {
@@ -4500,11 +4705,14 @@
 
         function clearManualInputs() {
             mHour.value = 0; mMin.value = 0; mPercent.value = 0; mFogHour.value = 0; mFogMin.value = 0; mFogSec.value = 0;
+            document.getElementById('mFogDurHour').value = 1; document.getElementById('mFogDurMin').value = 0;
             mMonsterSelect.selectedIndex = 0; document.querySelector('input[name="mStatus"][value="green"]').checked = true;
             mFogGroup.style.display = 'none'; mFateGroup.style.display = 'none'; fateRecords = []; updateSpecialCounterUI(); autoCorrect(); showToast("🗑️ 输入已清空");
             
             weatherTargetEndTime = null;
+            weatherDurationMs = WEATHER_DURATION_MS;
             document.getElementById('weatherStatusBox').style.display = 'none';
+            document.getElementById('weatherEditPanel').style.display = 'none';
         }
 
         function updateSpecialCounterUI() {
