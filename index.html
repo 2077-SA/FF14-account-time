@@ -688,6 +688,415 @@
         .detail-val { font-family: monospace; font-weight: bold; }
         .detail-section-title { color: var(--gold); font-weight: bold; margin: 16px 0 6px 0; font-size: 14px; }
     </style>
+    <style id="optimized-structure-overrides">
+
+/* 全局滚动条美化 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+:root { 
+    --bg: #0f0f1a; --panel: #1a1a2e; --panel-rgb: 26, 26, 46; --panel-light: #22223b; 
+    --accent: #00ff7f; --text: #e0e0e0; --text-muted: #999; --red: #ff4d4d; --gold: #f39c12; 
+    --blue: #00bfff; --border: #2a2a4a; --purple: #9b59b6; --input-bg: #0b132b; --input-border: #555; 
+    --glass-blur: blur(16px);
+}
+[data-theme="light"] { 
+    --bg: #f0f2f5; --panel: #ffffff; --panel-rgb: 255, 255, 255; --panel-light: #f8f9fa; 
+    --accent: #00b359; --text: #333333; --text-muted: #666; --red: #e74c3c; --gold: #d35400; 
+    --blue: #2980b9; --border: #e0e0e0; --purple: #8e44ad; --input-bg: #f9f9f9; --input-border: #cccccc; 
+}
+[data-theme="pink"] { 
+    --bg: #ffe6f2; --panel: #fff0f5; --panel-rgb: 255, 240, 245; --panel-light: #ffe4ef; 
+    --accent: #ff69b4; --text: #4a1c2d; --text-muted: #8e5a70; --red: #ff4757; --gold: #e67e22; 
+    --blue: #3498db; --border: #ffcce0; --purple: #9b59b6; --input-bg: #ffffff; --input-border: #ffb6c1; 
+}
+[data-theme="sky"] { 
+    --bg: #e1f5fe; --panel: #ffffff; --panel-rgb: 255, 255, 255; --panel-light: #b3e5fc; 
+    --accent: #0277bd; --text: #003b5c; --text-muted: #005f8f; --red: #e53935; --gold: #f57c00; 
+    --blue: #0288d1; --border: #81d4fa; --purple: #8e44ad; --input-bg: #f1f8e9; --input-border: #81d4fa; 
+}
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } } 
+.blink-warning { animation: blink 1s infinite; }
+@keyframes ssBlink {
+    0%, 100% { background-color: rgba(243, 156, 18, 0.25); border-left: 4px solid var(--gold); }
+    50% { background-color: transparent; border-left: 4px solid transparent; }
+}
+.ss-highlight { animation: ssBlink 1s infinite; }
+
+* { box-sizing: border-box; } 
+html, body { overflow-y: auto !important; height: auto; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: background 0.3s, color 0.3s; min-height: 100vh;}
+h1 { color: var(--accent); margin-bottom: 5px; text-align: center; font-size: 24px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 255, 127, 0.3); } 
+.subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; text-align: center; min-height: 20px; }
+
+button { outline: none; font-family: inherit; }
+.btn { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.25s; font-size: 13px; border: 1px solid transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.1); letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); filter: brightness(1.1); } 
+.btn:active { transform: translateY(0); }
+.btn-accent { background: linear-gradient(135deg, var(--accent), #00b359); color: #fff !important; border: none; }
+.btn-red { background: linear-gradient(135deg, var(--red), #cc0000); color: #fff; border: none; }
+.btn-outline { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(255,255,255,0.1); }
+.btn-large-route { padding: 12px 30px; font-size: 18px; font-weight: 900; background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; border-radius: 10px; border: none; box-shadow: 0 6px 20px rgba(0, 191, 255, 0.4); transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; letter-spacing: 1px; }
+.btn-large-route:hover { transform: scale(1.02); filter: brightness(1.2); box-shadow: 0 8px 25px rgba(0, 191, 255, 0.6); }
+
+.top-bar { width: 100%; max-width: 1250px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; position: relative; z-index: 100;} 
+.top-bar-left { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.toolbox-wrapper { position: relative; display: inline-block; } 
+.toolbox-menu { display: none; position: absolute; background: rgba(var(--panel-rgb), 0.85); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); min-width: 260px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 1000; border-radius: 8px; border: 1px solid var(--border); top: 100%; left: 0; padding: 8px 0; }
+.toolbox-menu button { width: 100%; text-align: left; padding: 10px 15px; border: none; background: none; color: var(--text); cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; display: flex; justify-content: space-between; align-items: center; } 
+.toolbox-menu button:hover { background: var(--panel-light); color: var(--accent); } 
+.toolbox-wrapper:hover .toolbox-menu { display: block; }
+
+.toggle-switch { position: relative; width: 36px; height: 20px; background-color: rgba(255, 255, 255, 0.1); border-radius: 20px; border: 1px solid var(--border); transition: all 0.3s ease; display: inline-block; flex-shrink: 0; }
+.toggle-switch::after { content: ''; position: absolute; width: 14px; height: 14px; background-color: var(--text-muted); border-radius: 50%; top: 2px; left: 2px; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.toggle-switch.active { background-color: var(--accent); border-color: var(--accent); } 
+.toggle-switch.active::after { transform: translateX(16px); background-color: #fff; }
+[data-theme="light"] .toggle-switch, [data-theme="pink"] .toggle-switch, [data-theme="sky"] .toggle-switch { background-color: rgba(0, 0, 0, 0.1); }
+
+body[data-layout="landscape"] .manual-card, body[data-layout="landscape"] .top-bar { max-width: 100% !important; } 
+body[data-layout="landscape"] .input-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; } 
+body[data-layout="landscape"] .status-radio { flex-direction: row !important; }
+
+.glass-card {
+    background: rgba(var(--panel-rgb), 0.65) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+}
+[data-theme="light"] .glass-card, [data-theme="pink"] .glass-card, [data-theme="sky"] .glass-card {
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05) !important;
+}
+
+.manual-card { padding: 20px 30px; width: 100%; max-width: 1250px; box-sizing: border-box; margin-bottom: 20px; position: relative; transition: background 0.3s; }
+.manual-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; } 
+.manual-header h2 { margin: 0; font-size: 16px; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; } 
+.manual-header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.input-section { background: rgba(var(--panel-rgb), 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 18px; margin-bottom: 15px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); } 
+.section-title { font-size: 14px; color: var(--text); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; border-left: 3px solid var(--accent); padding-left: 10px; border-radius: 2px;}
+.input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; } 
+.input-group { display: flex; flex-direction: column; gap: 8px; min-width: 0; } 
+.input-group label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.row-flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; }
+
+select, input[type="number"], input[type="text"], input[type="password"], input[type="time"], input[type="range"] { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s; width: 100%; box-sizing: border-box; }
+select:focus, input[type="number"]:focus, input[type="text"]:focus, input[type="password"]:focus, input[type="time"]:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 255, 127, 0.2); } 
+select { cursor: pointer; color: var(--accent); font-weight: bold; } 
+input[type="number"] { width: 70px; text-align: center; font-family: monospace; font-weight: bold; }
+
+.custom-select-input { cursor: pointer; color: var(--accent); font-weight: bold; background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s; }
+.custom-select-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 255, 127, 0.2); }
+
+.custom-dropdown-panel { display: none; position: absolute; top: 100%; left: 0; z-index: 9999; background: rgba(var(--panel-rgb), 0.95); backdrop-filter: var(--glass-blur); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); width: 340px; max-height: 400px; overflow-y: auto; padding: 10px; margin-top: 5px; text-align: left; }
+.dropdown-search { width: 100%; margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); outline:none; } 
+.dropdown-search:focus { border-color: var(--accent); }
+.dropdown-region-group { margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; } 
+.dropdown-region-title { background: var(--panel-light); padding: 8px 12px; font-size: 14px; color: var(--accent); font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+.dropdown-region-title::after { content: '▼'; font-size: 10px; transition: 0.2s; } 
+.dropdown-region-group.collapsed .dropdown-region-title::after { transform: rotate(-90deg); } 
+.dropdown-region-group.collapsed .dropdown-item-list { display: none; }
+.dropdown-item-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: var(--input-bg); } 
+.dropdown-item { padding: 6px 10px; cursor: pointer; border-radius: 4px; font-size: 13px; color: var(--text); transition: 0.1s; border: 1px solid var(--border); background: var(--panel); } 
+.dropdown-item:hover { background: var(--accent); color: var(--panel); border-color: var(--accent); transform: translateY(-1px); }
+
+.status-radio { display: flex; gap: 10px; } 
+.status-radio label { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-weight: bold; padding: 8px 15px; border-radius: 6px; background: var(--input-bg); border: 1px solid var(--input-border); transition: 0.2s; flex: 1; text-align: center; }
+.status-radio input[type="radio"] { display: none; } 
+.status-radio input[type="radio"]:checked + span.green { color: var(--accent); } 
+.status-radio input[type="radio"]:checked + span.red { color: var(--red); } 
+.status-radio label:has(input:checked) { border-color: currentColor; background: var(--panel); }
+
+.counter-panel { background: var(--input-bg); border: 1px solid var(--purple); border-radius: 8px; padding: 15px; margin-top: 15px; display: none; } 
+.counter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; } 
+.counter-title { color: var(--purple); font-weight: bold; font-size: 14px; } 
+.counter-val { font-size: 28px; font-family: monospace; font-weight: bold; color: var(--accent); } 
+.counter-btns { display: flex; gap: 10px; margin-top: 10px; }
+
+.recent-list { margin-top: 20px; border-top: 1px dashed var(--border); padding-top: 15px; } 
+.recent-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; } 
+.recent-list-title { font-size: 14px; color: var(--accent); font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;} 
+.recent-list-title:hover { color: var(--gold); } 
+.recent-list-actions { display: flex; gap: 8px; } 
+.recent-list-content { max-height: 500px; overflow-y: auto; display: block; transition: max-height 0.3s ease; } 
+.recent-list-content.collapsed { display: none; }
+.recent-item { display: flex; justify-content: space-between; align-items: center; background: rgba(var(--panel-rgb), 0.5); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; transition: all 0.2s; cursor: pointer; } 
+.recent-item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.recent-item-info { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; } 
+.recent-item-title { font-weight: bold; font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;} 
+.recent-item-times { font-size: 13px; color: var(--text-muted); display: flex; gap: 15px; flex-wrap: wrap; background: var(--input-bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); align-items: center; }
+.recent-time-block { display: flex; flex-direction: column; gap: 2px; } 
+.recent-time-val { font-family: monospace; font-weight: bold; font-size: 14px; }
+.recent-progress-block { display: flex; flex-direction: column; gap: 4px; width: 100px; margin-left: auto; border-left: 1px solid var(--border); padding-left: 15px; } 
+.recent-progress-bar { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; } 
+.recent-progress-fill { height: 100%; background: var(--blue); width: 0%; transition: width 0.3s; } 
+.recent-progress-text { font-size: 11px; font-weight: bold; color: var(--text-muted); text-align: right; }
+
+.manual-result-box { background: var(--input-bg); padding: 20px; border-radius: 10px; font-size: 15px; line-height: 1.8; border: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 30px; min-height: 50px; margin-top: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+.res-item { display: flex; flex-direction: column; } 
+.res-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px;} 
+.res-val { font-family: monospace; font-size: 18px; font-weight: bold; } 
+.res-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-family: monospace; display: flex; align-items: center; gap: 5px; }
+.btn-copy-manual { background: var(--input-border); color: var(--accent); border: 1px solid var(--accent); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-left: auto;} 
+.btn-copy-manual:hover { background: var(--accent); color: var(--panel); } 
+.manual-warn { color: var(--gold); font-size: 12px; width: 100%; margin-top: 5px;}
+.extra-area { margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px; display: none; }
+
+.weather-status-box { background: rgba(155,89,182,0.1); border: 1px solid var(--purple); border-radius: 8px; padding: 12px; margin-top: 10px; display: none; } 
+.weather-status-title { font-size: 13px; color: var(--purple); font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 5px; } 
+.weather-countdown-val { font-family: monospace; font-size: 20px; font-weight: bold; color: var(--gold); } 
+.weather-countdown-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.fate-records-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; } 
+.fate-record-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; } 
+.fate-record-item .fate-time { font-family: monospace; font-weight: bold; color: var(--accent); } 
+.fate-record-item .fate-remove { background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 14px; font-weight: bold; padding: 0 5px; } 
+.fate-warning { color: var(--red); font-weight: bold; font-size: 13px; margin-top: 10px; padding: 10px; background: rgba(255,77,77,0.1); border: 1px dashed var(--red); border-radius: 6px; }
+
+#loading { display: none; text-align: center; color: var(--gold); font-weight: bold; margin-bottom: 20px; } 
+.progress-bar-container { width: 100%; max-width: 400px; height: 10px; background: var(--border); border-radius: 5px; margin: 10px auto; overflow: hidden; display: none;} 
+.progress-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; } 
+#progress-text { font-size: 12px; color: var(--text-muted); display: block; margin-top: 5px; }
+
+#results-container { width: 100%; max-width: 1250px; display: none; overflow-x: auto; margin-bottom: 30px; } 
+table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); table-layout: auto; } 
+th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; } 
+th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
+
+.hide-server .server-col { display: none; } .hide-action .action-col { display: none !important; }
+.server-th-flex { display: flex; align-items: center; justify-content: space-between; gap: 10px;} 
+.quick-fix-server { position: relative; display: inline-block; } 
+.quick-fix-btn { background: var(--gold); color: var(--panel); border: none; border-radius: 4px; cursor: pointer; padding: 2px 6px; font-size: 12px; font-weight: bold; } 
+.quick-fix-menu { display: none; position: absolute; top: 100%; left: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 5px; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); max-height: 200px; overflow-y: auto; min-width: 150px; } 
+.quick-fix-menu button { display: block; width: 100%; text-align: left; padding: 5px 10px; background: none; border: none; color: var(--text); cursor: pointer; font-size: 12px; } 
+.quick-fix-menu button:hover { background: var(--panel-light); color: var(--accent); } 
+.quick-fix-server:hover .quick-fix-menu { display: block; }
+
+.server-tag { background: var(--accent); color: var(--panel); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; white-space: nowrap; }
+.time-text-display { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100px; } 
+.time-text { font-family: monospace; font-size: 16px; font-weight: bold; color: var(--accent); } 
+.time-text.red-text { color: var(--red); } 
+.edit-time-btn { background: transparent; border: none; cursor: pointer; font-size: 14px; opacity: 0.7; transition: 0.2s; padding: 2px; } 
+.edit-time-btn:hover { opacity: 1; transform: scale(1.1); } 
+.time-edit-inputs { display: none; align-items: center; gap: 5px; } 
+.time-edit-inputs input { width: 45px; text-align: center; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 5px; border-radius: 4px; font-family: monospace; } 
+.save-time-btn { background: var(--accent); color: var(--panel); border: none; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-weight: bold; }
+
+.status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; white-space: nowrap; cursor: pointer; user-select: none; transition: 0.2s; } 
+.status-badge:hover { filter: brightness(1.2); transform: scale(1.05); } 
+.badge-gate-open { background: rgba(0, 255, 127, 0.15); color: var(--accent); border: 1px solid var(--accent); } 
+.badge-cd { background: rgba(255, 77, 77, 0.15); color: var(--red); border: 1px solid var(--red); } 
+.badge-wait-weather { background: rgba(155, 89, 182, 0.15); color: var(--purple); border: 1px solid var(--purple); }
+
+.progress-container { width: 120px; background: var(--border); border-radius: 10px; height: 10px; margin-top: 5px; overflow: hidden; } 
+.progress-fill { height: 100%; width: 0%; transition: 0.3s; } 
+.fill-green { background: linear-gradient(90deg, var(--accent), var(--blue)); } 
+.fill-red { background: linear-gradient(90deg, var(--red), var(--gold)); } 
+.fill-purple { background: linear-gradient(90deg, var(--purple), var(--red)); }
+
+.time-display { font-family: monospace; font-weight: bold; font-size: 14px; } 
+.time-force { color: var(--gold); } 
+.countdown-big { font-family: monospace; font-weight: bold; font-size: 16px; }
+.countdown-red { color: var(--red); } 
+.countdown-blue { color: var(--blue); } 
+.countdown-gold { color: var(--gold); } 
+.countdown-green { color: var(--accent); }
+.status-text-col { font-size: 13px; font-weight: bold; color: var(--text-muted); } 
+.weather-info { font-size: 11px; color: var(--purple); margin-top: 4px; font-weight: bold; }
+
+.btn-row-action { display: flex; gap: 5px; } 
+.btn-kill-row { background: var(--red); color: #fff; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; } 
+.btn-kill-row:hover { filter: brightness(0.9); } 
+.btn-undo-row { background: var(--text-muted); color: var(--panel); border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; } 
+.btn-undo-row:hover { filter: brightness(0.9); }
+
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 20000; justify-content: center; align-items: center; } 
+.modal-content { background: var(--panel); padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); border: 1px solid var(--border); text-align: center; position: relative; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 20px; color: var(--accent); margin-bottom: 10px; font-weight: bold; } 
+.modal-desc { color: var(--text); font-size: 14px; margin-bottom: 15px; line-height: 1.5; } 
+.modal-upload-area { border: 2px dashed var(--input-border); border-radius: 8px; padding: 20px; margin-bottom: 15px; background: var(--input-bg); cursor: pointer; transition: 0.2s; } 
+.modal-upload-area:hover { border-color: var(--accent); } 
+.modal-upload-area img { max-width: 100%; max-height: 200px; border-radius: 4px; display: none; margin-top: 10px; } 
+.modal-upload-area.has-img { border-color: var(--accent); }
+.modal-btns { display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap; } 
+.btn-modal { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; flex: 1; min-width: 120px;} 
+.btn-cancel { background: var(--text-muted); color: var(--panel); } 
+.btn-cancel:hover { filter: brightness(0.9); } 
+.btn-confirm { background: var(--red); color: #fff; opacity: 0.5; pointer-events: none; } 
+.btn-confirm.ready { opacity: 1; pointer-events: auto; } 
+.btn-confirm.ready:hover { filter: brightness(0.9); }
+.btn-close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: var(--text-muted); font-size: 24px; line-height: 1; cursor: pointer; transition: 0.2s; padding: 0; z-index: 10;} 
+.btn-close-modal:hover { color: var(--red); transform: scale(1.1); }
+
+#triggerSelectModal { z-index: 25000; }
+#historyModal .modal-content, #allKillRecordsModal .modal-content { max-width: 800px; text-align: left; } 
+.history-search { width: 100%; padding: 10px; margin-bottom: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; box-sizing: border-box; } 
+.history-list { max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); } 
+.history-item { padding: 10px 15px; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: center;} 
+.history-item:last-child { border-bottom: none; } 
+.history-time { color: var(--text-muted); font-size: 11px; margin-right: 10px;} 
+.history-type { font-size: 11px; padding: 2px 5px; border-radius: 3px; background: var(--border); color: var(--text); margin-right: 5px;} 
+.history-actions button { padding: 4px 8px; font-size: 12px; border-radius: 4px; cursor: pointer; border: none; background: var(--accent); color: var(--panel); font-weight: bold;}
+
+#toast { position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: var(--panel); padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; z-index: 30000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transform: translateY(20px); } 
+#toast.show { opacity: 1; transform: translateY(0); }
+
+.theme-switcher { position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 100; } 
+.theme-btn { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);} 
+.theme-btn:hover { transform: scale(1.1); } 
+.theme-btn.active { border-color: var(--text); } 
+.theme-btn.dark { background: #1a1a2e; } 
+.theme-btn.light { background: #ffffff; } 
+.theme-btn.pink { background: #ffcce0; } 
+.theme-btn.sky { background: #4fc3f7; }
+
+.floating-window { display: none; position: fixed; background: rgba(var(--panel-rgb), 0.85); backdrop-filter: var(--glass-blur); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; box-shadow: 0 6px 24px rgba(0,0,0,0.4); z-index: 9999; min-width: 320px; max-width: 400px; cursor: move; user-select: none; } 
+.floating-window .fc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); cursor: move; } 
+.floating-window .fc-title { font-size: 14px; color: var(--gold); font-weight: bold; } 
+.floating-window .fc-btns { display: flex; gap: 10px; align-items: center; } 
+.floating-window .fc-copy, .floating-window .fc-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px; } 
+.floating-window .fc-copy:hover { color: var(--accent); } 
+.floating-window .fc-close:hover { color: var(--red); } 
+.floating-window .fc-body { font-size: 13px; line-height: 1.8; } 
+.floating-window .fc-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 5px; } 
+.floating-window .fc-label { color: var(--text-muted); } 
+.floating-window .fc-val { font-family: monospace; font-weight: bold; } 
+.floating-window .fc-countdown { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-family: monospace; font-size: 16px; font-weight: bold; text-align: center; } 
+.floating-window .fc-desc { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 5px; }
+
+#focusRoutePage { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 10000; padding: 20px; flex-direction: column; overflow-y: auto; }
+.focus-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); flex-shrink: 0; max-width: 1600px; margin: 0 auto 20px auto; width: 100%; } 
+.focus-header-left { display: flex; align-items: center; gap: 15px; } 
+.focus-title { font-size: 24px; font-weight: bold; color: var(--blue); display: flex; align-items: center; gap: 10px; }
+.focus-container { display: flex; flex: 1; gap: 20px; max-width: 1600px; margin: 0 auto; width: 100%; align-items: stretch; min-height: 800px; } 
+.focus-col-left { flex: var(--left-ratio, 1); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; overflow-y: auto; transition: flex 0.3s; } 
+.focus-col-right { flex: var(--right-ratio, 1.5); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: flex 0.3s; overflow: hidden; }
+.route-textarea { width: 100%; height: 180px; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; box-sizing: border-box; resize: none; margin-bottom: 10px; outline: none; font-size: 14px; line-height: 1.6; } 
+.route-textarea:focus { border-color: var(--accent); } 
+.route-output { color: var(--gold); border-style: dashed; height: 200px; font-size: 14px; flex-shrink: 0; }
+.route-result-box { display: none; text-align: left; flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; } 
+.route-log-list { font-size: 12px; color: var(--text-muted); flex: 1; overflow-y: auto; margin-top: 10px; border: none; border-radius: 0; padding: 0; background: transparent; min-height: 0; max-height: 60vh; }
+.server-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); } 
+.server-card-header { background: var(--panel-light); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; } 
+.server-card-title { font-weight: bold; color: var(--accent); font-size: 14px; } 
+.server-card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.monster-list-item { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; gap: 8px; transition: background 0.2s; } 
+.monster-list-item:last-child { border-bottom: none; } 
+.monster-list-item:hover { background: rgba(255,255,255,0.02); }
+@keyframes targetBlink { 0%, 100% { background-color: rgba(243, 156, 18, 0.2); border-left: 4px solid var(--gold); } 50% { background-color: transparent; border-left: 4px solid transparent; } } 
+.monster-list-item.target-highlight { animation: targetBlink 1s infinite; }
+.v7 { color: var(--red); font-weight: bold; background: rgba(255,77,77,0.1); padding: 2px 4px; border-radius: 3px;} 
+.v6 { color: var(--gold); font-weight: bold; background: rgba(243,156,18,0.1); padding: 2px 4px; border-radius: 3px;} 
+.v5 { color: var(--blue); font-weight: bold; background: rgba(0,191,255,0.1); padding: 2px 4px; border-radius: 3px;} 
+.v4 { color: var(--purple); font-weight: bold; background: rgba(155,89,182,0.1); padding: 2px 4px; border-radius: 3px;}
+.btn-fix { background: var(--gold); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; } 
+.btn-fix:hover { filter: brightness(0.9); } 
+.route-add-btn { background: var(--accent); color: var(--panel); border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; } 
+.route-add-btn:hover { filter: brightness(0.9); }
+.btn-edit-small, .btn-delete-small, .btn-order-up, .btn-order-down { background: transparent; border: 1px solid transparent; cursor: pointer; font-size: 14px; padding: 4px 6px; border-radius: 4px; transition: 0.2s; } 
+.btn-edit-small { color: var(--blue); } 
+.btn-edit-small:hover { background: rgba(0, 191, 255, 0.1); border-color: var(--blue); } 
+.btn-delete-small { color: var(--red); } 
+.btn-delete-small:hover { background: rgba(255, 77, 77, 0.1); border-color: var(--red); }
+.btn-order-up, .btn-order-down { color: var(--text-muted); display: none; } 
+.server-card.show-arrows .btn-order-up, .server-card.show-arrows .btn-order-down { display: inline-block; } 
+.btn-order-up:hover, .btn-order-down:hover { color: var(--accent); background: rgba(0, 255, 127, 0.1); border-radius: 4px; }
+.input-trigger-compact { background: var(--input-bg); border: 1px solid var(--border); color: var(--gold); padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 180px; outline: none; transition: 0.2s; } 
+.input-trigger-compact:focus { border-color: var(--accent); background: var(--panel); }
+.advanced-route-panel { margin-top: 15px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); } 
+.advanced-route-header { padding: 12px 15px; font-weight: bold; color: var(--accent); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; } 
+.advanced-route-body { padding: 0 15px 15px 15px; display: none; } 
+.stat-box { display: flex; justify-content: space-between; background: var(--panel); padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; flex-wrap: wrap; gap: 10px;}
+#announcementBody .input-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-bottom: 10px; } 
+#announcementBody input[type="text"] { width: 100%; box-sizing: border-box; }
+.announcement-box { background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: 10px; } 
+.announcement-textarea { width: 100%; height: 160px; background: var(--panel); color: var(--text); border: 1px solid var(--border); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; line-height: 1.6; margin-top: 10px; resize: vertical; }
+.quick-add-tag { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; user-select: none; } 
+.quick-add-tag:hover { background: var(--accent); color: var(--panel); border-color: var(--accent); transform: translateY(-1px); }
+.trigger-container { display: flex; flex-wrap: wrap; gap: 8px; max-height: 250px; overflow-y: auto; padding: 12px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; margin-top: 10px; } 
+.trigger-tag { display: inline-block; padding: 6px 12px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; color: var(--text); cursor: pointer; transition: all 0.2s; user-select: none; } 
+.trigger-tag:hover { background: var(--accent); color: var(--panel); border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.3); } 
+.trigger-tag .server-part { font-size: 11px; opacity: 0.6; margin-left: 2px; } 
+.trigger-tag:hover .server-part { color: var(--panel); opacity: 0.9; }
+
+@media (max-width: 900px) { 
+    .focus-container { flex-direction: column; min-height: auto; } 
+    .focus-col-left, .focus-col-right { flex: none !important; overflow: visible; } 
+    .btn-large-route { font-size: 16px; padding: 12px 20px; } 
+    .route-log-list { max-height: none; } 
+}
+@media (max-width: 768px) { 
+    body { padding: 10px; } 
+    .theme-switcher { top: 10px; right: 10px; } 
+    h1 { font-size: 18px; margin-top: 30px; } 
+    .manual-card { padding: 15px; } 
+    .input-grid { grid-template-columns: 1fr; } 
+    .status-radio { flex-direction: column; } 
+    .status-radio label { width: 100%; } 
+    .row-flex { width: 100%; } 
+    select, .custom-select-input { max-width: 100%; } 
+    .manual-result-box { flex-direction: column; align-items: flex-start; gap: 15px; } 
+    .btn-copy-manual { margin-left: 0; width: 100%; } 
+    table, thead, tbody, th, td, tr { display: block; } 
+    thead tr { position: absolute; top: -9999px; left: -9999px; } 
+    tr { border: 1px solid var(--border); margin-bottom: 15px; border-radius: 8px; background: var(--panel); overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); } 
+    td { border: none; border-bottom: 1px solid var(--border); position: relative; padding-left: 50%; text-align: right; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; padding-bottom: 15px; padding-right: 15px; } 
+    td:last-child { border-bottom: none; } 
+    td::before { content: attr(data-label); position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; color: var(--accent); } 
+    .floating-window { left: 10px !important; right: 10px !important; max-width: none; top: auto !important; bottom: 10px !important; position: relative !important; margin-bottom: 10px; } 
+    .modal-btns { flex-direction: column; } 
+    .btn-modal { width: 100%; } 
+    .recent-item { flex-direction: column; align-items: flex-start; } 
+    .recent-item-times { flex-direction: column; gap: 5px; width: 100%;} 
+    .recent-progress-block { margin-left: 0; border-left: none; border-top: 1px solid var(--border); padding-left: 0; padding-top: 8px; width: 100%; margin-top: 8px;} 
+    .recent-progress-text { text-align: left; } 
+    .time-text-display { width: auto; justify-content: flex-end; } 
+    .time-edit-inputs { justify-content: flex-end; } 
+}
+
+.route-monitor-box { background: rgba(243, 156, 18, 0.1); border: 2px solid var(--gold); border-radius: 8px; padding: 15px; margin-bottom: 15px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); } 
+.route-monitor-title { font-size: 14px; color: var(--gold); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; } 
+.route-monitor-content { display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; } 
+.route-monitor-item { display: flex; flex-direction: column; gap: 4px; } 
+.route-monitor-val { font-family: monospace; font-size: 16px; font-weight: bold; color: var(--text); }
+
+.modal-overlay.glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(0,0,0,0.4); } 
+.update-modal-content { background: rgba(26, 26, 46, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05); border-radius: 16px; color: #fff; max-width: 550px; padding: 30px; transform: translateY(20px); animation: modalSlideUp 0.4s forwards; } 
+[data-theme="light"] .update-modal-content { background: rgba(255,255,255,0.9); color: #333; border: 1px solid rgba(0,0,0,0.1); } 
+@keyframes modalSlideUp { to { transform: translateY(0); } } 
+.update-title { font-size: 22px; font-weight: 900; background: linear-gradient(90deg, var(--accent), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; text-align: center; } 
+.update-list { list-style: none; padding: 0; margin: 0 0 25px 0; text-align: left; } 
+.update-list li { margin-bottom: 12px; font-size: 14px; line-height: 1.6; padding-left: 25px; position: relative; background: rgba(255,255,255,0.03); padding: 10px 10px 10px 35px; border-radius: 8px; border-left: 3px solid var(--accent); } 
+.update-list li::before { content: '✨'; position: absolute; left: 10px; top: 10px; } 
+.update-list strong { color: var(--gold); }
+
+.marquee-container { background: rgba(20, 20, 35, 0.65) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; box-shadow: 0 0 50px rgba(0, 0, 0, 0.5) !important; color: #fff !important; max-width: 650px !important; padding: 40px !important; overflow: hidden; } 
+.marquee-title { font-size: 36px; font-weight: 900; text-align: center; margin-bottom: 30px; animation: dropDown 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; letter-spacing: 2px; } 
+.marquee-text { font-size: 20px; line-height: 1.8; text-align: center; font-family: monospace; font-weight: bold; margin: 30px 0; animation: dropDown 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; white-space: pre-wrap; text-shadow: 0 0 10px currentColor; word-break: break-all; } 
+@keyframes dropDown { 0% { transform: translateY(-50px); opacity: 0; filter: blur(5px); } 100% { transform: translateY(0); opacity: 1; filter: blur(0); } } 
+.marquee-container .btn-modal { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); } 
+.marquee-container .btn-modal:hover { background: rgba(255,255,255,0.2); } 
+.marquee-container .btn-copy-result { background: var(--accent) !important; color: var(--panel) !important; border: none !important; }
+
+.detail-modal-content { background: rgba(var(--panel-rgb), 0.85) !important; backdrop-filter: blur(18px) !important; -webkit-backdrop-filter: blur(18px) !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; border-radius: 16px !important; color: var(--text) !important; max-width: 640px !important; padding: 30px !important; text-align: left !important; } 
+.detail-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed rgba(128,128,128,0.25); font-size: 13px; align-items: center; flex-wrap: wrap; } 
+.detail-label { color: var(--text-muted); } 
+.detail-val { font-family: monospace; font-weight: bold; } 
+.detail-section-title { color: var(--gold); font-weight: bold; margin: 16px 0 6px 0; font-size: 14px; }
+
+.batch-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; } 
+.batch-table th, .batch-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); } 
+.batch-table th { background: var(--panel-light); color: var(--accent); font-weight: bold; } 
+.batch-table input[type="number"] { width: 50px; padding: 4px; text-align: center; } 
+.batch-remove-btn { background: transparent; border: none; color: var(--red); cursor: pointer; font-weight: bold; font-size: 16px; }
+
+    </style>
+
 </head>
 <body data-layout="portrait">
     <div class="theme-switcher">
@@ -724,9 +1133,16 @@
                             </div>
                         </div>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" id="mMonsterWrapper">
                         <label>S怪名称</label>
-                        <select id="mMonster"><option value="未知|未知">--- 选择S怪 ---</option></select>
+                        <div class="row-flex">
+                            <input type="text" id="mMonsterInput" class="custom-select-input" placeholder="点击选择或搜索S怪..." readonly>
+                            <input type="hidden" id="mMonster" value="未知|未知">
+                            <div id="monsterDropdownPanel" class="custom-dropdown-panel">
+                                <input type="text" id="monsterSearchInput" class="dropdown-search" placeholder="🔍 搜索S怪名字或黑话..." oninput="filterDropdownMonsters()">
+                                <div id="monsterDropdownList"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -837,16 +1253,18 @@
 
             <div class="manual-result-box" id="manualResultBox"></div>
 
-            <div class="row-flex" style="justify-content: center; margin-top: 15px;">
+            <div class="row-flex" style="justify-content: center; margin-top: 15px; flex-wrap: wrap;">
                 <button class="btn btn-accent" onclick="addToRecentList()" style="padding: 12px 30px; font-size: 16px;">➕ 添加至计算列表</button>
+                <button class="btn btn-outline" onclick="openBatchAddModal()" style="padding: 12px 30px; font-size: 15px; margin-left: 10px; border-color: var(--purple); color: var(--purple);">批量录入 S怪</button>
             </div>
 
             <div class="recent-list">
                 <div class="recent-list-header">
                     <div class="recent-list-title" onclick="toggleRecentList()">
-                        <span id="recentToggleIcon">▶</span> 📋 最近计算记录 (最多保留50条)
+                        <span id="recentToggleIcon">▶</span> 📋 最近计算记录 <span id="recentLimitBadge" style="font-size: 12px; color: var(--gold); margin-left: 5px;"></span>
                     </div>
                     <div class="recent-list-actions">
+                        <button class="btn btn-outline" onclick="expandRecentLimit()" style="padding: 4px 10px; font-size: 12px; color: var(--purple); border-color: var(--purple);">扩容上限</button>
                         <button class="btn btn-outline" onclick="openAllKillRecordsModal()" style="padding: 4px 10px; font-size: 12px; color: var(--gold); border-color: var(--gold);">📜 查看所有出货记录</button>
                     </div>
                 </div>
@@ -1498,7 +1916,34 @@
 
     <div id="toast">✅ 操作成功</div>
     <canvas id="canvas"></canvas>
-        <script>
+        
+    <!-- Optimized batch-entry modal merged from the first source. -->
+    <div class="modal-overlay" id="batchAddModal">
+<div class="modal-content glass-panel" style="max-width: 900px; text-align: left;">
+<button class="btn-close-modal" onclick="document.getElementById('batchAddModal').style.display='none'">×</button>
+<div class="modal-title" style="text-align: center; color: var(--gold); margin-bottom: 20px;">批量录入 S怪</div>
+<div class="row-flex" style="margin-bottom: 15px; background: rgba(0,0,0,0.1); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+<div class="input-group" style="flex:1;"><label style="font-size:12px; color:var(--text-muted);">服务器</label><select id="batchAddServerSelect"></select></div>
+<div class="input-group" style="flex:1;"><label style="font-size:12px; color:var(--text-muted);">状态</label><select id="batchAddStatusSelect"><option value="green">存活</option><option value="red">CD中</option></select></div>
+<div class="input-group" style="flex:1;"><label style="font-size:12px; color:var(--text-muted);">时间/进度 (时:分)</label><div class="row-flex" style="gap:5px;"><input type="number" id="batchAddH" min="0" max="99" value="0" style="width:60px;"> : <input type="number" id="batchAddM" min="0" max="59" value="0" style="width:60px;"></div></div>
+<button class="btn btn-accent" onclick="addBatchSelectionToQueue()" style="height: 42px; margin-top: 22px;">添加至表格</button>
+</div>
+<input type="text" id="batchAddSearch" class="dropdown-search" placeholder="搜索S怪 (支持黑话，未解锁用户不可用)..." oninput="filterBatchAddMonsters()">
+<div id="batchAddList" class="trigger-container" style="max-height: 200px; display:flex; flex-wrap:wrap; gap:8px; overflow-y: auto;"></div>
+<div style="margin-top: 15px; max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
+<table class="batch-table" id="batchQueueTable"><thead><tr><th>服务器</th><th>S怪名称</th><th>状态</th><th>进度/时间</th><th>操作</th></tr></thead><tbody id="batchQueueBody"></tbody></table>
+</div>
+<div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+<span id="batchAddLimitText" style="color:var(--purple); font-weight:bold; font-size: 13px;"></span>
+<div class="row-flex">
+<button class="btn btn-outline" onclick="executeBatchAdd('calc')" style="color:var(--accent); border-color:var(--accent);">加入最近计算列表</button>
+<button class="btn btn-accent" onclick="executeBatchAdd('route')">加入排车列表</button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
         const PredictorConfig = {
             PRIOR_LIVING_HOURS: { '7.0': 1.5, '6.0': 3.0, '5.0': 8.0, '4.0': 15.0 },
             PRIOR_WEIGHT: 2,
@@ -4026,5 +4471,1076 @@
         window.__predictor = new SMonsterPredictor(function () { return allKillRecords; });
         window.addEventListener('load', () => { setTimeout(() => { loadLocalState(); }, 100); });
     </script>
+
+<script>
+/*
+ * Merge layer: the complete original source above remains in place.
+ * Updated function bodies are layered from the optimized source below.
+ */
+(function () {
+    let recentLimitOffset = 0;
+    let expandCooldownEnd = 0;
+    let batchSelectedMonsters = new Set();
+    let batchQueue = [];
+    const mMonsterInput = document.getElementById('mMonsterInput');
+    const mMonsterHidden = document.getElementById('mMonster');
+    const monsterDropdownPanel = document.getElementById('monsterDropdownPanel');
+    const monsterDropdownList = document.getElementById('monsterDropdownList');
+    const DEFAULT_UPDATE_CONTENT = `<li><strong>天气系统全面进化</strong>：支持“保存并开始倒计时”，临近自动闪烁，进入天气后自动监控剩余存在时间！</li><li><strong>多开悬浮窗增强</strong>：支持随意拖拽，新增天气状态监控，信息更丰富，随点随看！</li><li><strong>专注排车目标监控</strong>：开启带车目标追踪后，右上方直接展示当前目标的精确倒计时与天气状态！</li><li><strong>计算列表大扩容</strong>：从 5 条扩展到 50 条，同时展示进闸时间、强制时间和天气状态多重监控面板！</li><li><strong>新黑话适配</strong>：补齐了起立格、奥山、少爷等前置天气 S 怪，适配更加完美！</li><li><strong>全量出货记录与进度条</strong>：新增出货/寄了按钮，支持查询所有S怪的历史击杀记录！</li><li><strong>修复上报冷却 Bug</strong>：移除自动判定死亡锁操作限制，支持开发者/特殊邀请码调整冷却。</li><li><strong>新增磨砂玻璃详情</strong>：点击记录卡片可查看详细的时间节点和上一次出货时间。</li><li><strong>新增批量加入 & 击杀功能</strong>：支持多选S怪批量加入，直接击杀重置CD，阶梯权限扩容。</li><li><strong>寄了修复</strong>：现在支持在48小时内多次点击寄了记录触发失败次数！</li>`;
+    const optimizedMonsterData = [ { name: "厌忌之人 奇里格", area: "奥阔帕恰山", version: "7.0", alias: ["起立哥", "天气哥", "起立格", "奥山", "qilige", "qlg"] }, { name: "伊努索奇", area: "克扎玛乌卡湿地", version: "7.0", alias: ["螳螂", "湿地", "tanglang", "tl"] }, { name: "内尤佐缇", area: "亚克特尔树海", version: "7.0", alias: ["鱼粉", "yufen", "yf"] }, { name: "山谢亚", area: "夏劳尼荒野", version: "7.0", alias: ["山火", "山谢娅", "荒野", "shanxieya", "sxy"] }, { name: "先驱勇士 阿提卡斯", area: "遗产之地", version: "7.0", alias: ["烤肉", "牛排", "xianqu", "xq"] }, { name: "天气预报机器人", area: "活着的记忆", version: "7.0", alias: ["天气", "机器人", "预言家", "tianqi", "tq"] }, { name: "布弗鲁", area: "迷津", version: "6.0", alias: ["少爷", "bfl"] }, { name: "颇胝迦", area: "萨维奈岛", version: "6.0", alias: ["腰子", "pzj"] }, { name: "阿姆斯特朗", area: "加雷马", version: "6.0", alias: ["壮壮", "胳膊壮", "gbz"] }, { name: "沉思之物", area: "叹息海", version: "6.0", alias: ["路由器", "蘑菇", "mogu", "mg"] }, { name: "俄菲翁尼厄斯", area: "厄尔庇斯", version: "6.0", alias: ["鸟蛋", "蛋仔", "danza", "dz"] }, { name: "狭缝", area: "天外天垓", version: "6.0", alias: ["芒果", "mangguo", "mg"] }, { name: "戾虫", area: "雷克兰德", version: "5.0", alias: ["李冲", "lichong"] }, { name: "得到宽恕的炫学", area: "珂露西亚岛", version: "5.0", alias: ["棉花", "嫂子", "xuanxue", "xx"] }, { name: "多智兽", area: "安穆·艾兰", version: "5.0", alias: ["多汁", "duozhi", "dz"] }, { name: "阿格拉俄珀", area: "伊尔美格", version: "5.0", alias: ["蛾子", "孔雀", "kongque", "kq"] }, { name: "伊休妲", area: "拉凯提卡大森林", version: "5.0", alias: ["大森", "yxd", "伊休但"] }, { name: "顾尼图", area: "黑风海", version: "5.0", alias: ["图图", "船长", "chuanzhang", "cz"] }, { name: "优昙婆罗花", area: "基拉巴尼亚边区", version: "4.0", alias: ["边花", "花", "bianhua", "bh"] }, { name: "爬骨怪龙", area: "基拉巴尼亚山区", version: "4.0", alias: ["爬爬", "papa", "pp"] }, { name: "盐和光", area: "基拉巴尼亚湖区", version: "4.0", alias: ["基佬", "盐基佬", "扔垃圾", "yanheguang", "yhg"] }, { name: "巨大鳐", area: "红玉海", version: "4.0", alias: ["窑子", "瑶子", "鳐子", "巨大瑶", "judayao"] }, { name: "伽马", area: "延夏", version: "4.0", alias: ["γ", "gama", "gm"] }, { name: "兀鲁忽乃朝鲁", area: "太阳海岸", version: "4.0", alias: ["石板", "门板", "shiban", "sb"] } ];
+    for (const src of optimizedMonsterData) {
+        const target = S_MONSTERS.find(m => m.name === src.name);
+        if (!target) {
+            S_MONSTERS.push({ ...src, alias: Array.isArray(src.alias) ? [...src.alias] : [] });
+        } else if (Array.isArray(src.alias)) {
+            target.alias = Array.from(new Set([...(target.alias || []), ...src.alias]));
+        }
+    }
+    window.checkUpdateModal = function checkUpdateModal() {
+const isViewed = localStorage.getItem('ff14_update_169_viewed'); let content = localStorage.getItem('ff14_custom_update_text') || DEFAULT_UPDATE_CONTENT;
+if (!content.includes('<li>')) { const lines = content.split('\n').filter(l => l.trim()); content = lines.map(line => `<li><strong>更新内容</strong>：${line}</li>`).join(''); }
+document.getElementById('updateContentList').innerHTML = content;
+if (!isViewed) document.getElementById('updatePreviewModal').style.display = 'flex';
+};
+
+    window.openEditUpdateModal = function openEditUpdateModal() {
+if (!isDeveloperMode) { showToast('需要前往【邀请码特权】解锁后操作'); openInviteModal(); return; }
+let currentText = localStorage.getItem('ff14_custom_update_raw') || ''; if (!currentText) currentText = DEFAULT_UPDATE_CONTENT.replace(/<[^>]+>/g, '').trim();
+document.getElementById('updateEditTextarea').value = currentText; document.getElementById('editUpdateModal').style.display = 'flex';
+};
+
+    window.saveUpdateContent = function saveUpdateContent() {
+let text = document.getElementById('updateEditTextarea').value.trim();
+if (!text) { localStorage.removeItem('ff14_custom_update_text'); localStorage.removeItem('ff14_custom_update_raw'); showToast('已恢复默认公告'); } 
+else { const lines = text.split('\n').filter(l => l.trim()); const htmlContent = lines.map(line => `<li>${line}</li>`).join(''); localStorage.setItem('ff14_custom_update_text', htmlContent); localStorage.setItem('ff14_custom_update_raw', text); showToast('更新公告已保存'); }
+localStorage.removeItem('ff14_update_169_viewed'); document.getElementById('editUpdateModal').style.display = 'none'; checkUpdateModal();
+};
+
+    window.matchTriggerSearch = function matchTriggerSearch(t, search) { if (t.toLowerCase().includes(search)) return true; for (let alias in TRIGGER_ALIASES) { if (TRIGGER_ALIASES[alias] === t && alias.toLowerCase().includes(search)) return true; } return false; };
+
+    window.updateGlobalTriggers = function updateGlobalTriggers() {
+if (isVipUnlocked) allTriggers = Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])); else allTriggers = [...customTriggers];
+let datalistEl = document.getElementById('trigger-datalist'); if(!datalistEl) { datalistEl = document.createElement('datalist'); datalistEl.id = 'trigger-datalist'; document.body.appendChild(datalistEl); }
+datalistEl.innerHTML = ''; allTriggers.forEach(t => { datalistEl.innerHTML += `<option value="${t}">`; }); for (let alias in TRIGGER_ALIASES) datalistEl.innerHTML += `<option value="${alias}">`;
+document.querySelectorAll('.select-trigger').forEach(sel => { const currentVal = sel.value; let html = `<option value="">-- 选择触发者 --</option>`; allTriggers.forEach(t => { html += `<option value="${t}">${t}</option>`; }); html += `<option value="__CUSTOM__" style="color:var(--gold); font-weight:bold;">+ 添加自定义触发者...</option>`; sel.innerHTML = html; sel.value = currentVal; }); renderRouteTriggerList();
+};
+
+    window.initMonsterSelects = function initMonsterSelects() {
+const versions = ['7.0', '6.0', '5.0', '4.0'];
+[mMonsterSelect, addMonsterSelect, fixMonsterSelect].forEach(sel => {
+if(!sel) return;
+let baseHtml = sel.id === 'mMonster' ? `<option value="未知|未知">--- 选择S怪 ---</option>` : '';
+versions.forEach(v => {
+const opts = S_MONSTERS.filter(m => m.version === v);
+if(opts.length > 0) {
+baseHtml += `<optgroup label="${v} S怪">`;
+opts.forEach(m => { baseHtml += `<option value="${m.name}|${m.area}">${m.name} [${m.area}]</option>`; });
+baseHtml += `</optgroup>`;
+}
+});
+sel.innerHTML = baseHtml;
+});
+};
+
+    window.buildMonsterDropdown = function buildMonsterDropdown() {
+let html = '';
+const versions = ['7.0', '6.0', '5.0', '4.0'];
+versions.forEach(v => {
+const opts = S_MONSTERS.filter(m => m.version === v);
+if(opts.length > 0) {
+html += `<div class="dropdown-region-group collapsed" data-ver="${v}">
+<div class="dropdown-region-title" onclick="toggleDropdownRegion(this)">${v} S怪</div>
+<div class="dropdown-item-list">`;
+opts.forEach(m => {
+html += `<div class="dropdown-item" onclick="selectMonster('${m.name}', '${m.area}', event)">${m.name}</div>`;
+});
+html += `</div></div>`;
+}
+});
+monsterDropdownList.innerHTML = html;
+};
+
+    window.filterDropdownMonsters = function filterDropdownMonsters() {
+const val = document.getElementById('monsterSearchInput').value.trim().toLowerCase();
+const groups = monsterDropdownList.querySelectorAll('.dropdown-region-group');
+groups.forEach(g => {
+let hasVisible = false;
+const items = g.querySelectorAll('.dropdown-item');
+items.forEach(item => {
+const text = item.innerText.toLowerCase();
+const matchObj = S_MONSTERS.find(m => m.name === item.innerText);
+const matchAlias = matchObj && matchObj.alias && matchObj.alias.some(a => a.toLowerCase().includes(val));
+if (text.includes(val) || matchAlias) { item.style.display = 'block'; hasVisible = true; } 
+else item.style.display = 'none';
+});
+if (hasVisible) { g.style.display = 'block'; if (val !== '') g.classList.remove('collapsed'); } 
+else g.style.display = 'none';
+});
+};
+
+    window.selectMonster = function selectMonster(name, area, event) {
+if (event) event.stopPropagation();
+mMonsterHidden.value = `${name}|${area}`;
+mMonsterInput.value = name;
+monsterDropdownPanel.style.display = 'none';
+mMonsterHidden.dispatchEvent(new Event('change'));
+};
+
+    window.applyWeatherRemainTime = function applyWeatherRemainTime() {
+if (!weatherTargetEndTime) { showToast('请先启动天气倒计时'); return; }
+const remH = parseInt(document.getElementById('wRemHour').value) || 0; const remM = parseInt(document.getElementById('wRemMin').value) || 0; const remS = parseInt(document.getElementById('wRemSec').value) || 0;
+const remMs = (remH * 3600 + remM * 60 + remS) * 1000;
+const durH = parseInt(document.getElementById('wDurHour').value) || 0; const durM = parseInt(document.getElementById('wDurMin').value) || 0;
+let newDurMs = (durH * 3600 + durM * 60) * 1000; if (newDurMs <= 0) newDurMs = WEATHER_DURATION_MS;
+const now = Date.now();
+if (now < weatherTargetEndTime) { weatherTargetEndTime = now + remMs; weatherDurationMs = newDurMs; showToast('已修正距天气出现的时间及总时长'); } 
+else { const oldEnd = weatherTargetEndTime + weatherDurationMs; const oldRem = oldEnd - now; if (remMs !== oldRem && remMs > 0) { const passedMs = now - weatherTargetEndTime; weatherDurationMs = passedMs + remMs; showToast('已修正天气剩余时间'); } else { weatherDurationMs = newDurMs; showToast('已修正天气总持续时间'); } }
+document.getElementById('weatherEditPanel').style.display = 'none'; tickWeatherCountdown(); calcManual();
+};
+
+    window.toggleTrackingMode = function toggleTrackingMode(val) { isTrackingMode = val; renderRouteResult(); if(isTrackingMode) showToast('目标追踪已开启，点击S怪旁的准星设为当前目标'); };
+
+    window.setTargetMonster = function setTargetMonster(idx) {
+if(!isTrackingMode) return;
+if (parsedMonsters[idx].isTarget) { parsedMonsters[idx].isTarget = false; showToast(`已取消目标`); } 
+else { parsedMonsters.forEach((m, i) => { m.isTarget = (i === idx); }); showToast(`当前目标：${parsedMonsters[idx].name}`); }
+renderRouteResult();
+};
+
+    window.copyMonsterCoord = function copyMonsterCoord(idx) { const m = parsedMonsters[idx]; if(!m) return; navigator.clipboard.writeText(`${m.server} ${m.name} ${m.coord}`).then(() => showToast("坐标信息已复制")); };
+
+    window.copyTacticMacro = function copyTacticMacro(idx, isCrossServer) {
+const m = parsedMonsters[idx]; if(!m) return;
+let macro = isCrossServer ? `/sh 不出SS跨服解散下一站【${m.server}】<flag>\n/y 不出SS跨服解散下一站【${m.server}】<flag> <wait.2>\n/sh 车头会在最后传送，抵达后请耐心等待，烦请不要抢开\n/y 车头会在最后传送，抵达后请耐心等待，烦请不要抢开。` : `/sh 不要解散下一站【本地】<flag>\n/y 不要解散下一站【本地】<flag>`;
+navigator.clipboard.writeText(macro).then(() => showToast("战术宏已复制，请前往游戏粘贴"));
+};
+
+    window.saveLayout = function saveLayout() { const val = document.getElementById('layoutRatio').value; localStorage.setItem('ff14_route_layout', val); showToast('布局比例已保存'); };
+
+    window.initGlobalServerLock = function initGlobalServerLock() {
+const sel = document.getElementById('globalServerLock');
+let html = `<option value="">-- 选择要应用的服务器 --</option>`;
+for (const [region, servers] of Object.entries(SERVER_GROUPS)) { html += `<optgroup label="${region}">`; servers.forEach(s => { html += `<option value="${s}">${s}</option>`; }); html += `</optgroup>`; }
+sel.innerHTML = html;
+const newTrgServer = document.getElementById('newTriggerServer'); let trgHtml = '';
+for (const [region, servers] of Object.entries(SERVER_GROUPS)) { trgHtml += `<optgroup label="${region}">`; servers.forEach(s => { trgHtml += `<option value="${s}">${s}</option>`; }); trgHtml += `</optgroup>`; }
+newTrgServer.innerHTML = trgHtml;
+const routeNewTrgServer = document.getElementById('routeNewTriggerServer'); if(routeNewTrgServer) routeNewTrgServer.innerHTML = trgHtml;
+const quickServerSelect = document.getElementById('quickServerSelect');
+if(quickServerSelect) { let qHtml = ''; for (const [region, servers] of Object.entries(SERVER_GROUPS)) { qHtml += `<optgroup label="${region}">`; servers.forEach(s => { qHtml += `<option value="${s}">${s}</option>`; }); qHtml += `</optgroup>`; } quickServerSelect.innerHTML = qHtml; }
+renderQuickMonsterTags(S_MONSTERS);
+};
+
+    window.renderQuickMonsterTags = function renderQuickMonsterTags(list) {
+const container = document.getElementById('quickMonsterTags'); if(!container) return; container.innerHTML = '';
+list.forEach(m => {
+const span = document.createElement('span'); span.className = 'quick-add-tag'; span.innerText = m.name;
+span.onclick = () => {
+document.getElementById('quickMonsterNameInput').value = m.name; navigator.clipboard.writeText(m.name).then(() => {});
+if(mMonsterInput && mMonsterHidden) { mMonsterInput.value = m.name; mMonsterHidden.value = `${m.name}|${m.area}`; mMonsterHidden.dispatchEvent(new Event('change')); }
+const addMonsterEl = document.getElementById('addMonsterSelect'); if(addMonsterEl) addMonsterEl.value = `${m.name}|${m.area}`;
+const fixMonsterEl = document.getElementById('fixMonsterSelect'); if(fixMonsterEl) fixMonsterEl.value = `${m.name}|${m.area}`;
+showToast(`已关联选中：${m.name}`);
+};
+container.appendChild(span);
+});
+};
+
+    window.quickAddToList = function quickAddToList() {
+const name = document.getElementById('quickMonsterNameInput').value; if (!name) { showToast('请先选择S怪'); return; }
+const server = document.getElementById('quickServerSelect').value; let coord = document.getElementById('quickCoordInput').value.trim();
+if (!coord) coord = "(坐标未知)"; else if (!coord.startsWith('(')) coord = `(${coord.replace(/,/g, ', ')})`;
+const dbMonster = S_MONSTERS.find(m => m.name === name); if (!dbMonster) return;
+const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === server); if (isDuplicate) { showToast('该服务器下已有这只怪'); return; }
+parsedMonsters.push({ name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coord, server: server, hp: '100.00%', trigger: '', isDead: false, isTarget: false, isSS: false, originalName: dbMonster.name });
+sortParsedMonstersDefault(); renderRouteResult(); showToast(`已精准添加 ${name}`);
+document.getElementById('quickMonsterNameInput').value = ''; document.getElementById('quickCoordInput').value = '';
+};
+
+    window.applyGlobalServer = function applyGlobalServer() {
+const targetServer = document.getElementById('globalServerLock').value; if (!targetServer) { showToast('请先选择一个服务器'); return; }
+if (parsedMonsters.length === 0) { showToast('当前排车列表为空'); return; }
+let count = 0; parsedMonsters.forEach(m => { if (m.server === '未知' || !m.server) { m.server = targetServer; count++; } });
+if (count > 0) { renderRouteResult(); showToast(`已成功将 ${count} 只未知 S怪 的服务器设为 ${targetServer}`); } else showToast('没有找到服务器未知的 S怪');
+};
+
+    window.calculateRouteTime = function calculateRouteTime() {
+const activeMonsters = parsedMonsters.filter(m => !m.isDead);
+if (activeMonsters.length === 0) { document.getElementById('routeCountStats').innerText = '0只'; document.getElementById('routeTotalDuration').innerText = '-'; document.getElementById('routeEndTime').innerText = '-'; return; }
+let v7Count = 0, v6Count = 0, v5Count = 0, v4Count = 0;
+activeMonsters.forEach(m => { if (m.version === '7.0') v7Count++; else if (m.version === '6.0') v6Count++; else if (m.version === '5.0') v5Count++; else v4Count++; });
+document.getElementById('routeCountStats').innerHTML = `<span style="color:var(--red)">${v7Count}</span> / <span style="color:var(--gold)">${v6Count}</span> / <span style="color:var(--blue)">${v5Count}</span> / <span style="color:var(--purple)">${v4Count}</span> (7/6/5/4)`;
+const serverSet = new Set(activeMonsters.map(m => m.server)); const crossServerCount = serverSet.size;
+const playerCount = parseInt(document.getElementById('routePlayerCount').value) || 24; const waitTime = parseFloat(document.getElementById('routeWaitTime').value) || 2; const crossTime = parseFloat(document.getElementById('routeCrossTime').value) || 3;
+let baseDuration = (activeMonsters.length * waitTime) + (Math.max(0, crossServerCount - 1) * crossTime); if (playerCount > 24) baseDuration *= 1.1; 
+const hours = Math.floor(baseDuration / 60); const mins = Math.round(baseDuration % 60);
+document.getElementById('routeTotalDuration').innerText = `${hours > 0 ? hours + '小时' : ''}${mins}分钟 (跨服${crossServerCount}次)`;
+const startTimeVal = document.getElementById('routeStartTime').value;
+if (startTimeVal) { const parts = startTimeVal.split(':'); const startDate = new Date(); startDate.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0); const endDate = new Date(startDate.getTime() + baseDuration * 60000); document.getElementById('routeEndTime').innerText = `${String(endDate.getHours()).padStart(2,'0')}:${String(endDate.getMinutes()).padStart(2,'0')}`; } else document.getElementById('routeEndTime').innerText = '等待填开车时间';
+};
+
+    window.autoEvaluateTime = function autoEvaluateTime() {
+const playerCount = parseInt(document.getElementById('routePlayerCount').value) || 24;
+document.getElementById('routeWaitTime').value = Math.max(1, Math.ceil(playerCount / 20)); document.getElementById('routeCrossTime').value = Math.max(2, Math.ceil(playerCount / 15));
+calculateRouteTime(); showToast('已根据现场人数自动评估时间');
+};
+
+    window.loadSavedRouteDirect = function loadSavedRouteDirect() { if (loadSavedRoute()) openFocusRoute(); else showToast('没有找到20分钟内的排车缓存'); };
+
+    window.openFocusRoute = function openFocusRoute() {
+if (!isVipUnlocked) { openInviteModal(); showToast('请先生成或输入邀请码解锁排车特权'); return; }
+document.getElementById('focusRoutePage').style.display = 'flex'; const savedRatio = localStorage.getItem('ff14_route_layout') || 40;
+document.getElementById('layoutRatio').value = savedRatio; adjustLayout(savedRatio);
+if (parsedMonsters.length > 0) renderRouteResult(); 
+else {
+const cache = localStorage.getItem('ff14_route_cache');
+if (cache) { try { const data = JSON.parse(cache); if (Date.now() < data.expire) { parsedMonsters = data.monsters || []; parsedMonsters.forEach(m => { if (m.isDead === undefined) m.isDead = false; if (m.isTarget === undefined) m.isTarget = false; if (m.isSS === undefined) m.isSS = false; if (m.originalName === undefined) m.originalName = m.name; }); renderRouteResult(); } } catch(e) {} }
+}
+renderRouteTriggerList(); calculateRouteTime();
+};
+
+    window.generateAnnouncement = function generateAnnouncement() {
+const activeMonsters = parsedMonsters.filter(m => !m.isDead); if (activeMonsters.length === 0) { showToast('没有排车数据'); return; }
+const header = document.getElementById('annHeader').value || '未知'; let station = document.getElementById('annStartStation').value.trim();
+const isPureAom = activeMonsters.every(m => m.name === "厌忌之人 奇里格");
+if (!station) { if (currentAnnType === 'aom' || isPureAom) station = `【白金幻象】奥阔帕恰山`; else { const firstM = activeMonsters[0]; if (firstM) station = `【${firstM.server}】${firstM.area} ${firstM.coord}`; } }
+let v7 = 0, v6 = 0, v5 = 0, v4 = 0;
+activeMonsters.forEach(m => { if (m.version === '7.0') v7++; else if (m.version === '6.0') v6++; else if (m.version === '5.0') v5++; else v4++; });
+const now = new Date(); const dateStr = `${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+let output = "";
+if (currentAnnType === 'morning') { const mTime = document.getElementById('annMorningTime').value || '9:30AM'; output = `${dateStr} 早车S车资讯\n开车时间:${mTime}\n始发站：${station}\n车头：${header}\n100S*${v7} 90S*${v6} 80S*${v5} 70S*${v4}`; } 
+else if (currentAnnType === 'evening') { const eTime = document.getElementById('annEveningTime').value || '17:50'; output = `${dateStr} 晚车 ${eTime}\n首站 ${station.replace(/[【】]/g, '')}\n车头 ${header}\n100s*${v7} 90s*${v6} 80s*${v5} 70s*${v4}`; } 
+else { const aTime = document.getElementById('annAomTime').value || '21:00'; output = `${dateStr} 奥山车 ${aTime}\n首站 ${station.replace(/[【】]/g, '')}\n车头 ${header}\n`; output += isPureAom ? `纯奥山车，全服清空！` : `混合车：奥山(${v7 > 0 ? '包含' : '未包含'}) / 100s*${v7} 90s*${v6} 80s*${v5} 70s*${v4}`; }
+document.getElementById('announcementOutput').value = output; showToast('公告生成成功，请复制或修改');
+};
+
+    window.copyAnnouncement = function copyAnnouncement() { const text = document.getElementById('announcementOutput').value; if(!text) { showToast('请先生成公告'); return; } navigator.clipboard.writeText(text).then(() => showToast("公告已复制")); };
+
+    window.toggleMaintenance = function toggleMaintenance() { isMaintenanceMode = !isMaintenanceMode; CD_HOURS = isMaintenanceMode ? 50 : 84; document.querySelectorAll('.calc-row').forEach(tr => { if (tr.recalculate) tr.recalculate(); }); updateToolboxBadges(); showToast(isMaintenanceMode ? '已开启维护模式 (CD 50h)' : '已关闭维护模式 (CD 84h)'); };
+
+    window.generateInviteCode = function generateInviteCode() {
+    const input = document.getElementById('masterCodeInput').value.trim();
+    if (!input) { showToast('请输入主控码'); return; }
+    
+    // 允许在第一步直接输入特殊码或开发者码
+    if (input === 'kfz6168') {
+        isDeveloperMode = true; isMasterVerified = true; isVipUnlocked = true; 
+        localStorage.setItem('ff14_developer_mode', 'true'); localStorage.setItem('ff14_master_verified', 'true'); 
+        updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList(); renderRouteTriggerList(); 
+        showToast('开发者模式已解锁，全部功能无限制！'); 
+        document.getElementById('inviteModal').style.display = 'none'; 
+        if (document.getElementById('focusRoutePage').style.display === 'flex') calculateRouteTime(); 
+        return;
+    }
+    if (input === 'w6168' || input === 'y616') {
+        isMasterVerified = true; isVipUnlocked = true; 
+        localStorage.setItem('ff14_master_verified', 'true'); 
+        updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList(); renderRouteTriggerList(); 
+        showToast('特殊邀请码验证成功！已解锁排车及高级功能。'); 
+        document.getElementById('inviteModal').style.display = 'none'; 
+        if (document.getElementById('focusRoutePage').style.display === 'flex') calculateRouteTime(); 
+        return;
+    }
+
+    if (Date.now() < generateCooldownEnd) { const remain = Math.ceil((generateCooldownEnd - Date.now()) / 1000); showToast(`处于冷却期，请等待 ${remain} 秒`); return; }
+    if (input !== 'w6168') { showToast('主控码错误，无法生成'); return; }
+    // 这里的逻辑上一步已经拦截，但保留作为后置兜底
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let newCode = '';
+    for (let i = 0; i < 16; i++) newCode += chars.charAt(Math.floor(Math.random() * chars.length));
+    currentActiveInvite = newCode; inviteExpireTime = Date.now() + 30000;
+    document.getElementById('generatedCodeText').innerText = newCode; document.getElementById('newCodeResult').style.display = 'block';
+    document.getElementById('masterCodeInput').value = ''; document.getElementById('btnGenerateInvite').disabled = true;
+    if (inviteTimerInterval) clearInterval(inviteTimerInterval);
+    inviteTimerInterval = setInterval(() => { if (Date.now() < inviteExpireTime) document.getElementById('inviteCountdown').innerText = `(剩余 ${Math.ceil((inviteExpireTime - Date.now()) / 1000)} 秒)`; else { clearInterval(inviteTimerInterval); currentActiveInvite = null; document.getElementById('inviteCountdown').innerText = '(已过期！请等待1分钟冷却)'; generateCooldownEnd = Date.now() + 60000; document.getElementById('btnGenerateInvite').disabled = false; showToast('邀请码已过期，请等待1分钟冷却后重新生成'); } }, 1000);
+    showToast('新的 16 位临时邀请码已生成 (仅30秒有效)');
+};
+
+    window.copyGeneratedCode = function copyGeneratedCode() { navigator.clipboard.writeText(document.getElementById('generatedCodeText').innerText).then(() => showToast('邀请码已复制')); };
+
+    window.validateInviteCode = function validateInviteCode() {
+const code = document.getElementById('inviteCodeInput').value.trim();
+if (code === 'kfz6168') { isDeveloperMode = true; isMasterVerified = true; isVipUnlocked = true; localStorage.setItem('ff14_developer_mode', 'true'); localStorage.setItem('ff14_master_verified', 'true'); updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList(); renderRouteTriggerList(); showToast('开发者模式已解锁，全部功能无限制！'); document.getElementById('inviteModal').style.display = 'none'; if (document.getElementById('focusRoutePage').style.display === 'flex') calculateRouteTime(); return; }
+if (code === 'w6168' || code === 'y616') { isMasterVerified = true; isVipUnlocked = true; localStorage.setItem('ff14_master_verified', 'true'); updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList(); renderRouteTriggerList(); showToast('特殊邀请码验证成功！已解锁排车及高级功能。'); document.getElementById('inviteModal').style.display = 'none'; if (document.getElementById('focusRoutePage').style.display === 'flex') calculateRouteTime(); return; }
+if (currentActiveInvite && code === currentActiveInvite && Date.now() < inviteExpireTime) { isVipUnlocked = true; updateInviteStatusUI(); updateGlobalTriggers(); renderTriggerList(); renderRouteTriggerList(); showToast('验证成功！已解锁特权。'); document.getElementById('inviteModal').style.display = 'none'; if (document.getElementById('focusRoutePage').style.display === 'flex') calculateRouteTime(); } 
+else showToast('邀请码无效或已过期！');
+};
+
+    window.handleRouteAdd = function handleRouteAdd(server) { if (!isVipUnlocked) { alert("排车特权未解锁。\n请前往顶部【邀请码特权】获取。"); return; } openCorrectionModal(server); };
+
+    window.renderTriggerList = function renderTriggerList() {
+const container = document.getElementById('triggerContainer'); container.innerHTML = ''; const search = document.getElementById('triggerSearch').value.toLowerCase();
+let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
+displayList.forEach(t => { if (matchTriggerSearch(t, search)) { const span = document.createElement('span'); span.className = 'trigger-tag'; const parts = t.split('@'); if(parts.length === 2) span.innerHTML = `${parts[0]}<span class="server-part">@${parts[1]}</span>`; else span.innerText = t; span.onclick = () => { const parts = t.split('@'); if(parts.length === 2) { document.getElementById('newTriggerName').value = parts[0]; document.getElementById('newTriggerServer').value = parts[1]; } else document.getElementById('newTriggerName').value = t; navigator.clipboard.writeText(t).then(() => showToast('触发者已复制')); }; container.appendChild(span); } });
+if (container.innerHTML === '') container.innerHTML = isVipUnlocked ? '<div style="color:var(--text-muted); font-size:12px;">没有找到匹配的触发者</div>' : '<div style="color:var(--gold); font-size:12px; padding: 5px;">预置名单已锁定，请在顶部输入邀请码查看。</div>';
+};
+
+    window.renderRouteTriggerList = function renderRouteTriggerList() {
+const container = document.getElementById('routeTriggerContainer'); if (!container) return; container.innerHTML = '';
+const search = (document.getElementById('routeTriggerSearch')?.value || '').toLowerCase();
+let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
+displayList.forEach(t => { if (matchTriggerSearch(t, search)) { const span = document.createElement('span'); span.className = 'trigger-tag'; const parts = t.split('@'); if(parts.length === 2) span.innerHTML = `${parts[0]}<span class="server-part">@${parts[1]}</span>`; else span.innerText = t; span.onclick = () => { const parts = t.split('@'); if(parts.length === 2) { document.getElementById('routeNewTriggerName').value = parts[0]; document.getElementById('routeNewTriggerServer').value = parts[1]; } else document.getElementById('routeNewTriggerName').value = t; navigator.clipboard.writeText(t).then(()=> showToast('触发者已复制')); }; container.appendChild(span); } });
+if (container.innerHTML === '') container.innerHTML = isVipUnlocked ? '<div style="color:var(--text-muted); font-size:12px;">没有找到匹配的触发者</div>' : '<div style="color:var(--gold); font-size:12px; padding: 5px;">预置名单已锁定，请在顶部输入邀请码查看。</div>';
+};
+
+    window.addCustomTrigger = function addCustomTrigger() {
+const name = document.getElementById('newTriggerName').value.trim(); const alias = document.getElementById('newTriggerAlias').value.trim(); const server = document.getElementById('newTriggerServer').value;
+if (!name) { showToast('请输入触发者名字'); return; }
+const val = `${name}@${server}`;
+if (!customTriggers.includes(val)) { customTriggers.push(val); localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers)); }
+if (!allTriggers.includes(val)) allTriggers.push(val);
+if (alias) { const aliasArr = alias.split(/[\/|,，]/).map(a => a.trim()).filter(a => a); aliasArr.forEach(a => { TRIGGER_ALIASES[a] = val; }); }
+showToast('已添加自定义触发者'); document.getElementById('newTriggerName').value = ''; document.getElementById('newTriggerAlias').value = ''; renderTriggerList(); updateGlobalTriggers();
+};
+
+    window.addRouteCustomTrigger = function addRouteCustomTrigger() {
+const name = document.getElementById('routeNewTriggerName').value.trim(); const alias = document.getElementById('routeNewTriggerAlias').value.trim(); const server = document.getElementById('routeNewTriggerServer').value;
+if (!name) { showToast('请输入触发者名字'); return; }
+const val = `${name}@${server}`;
+if (!customTriggers.includes(val)) { customTriggers.push(val); localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers)); }
+if (!allTriggers.includes(val)) allTriggers.push(val);
+if (alias) { const aliasArr = alias.split(/[\/|,，]/).map(a => a.trim()).filter(a => a); aliasArr.forEach(a => { TRIGGER_ALIASES[a] = val; }); }
+showToast('已添加自定义触发者'); document.getElementById('routeNewTriggerName').value = ''; document.getElementById('routeNewTriggerAlias').value = ''; renderRouteTriggerList(); renderTriggerList(); updateGlobalTriggers();
+};
+
+    window.saveRouteData = function saveRouteData() { if (parsedMonsters.length === 0) { showToast("没有可保存的排车数据"); return; } const expire = Date.now() + 20 * 60 * 1000; localStorage.setItem('ff14_saved_route_20m', JSON.stringify({ data: parsedMonsters, expire })); addHistory('排车保存', `保存了 ${parsedMonsters.length} 只怪的排车数据`); showToast("排车数据已保存，20分钟内可在顶部恢复"); };
+
+    window.generateSimpleRoute = function generateSimpleRoute(force = false, flatList = null) {
+if (!force && isSimpleRouteLocked) return; const el = document.getElementById('simpleRouteOutput'); if (!el) return; 
+if (parsedMonsters.length === 0) { el.value = ""; return; }
+if (!flatList) { const serverMap = {}; parsedMonsters.forEach(m => { if (m.isDead) return; if (!serverMap[m.server]) serverMap[m.server] = []; serverMap[m.server].push(m); }); const serverStats = []; for (let server in serverMap) { const list = serverMap[server]; let v7 = list.filter(m => m.version === "7.0").length; let v6 = list.filter(m => m.version === "6.0").length; let v5 = list.filter(m => m.version === "5.0").length; let v4 = list.filter(m => m.version === "4.0").length; serverStats.push({ server, list, v7, v6, v5, v4 }); } serverStats.sort((a, b) => { if (b.v7 !== a.v7) return b.v7 - a.v7; if (b.count !== a.count) return b.count - a.count; if (b.v6 !== a.v6) return b.v6 - a.v6; if (b.v5 !== a.v5) return b.v5 - a.v5; return b.v4 - a.v4; }); flatList = []; serverStats.forEach(stat => { stat.list.forEach(m => flatList.push(m)); }); }
+let simpleStr = "今日车序：\n"; let lastServer = "";
+flatList.forEach(m => { if (m.server !== lastServer) { if (lastServer !== "") simpleStr += " "; simpleStr += `【${m.server}--${m.area}】`; lastServer = m.server; } else simpleStr += `--【${m.area}】`; });
+el.value = simpleStr.trim(); if (force) { isSimpleRouteLocked = false; showToast("简版车序已重新生成"); }
+};
+
+    window.saveSimpleRoute = function saveSimpleRoute() { isSimpleRouteLocked = true; showToast("简版修改已保存"); };
+
+    window.copySimpleRoute = function copySimpleRoute() { navigator.clipboard.writeText(document.getElementById('simpleRouteOutput').value).then(() => showToast("简版已复制")); };
+
+    window.saveTriggers = function saveTriggers() { localStorage.setItem('ff14_route_cache', JSON.stringify({ text: document.getElementById('routeOutput').value, log: document.getElementById('routeLogList').innerHTML, monsters: parsedMonsters, expire: Date.now() + 10 * 60 * 1000 })); showToast('触发者分配已保存！'); };
+
+    window.copyDetailedRoute = function copyDetailedRoute() { const activeMonsters = parsedMonsters.filter(m => !m.isDead); if (activeMonsters.length === 0) { showToast('没有存活的S怪'); return; } let text = ""; activeMonsters.forEach(m => { text += `${m.server} ${m.name} ${m.area} ${m.coord} ${m.trigger || '未分配'}\n`; }); navigator.clipboard.writeText(text.trim()).then(() => showToast("详细排车已复制")); };
+
+    window.exportMonsterTriggers = function exportMonsterTriggers() { const activeMonsters = parsedMonsters.filter(m => !m.isDead); if (activeMonsters.length === 0) { showToast('没有存活的S怪'); return; } let text = ""; activeMonsters.forEach(m => { text += `${m.name} - ${m.trigger || '未分配'}\n`; }); navigator.clipboard.writeText(text.trim()).then(() => showToast("触发者名单已复制")); };
+
+    window.exportTxtWithOptions = function exportTxtWithOptions() {
+const activeMonsters = parsedMonsters.filter(m => !m.isDead); if (activeMonsters.length === 0) { showToast('没有存活的S怪'); return; }
+const isSimple = confirm("存为TXT\n\n点击【确定】导出简易版（S怪名字 + 服务器）\n点击【取消】导出详细版（服务器 + S怪名字 + 地区 + 坐标 + 触发者）");
+let text = ""; if (isSimple) activeMonsters.forEach(m => { text += `${m.name} ${m.server}\n`; }); else activeMonsters.forEach(m => { text += `${m.server} ${m.name} ${m.area} ${m.coord} ${m.trigger || '未分配'}\n`; });
+const blob = new Blob([text.trim()], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; const now = new Date();
+a.download = `FF14排车_${isSimple?'简易':'详细'}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.txt`;
+document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("排车文件已保存！");
+};
+
+    window.processRouteImageOCR = async function processRouteImageOCR(file) {
+document.getElementById('routeOcrLoading').style.display = 'block'; document.getElementById('routeUploadArea').style.borderColor = 'var(--gold)'; document.getElementById('routeResultBox').style.display = 'none'; document.getElementById('routeEmptyState').style.display = 'none';
+const reader = new FileReader();
+reader.onload = async e => {
+const img = new Image();
+img.onload = async () => {
+const canvas = document.getElementById('canvas'); const ctx = canvas.getContext('2d');
+const scale = 3; canvas.width = img.width * scale; canvas.height = img.height * scale;
+ctx.filter = 'grayscale(100%) contrast(180%) brightness(110%)'; ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+const imgUrl = canvas.toDataURL(); currentRouteImageBase64 = imgUrl; document.getElementById('viewRouteImgBtn').style.display = 'block';
+try {
+const worker = await Tesseract.createWorker('chi_sim+eng', 1, { logger: m => { if (m.status === 'recognizing text') { const p = Math.round(m.progress * 100); document.getElementById('route-progress-text').innerText = `深度识别中... ${p}%`; document.getElementById('route-progress-bar-fill').style.width = `${p}%`; } } });
+await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT, preserve_interword_spaces: '1' });
+const { data } = await worker.recognize(imgUrl); await worker.terminate();
+document.getElementById('routeOcrLoading').style.display = 'none'; document.getElementById('routeUploadArea').style.borderColor = 'var(--border)';
+let text = data.text.replace(/＜/g, '<').replace(/＞/g, '>').replace(/（/g, '(').replace(/）/g, ')').replace(/：/g, ':').replace(/，/g, ',');
+const routeInput = document.getElementById('routeInput'); if (routeInput) routeInput.value = text;
+generateRoute(); 
+} catch (err) { document.getElementById('routeOcrLoading').style.display = 'none'; document.getElementById('routeEmptyState').style.display = 'flex'; alert("识别失败，请重试。" + err); }
+};
+img.src = e.target.result;
+};
+reader.readAsDataURL(file);
+};
+
+    window.generateRoute = function generateRoute() {
+const routeInputEl = document.getElementById('routeInput'); if (!routeInputEl) return;
+let text = routeInputEl.value; if (!text.trim()) { alert("请先粘贴或识别 S怪 信息！"); return; }
+text = text.replace(/[＜《]/g, '<').replace(/[＞》]/g, '>').replace(/[（【\[［]/g, '(').replace(/[）】\]］]/g, ')').replace(/[：]/g, ':').replace(/[，、]/g, ',');
+const lines = text.split('\n'); 
+if (currentParseMode === 'overwrite') parsedMonsters = []; 
+let lastServer = "未知";
+for (let i = 0; i < lines.length; i++) {
+let line = lines[i].trim(); if (!line) continue;
+let currentLine = line; let coord = "(坐标未知)"; let hp = "100.00%"; let serverFound = false; let currentServer = lastServer;
+let coordMatch = currentLine.match(/[\(（]?\s*(\d{1,2}\.\d{1,2})\s*[,，\s]\s*(\d{1,2}\.\d{1,2})\s*[\)）]?/);
+if (coordMatch) { coord = `(${coordMatch[1]}, ${coordMatch[2]})`; currentLine = currentLine.replace(coordMatch[0], ' '); }
+let hpMatch = currentLine.match(/(\d+(?:\.\d+)?)\s*%/); if (hpMatch) { hp = parseFloat(hpMatch[1]).toFixed(2) + '%'; currentLine = currentLine.replace(hpMatch[0], ' '); }
+let cleanForServer = currentLine.replace(/[\s\(\)（）]/g, ''); let isOnlyServer = false;
+for (let srv of ALL_SERVERS) { if (cleanForServer === srv) { currentServer = srv; serverFound = true; isOnlyServer = true; break; } }
+if (!isOnlyServer) { for (let alias in SERVER_ALIASES) { if (!["湖", "茶", "川"].includes(alias) && cleanForServer === alias) { currentServer = SERVER_ALIASES[alias]; serverFound = true; isOnlyServer = true; break; } } }
+if (isOnlyServer) { lastServer = currentServer; continue; }
+if (!serverFound) {
+for (let srv of ALL_SERVERS) { if (currentLine.includes(srv)) { currentServer = srv; serverFound = true; currentLine = currentLine.replace(srv, ' '); break; } }
+if (!serverFound) { for (let alias in SERVER_ALIASES) { if (["湖", "茶", "川"].includes(alias)) continue; if (currentLine.includes(alias)) { currentServer = SERVER_ALIASES[alias]; serverFound = true; currentLine = currentLine.replace(alias, ' '); break; } } }
+}
+if (serverFound) lastServer = currentServer; else currentServer = lastServer;
+let parsedFromGroups = []; let regex = /([^()（）]+?)[（(]([^）)]*)[）)]/g; let match;
+while ((match = regex.exec(currentLine)) !== null) {
+let rawNames = match[1].trim(); let rawTrigger = match[2].trim();
+let triggersArr = rawTrigger.split(/[+＋]+/); let finalTrigger = triggersArr.filter(t => t).map(t => resolveTrigger(t)).join('、');
+let namesArr = rawNames.split(/[+＋]+/);
+for (let nameStr of namesArr) { if (nameStr.trim()) parsedFromGroups.push({ name: nameStr.trim(), trigger: finalTrigger }); }
+}
+if (parsedFromGroups.length > 0) {
+for (let item of parsedFromGroups) {
+let matchedMonster = null; let cleanName = item.name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9γ]/g, ''); let matchLen = 0;
+for (let sm of S_MONSTERS) { if (sm.alias) { for (let al of sm.alias) { if (cleanName.includes(al)) { if (al.length > matchLen) { matchedMonster = sm; matchLen = al.length; } } } } }
+if (!matchedMonster) { for (let sm of S_MONSTERS) { let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, ''); if (cleanName.includes(areaStr) || cleanName.includes(nameStr)) { matchedMonster = sm; break; } } }
+if (matchedMonster) {
+let existingM = parsedMonsters.find(m => (m.name === matchedMonster.name || m.originalName === matchedMonster.name) && m.server === currentServer);
+if (!existingM) { parsedMonsters.push({ name: matchedMonster.name, originalName: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: currentServer, hp: hp, trigger: item.trigger, isDead: false, isTarget: false, isSS: false }); } else if (coord !== "(坐标未知)") existingM.coord = coord;
+}
+}
+} else {
+let matchedMonster = null; let matchLen = 0;
+for (let sm of S_MONSTERS) { if (sm.alias) { for (let al of sm.alias) { if (currentLine.includes(al)) { if (al.length > matchLen) { matchedMonster = sm; matchLen = al.length; } } } } }
+if (!matchedMonster) { for (let sm of S_MONSTERS) { let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, ''); if (currentLine.includes(areaStr) || currentLine.includes(nameStr)) { matchedMonster = sm; break; } } }
+if (matchedMonster) {
+let nameStr = matchedMonster.name, areaStr = matchedMonster.area;
+if (matchedMonster.alias) { for (let al of matchedMonster.alias) currentLine = currentLine.replace(al, ' '); }
+currentLine = currentLine.replace(nameStr, ' ').replace(areaStr, ' ');
+let triggerId = currentLine.replace(/[\(（\)）\[\]【】\<\>\s,，]/g, '').trim(); triggerId = resolveTrigger(triggerId);
+let existingM = parsedMonsters.find(m => (m.name === matchedMonster.name || m.originalName === matchedMonster.name) && m.server === currentServer);
+if (!existingM) { parsedMonsters.push({ name: matchedMonster.name, originalName: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: currentServer, hp: hp, trigger: triggerId, isDead: false, isTarget: false, isSS: false }); } else if (coord !== "(坐标未知)") existingM.coord = coord;
+}
+}
+}
+sortParsedMonstersDefault(); editingRouteServers.clear(); isSimpleRouteLocked = false; renderRouteResult();
+};
+
+    window.setServerAsFirst = function setServerAsFirst(serverName) { const targetServerMonsters = parsedMonsters.filter(m => m.server === serverName); const otherMonsters = parsedMonsters.filter(m => m.server !== serverName); parsedMonsters = [...targetServerMonsters, ...otherMonsters]; renderRouteResult(); showToast(`已将 ${serverName} 设为始发站`); };
+
+    window.moveServer = function moveServer(serverName, direction) {
+const serverOrder = []; parsedMonsters.forEach(m => { if (!serverOrder.includes(m.server)) serverOrder.push(m.server); });
+const currentIndex = serverOrder.indexOf(serverName); const targetIndex = currentIndex + direction;
+if (targetIndex < 0 || targetIndex >= serverOrder.length) { showToast('已经是最前/最后的服务器了'); return; }
+const temp = serverOrder[currentIndex]; serverOrder[currentIndex] = serverOrder[targetIndex]; serverOrder[targetIndex] = temp;
+const newParsed = []; serverOrder.forEach(srv => { parsedMonsters.forEach(m => { if (m.server === srv) newParsed.push(m); }); });
+parsedMonsters = newParsed; renderRouteResult(); showToast(`服务器 ${serverName} 已${direction === -1 ? '上移' : '下移'}`);
+};
+
+    window.moveMonster = function moveMonster(globalIdx, direction) {
+const currentMonster = parsedMonsters[globalIdx]; if (!currentMonster) return;
+const server = currentMonster.server; let targetIdx = -1;
+if (direction === -1) { for (let i = globalIdx - 1; i >= 0; i--) if (parsedMonsters[i].server === server) { targetIdx = i; break; } } 
+else { for (let i = globalIdx + 1; i < parsedMonsters.length; i++) if (parsedMonsters[i].server === server) { targetIdx = i; break; } }
+if (targetIdx !== -1) { const temp = parsedMonsters[globalIdx]; parsedMonsters[globalIdx] = parsedMonsters[targetIdx]; parsedMonsters[targetIdx] = temp; renderRouteResult(); showToast(direction === -1 ? '已上移' : '已下移'); } 
+else showToast('已经是最前/最后一只了');
+};
+
+    window.removeLastMonsterOfServer = function removeLastMonsterOfServer(serverName) { for (let i = parsedMonsters.length - 1; i >= 0; i--) { if (parsedMonsters[i].server === serverName) { parsedMonsters.splice(i, 1); renderRouteResult(); showToast(`已移除 ${serverName} 的最后一只怪`); return; } } showToast(`${serverName} 下没有怪了`); };
+
+    window.removeServer = function removeServer(serverName) { const beforeLen = parsedMonsters.length; parsedMonsters = parsedMonsters.filter(m => m.server !== serverName); if (parsedMonsters.length !== beforeLen) { renderRouteResult(); showToast(`已移除服务器：${serverName}`); } else showToast(`没有找到该服务器的怪`); };
+
+    window.toggleMonsterDead = function toggleMonsterDead(idx, isDead) {
+if (parsedMonsters[idx]) {
+parsedMonsters[idx].isDead = isDead;
+if (isDead && parsedMonsters[idx].isTarget && isTrackingMode) { parsedMonsters[idx].isTarget = false; let nextTarget = parsedMonsters.slice(idx + 1).find(m => !m.isDead); if (!nextTarget) nextTarget = parsedMonsters.find(m => !m.isDead); if (nextTarget) { nextTarget.isTarget = true; showToast(`目标已自动切换至：${nextTarget.name}`); } }
+renderRouteResult();
+}
+};
+
+    window.clearDeadMonsters = function clearDeadMonsters() { const initial = parsedMonsters.length; parsedMonsters = parsedMonsters.filter(m => !m.isDead); if (parsedMonsters.length !== initial) { renderRouteResult(); showToast(`已一键清理 ${initial - parsedMonsters.length} 只已去世的 S怪`); } else showToast('没有标记为已去世的 S怪'); };
+
+    window.updateRouteTriggerInput = function updateRouteTriggerInput(el, idx) { let val = el.value.trim(); if (val) { const resolved = resolveTrigger(val); if (resolved !== val) { val = resolved; showToast('黑话已转换'); } } if (parsedMonsters[idx]) { parsedMonsters[idx].trigger = val; if (val && !allTriggers.includes(val)) { customTriggers.push(val); localStorage.setItem('ff14_custom_triggers', JSON.stringify(customTriggers)); allTriggers.push(val); updateGlobalTriggers(); } } renderRouteResult(); };
+
+    window.filterSelectTriggers = function filterSelectTriggers() {
+const search = document.getElementById('selectTriggerSearch').value.toLowerCase(); const container = document.getElementById('selectTriggerList'); container.innerHTML = '';
+let displayList = isVipUnlocked ? Array.from(new Set([...DEFAULT_TRIGGERS, ...customTriggers])) : [...customTriggers];
+displayList.forEach(t => { if (matchTriggerSearch(t, search)) { const span = document.createElement('span'); span.className = 'trigger-tag'; const parts = t.split('@'); if(parts.length === 2) span.innerHTML = `${parts[0]}<span class="server-part">@${parts[1]}</span>`; else span.innerText = t; span.onclick = () => { if (currentAomInput) { currentAomInput.value = t; document.getElementById('triggerSelectModal').style.display = 'none'; showToast(`已分配触发者：${t}`); } else if (currentTriggerSelectIdx >= 0 && parsedMonsters[currentTriggerSelectIdx]) { parsedMonsters[currentTriggerSelectIdx].trigger = t; renderRouteResult(); document.getElementById('triggerSelectModal').style.display = 'none'; showToast(`已为 ${parsedMonsters[currentTriggerSelectIdx].name} 分配触发者：${t}`); } }; container.appendChild(span); } });
+if (container.innerHTML === '') container.innerHTML = isVipUnlocked ? '<div style="color:var(--text-muted); font-size:12px;">没有找到匹配的触发者</div>' : '<div style="color:var(--gold); font-size:12px; padding: 5px;">预置名单已锁定，请在顶部输入邀请码查看。</div>';
+};
+
+    window.clearTriggerForCurrentMonster = function clearTriggerForCurrentMonster() { if (currentAomInput) { currentAomInput.value = ""; document.getElementById('triggerSelectModal').style.display = 'none'; showToast(`已清空该输入框`); } else if (currentTriggerSelectIdx >= 0 && parsedMonsters[currentTriggerSelectIdx]) { parsedMonsters[currentTriggerSelectIdx].trigger = ""; renderRouteResult(); document.getElementById('triggerSelectModal').style.display = 'none'; showToast(`已清空该怪触发者`); } };
+
+    window.openAomPresetModal = function openAomPresetModal() { const dcSelect = document.getElementById('aomDcSelect'); if (dcSelect.options.length === 0) { let html = ''; for (const region in SERVER_GROUPS) html += `<option value="${region}">${region}</option>`; dcSelect.innerHTML = html; } renderAomServerList(); document.getElementById('aomPresetModal').style.display = 'flex'; };
+
+    window.renderAomServerList = function renderAomServerList() {
+const dc = document.getElementById('aomDcSelect').value; const container = document.getElementById('aomServerList'); if (!dc) { container.innerHTML = '请先选择大区'; return; }
+const servers = SERVER_GROUPS[dc]; let html = '';
+servers.forEach(s => { html += `<div style="display:flex; align-items:center; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><label style="display:flex; align-items:center; gap:8px; cursor:pointer; width: 100px;"><input type="checkbox" class="aom-server-cb" value="${s}"> ${s}</label><div class="row-flex" style="flex:1;"><input type="text" class="input-trigger-compact aom-trigger-input" list="trigger-datalist" placeholder="触发者 (黑话/全名)" style="flex:1;"><button class="btn btn-outline" style="padding:4px 8px; font-size:12px; border-color:var(--purple); color:var(--purple);" onclick="openAomTriggerSelect(this.previousElementSibling)">选人</button></div></div>`; });
+container.innerHTML = html;
+};
+
+    window.executeAomPreset = function executeAomPreset() {
+const cbList = document.querySelectorAll('.aom-server-cb'); const inputList = document.querySelectorAll('.aom-trigger-input'); let addedCount = 0;
+cbList.forEach((cb, idx) => { if (cb.checked) { const server = cb.value; let trigger = inputList[idx].value.trim(); trigger = resolveTrigger(trigger); const dbMonster = S_MONSTERS.find(m => m.name === "厌忌之人 奇里格"); if (!dbMonster) return; const isDuplicate = parsedMonsters.some(m => m.name === dbMonster.name && m.server === server); if (!isDuplicate) { parsedMonsters.push({ name: dbMonster.name, originalName: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: "(坐标未知)", server: server, hp: '100.00%', trigger: trigger, isDead: false, isTarget: false, isSS: false }); addedCount++; } } });
+if (addedCount > 0) { sortParsedMonstersDefault(); renderRouteResult(); showToast(`已成功预设 ${addedCount} 个服务器的奥山 S怪`); document.getElementById('aomPresetModal').style.display = 'none'; } 
+else showToast('未勾选任何服务器或所选服务器已存在该S怪');
+};
+
+    window.renderTacticMacros = function renderTacticMacros() {
+const container = document.getElementById('tacticMacroList'); if(!container) return;
+const activeMonsters = parsedMonsters.filter(m => !m.isDead); if(activeMonsters.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); padding:10px;">暂无存活的S怪</div>'; return; }
+let html = '';
+activeMonsters.forEach(m => { html += `<div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; border-bottom: 1px solid var(--border); background: var(--panel); border-radius: 6px; margin-bottom: 8px;"><div style="display:flex; flex-direction:column; gap:4px;"><span style="font-weight:bold; color:var(--gold); font-size:13px;">S：${m.name}</span><span style="font-size:12px; color:var(--text-muted);">【${m.server}】 ${m.coord}</span></div><div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;"><button class="btn btn-outline" style="padding:4px 8px; font-size:12px;" onclick="copyTacticMacro(${m._globalIdx}, false)">复制本地宏</button><button class="btn btn-accent" style="padding:4px 8px; font-size:12px;" onclick="copyTacticMacro(${m._globalIdx}, true)">复制跨服宏</button><button class="btn" style="background:var(--purple); color:#fff; padding:4px 8px; font-size:12px;" onclick="copyMonsterCoord(${m._globalIdx})">复制坐标</button></div></div>`; });
+container.innerHTML = html;
+};
+
+    window.renderRouteResult = function renderRouteResult() {
+const resBox = document.getElementById('routeResultBox'); if(resBox) resBox.style.display = 'flex';
+const emptyState = document.getElementById('routeEmptyState'); if(emptyState) emptyState.style.display = 'none';
+const outEl = document.getElementById('routeOutput'); const simpleOutEl = document.getElementById('simpleRouteOutput'); const logEl = document.getElementById('routeLogList'); const ssStatsBox = document.getElementById('ssStatsBox');
+if (parsedMonsters.length === 0) { if(outEl) outEl.value = ""; if(simpleOutEl) simpleOutEl.value = ""; if(logEl) logEl.innerHTML = `<div style="color:var(--red); text-align:center; padding:10px; font-weight:bold;">未能解析出有效的 S怪 信息！<br>请点击上方【修正/手动添加】补录。</div>`; if(ssStatsBox) ssStatsBox.style.display = 'none'; document.getElementById('routeMonitorBox').style.display = 'none'; calculateRouteTime(); renderTacticMacros(); return; }
+const totalPlanned = parsedMonsters.length; const totalSS = parsedMonsters.filter(m => m.isSS).length;
+if (totalSS > 0) { ssStatsBox.style.display = 'flex'; document.getElementById('ssCountText').innerText = totalSS; document.getElementById('ssTotalText').innerText = totalPlanned; document.getElementById('ssRateText').innerText = ((totalSS / totalPlanned) * 100).toFixed(1) + '%'; } else ssStatsBox.style.display = 'none';
+const serverOrder = []; parsedMonsters.forEach(m => { if (!serverOrder.includes(m.server)) serverOrder.push(m.server); });
+let datalistEl = document.getElementById('trigger-datalist'); if(!datalistEl) { datalistEl = document.createElement('datalist'); datalistEl.id = 'trigger-datalist'; document.body.appendChild(datalistEl); }
+datalistEl.innerHTML = ''; allTriggers.forEach(t => { datalistEl.innerHTML += `<option value="${t}">`; }); for (let alias in TRIGGER_ALIASES) datalistEl.innerHTML += `<option value="${alias}">`;
+parsedMonsters.forEach((m, idx) => m._globalIdx = idx);
+let routeStr = "", logHtml = "", flatSortedMonsters = []; 
+const serverStationMap = {}; let activeIndex = 0;
+serverOrder.forEach(srv => { const activeCount = parsedMonsters.filter(m => m.server === srv && !m.isDead).length; if (activeCount > 0) { serverStationMap[srv] = activeIndex === 0 ? '首站' : `第${activeIndex + 1}站`; activeIndex++; } else serverStationMap[srv] = '已全灭'; });
+serverOrder.forEach(server => {
+const activeList = parsedMonsters.filter(m => m.server === server && !m.isDead);
+if (activeList.length > 0) { const prefix = serverStationMap[server]; routeStr += `【${prefix}：${server}】\n`; activeList.forEach(m => { flatSortedMonsters.push(m); let triggerDisplay = m.trigger ? `(触发: ${m.trigger})` : ''; routeStr += `S：${m.name} ${m.hp} ${m.area} ${m.coord} ${m.server} ${triggerDisplay}\n`; }); routeStr += `\n`; }
+});
+serverOrder.forEach(server => {
+const list = parsedMonsters.filter(m => m.server === server); const activeList = list.filter(m => !m.isDead);
+const prefix = serverStationMap[server]; const isEditing = editingRouteServers.has(server);
+logHtml += `<div class="server-card ${isEditing ? 'show-arrows' : ''}"><div class="server-card-header"><div class="server-card-title">${prefix}：${server} <span style="font-size:12px; color:var(--text-muted);">(总计${list.length}只, 存活${activeList.length}只)</span></div><div class="server-card-actions"><button class="route-add-btn" style="background:var(--purple); color:#fff;" onclick="setServerAsFirst('${server}')">设为首站</button><button class="route-add-btn" style="background:var(--blue); color:#fff;" onclick="moveServer('${server}', -1)">上移</button><button class="route-add-btn" style="background:var(--blue); color:#fff;" onclick="moveServer('${server}', 1)">下移</button><button class="route-add-btn" onclick="handleRouteAdd('${server}')">+1只</button><button class="route-add-btn" style="background:var(--red); color:#fff;" onclick="removeLastMonsterOfServer('${server}')">-1只</button><button class="route-add-btn" style="background:var(--gold); color:var(--panel);" onclick="openCorrectionModal('${server}')">+1服</button><button class="route-add-btn" style="background:var(--red); color:#fff;" onclick="removeServer('${server}')">-1服</button><button class="route-add-btn" style="background:var(--purple); color:#fff;" onclick="toggleRouteArrows('${server}')">${isEditing ? '完成调整' : '调整车序'}</button></div></div><div class="monster-list">`;
+list.forEach(m => {
+let triggerDisplay = m.trigger ? ` <span style="color:var(--gold); font-size:11px;">[${m.trigger}]</span>` : '';
+let vClass = m.version === "7.0" ? "v7" : m.version === "6.0" ? "v6" : m.version === "5.0" ? "v5" : "v4";
+let deadStyle = m.isDead ? 'opacity: 0.5; text-decoration: line-through;' : '';
+let itemClass = `monster-list-item`;
+if (isTrackingMode && m.isTarget) itemClass += ' target-highlight';
+if (m.isSS) itemClass += ' ss-highlight';
+let targetBtn = ''; if (isTrackingMode) targetBtn = `<button class="btn-edit-small" style="color:${m.isTarget ? 'var(--accent)' : 'var(--text-muted)'}; font-size:16px; padding:4px 6px;" onclick="setTargetMonster(${m._globalIdx})" title="设为当前目标">准</button>`;
+let ssBtn = ''; if (SS_MAP[m.version]) ssBtn = `<button class="btn btn-outline" style="padding:4px 8px; font-size:12px; border-color:${m.isSS ? 'var(--gold)' : 'var(--border)'}; color:${m.isSS ? 'var(--gold)' : 'var(--text-muted)'};" onclick="toggleSS(${m._globalIdx})">${m.isSS ? '复原' : '出SS'}</button>`;
+logHtml += `<div class="${itemClass}" style="${deadStyle}"><div style="display:flex; flex-direction:column; gap:4px; flex:1; margin-right:10px;"><span style="font-family:monospace;"><span style="color:var(--gold); font-weight:bold; font-size: 13px;">S：${m.name}</span><span style="color:var(--text-muted);">${m.hp} ${m.area} ${m.coord}</span>${triggerDisplay}</span><div class="row-flex"><input type="text" class="input-trigger-compact" list="trigger-datalist" placeholder="触发者 (可搜索/黑话)" value="${m.trigger || ''}" onchange="updateRouteTriggerInput(this, ${m._globalIdx})"><button class="btn btn-outline" style="padding:4px 8px; font-size:12px; border-color:var(--purple); color:var(--purple);" onclick="openTriggerSelectModal(${m._globalIdx})">选人</button></div></div><div style="display:flex; align-items:center; gap: 8px;"><label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:12px; color:var(--red); font-weight:bold;"><input type="checkbox" ${m.isDead ? 'checked' : ''} onchange="toggleMonsterDead(${m._globalIdx}, this.checked)"> 已去世</label><span class="${vClass}">${m.version}</span>${ssBtn}${targetBtn}<button class="btn-order-up" onclick="moveMonster(${m._globalIdx}, -1)" title="上移">⬆️</button><button class="btn-order-down" onclick="moveMonster(${m._globalIdx}, 1)" title="下移">⬇️</button><button class="btn-edit-small" onclick="editParsedMonster(${m._globalIdx})" title="修正名字/信息">✏️</button><button class="btn-edit-small" style="color:var(--gold);" onclick="changeMonsterLocation(${m._globalIdx})" title="临时变更地点/服务器">📍</button><button class="btn-edit-small" style="color:var(--purple);" onclick="copyMonsterCoord(${m._globalIdx})" title="复制坐标信息">📋</button><button class="btn-delete-small" onclick="deleteParsedMonster(${m._globalIdx})" title="彻底删除此条">🗑️</button></div></div>`;
+});
+logHtml += `</div></div>`; 
+});
+if(outEl) outEl.value = routeStr.trim(); if(logEl) logEl.innerHTML = logHtml;
+if (!isSimpleRouteLocked) generateSimpleRoute(false, flatSortedMonsters);
+calculateRouteTime(); renderTacticMacros(); updateRouteMonitor();
+localStorage.setItem('ff14_route_cache', JSON.stringify({ text: routeStr.trim(), log: logHtml, monsters: parsedMonsters, expire: Date.now() + 10 * 60 * 1000 }));
+};
+
+    window.updateRouteMonitor = function updateRouteMonitor() {
+const box = document.getElementById('routeMonitorBox'); if (!isTrackingMode || parsedMonsters.length === 0) { box.style.display = 'none'; return; }
+const target = parsedMonsters.find(m => m.isTarget && !m.isDead); if (!target) { box.style.display = 'none'; return; }
+box.style.display = 'block'; document.getElementById('monitorTargetName').innerText = `[${target.server}] ${target.name}`;
+const content = document.getElementById('monitorContent'); let html = '';
+html += `<div class="route-monitor-item"><span class="res-label">地区</span><span class="route-monitor-val" style="color:var(--text-muted); font-size:14px;">${target.area}</span></div><div class="route-monitor-item"><span class="res-label">坐标</span><span class="route-monitor-val" style="color:var(--purple); font-size:14px;">${target.coord}</span></div>`;
+const isWeather = target.name.includes('奇里格') || target.name.includes('布弗鲁') || target.name.includes('巨大鳐');
+if (isWeather) html += `<div class="route-monitor-item"><span class="res-label">天气前置</span><span class="route-monitor-val" style="color:var(--gold); font-size:14px;">是（请使用手动计算开启天气监控）</span></div>`;
+content.innerHTML = html;
+};
+
+    window.deleteParsedMonster = function deleteParsedMonster(idx) { if (confirm(`确定要删除这只怪吗？`)) { parsedMonsters.splice(idx, 1); renderRouteResult(); showToast('已删除'); } };
+
+    window.editParsedMonster = function editParsedMonster(idx) {
+editingParsedIndex = idx; const m = parsedMonsters[idx];
+fixMonsterSelect.value = `${m.originalName}|${m.area}`; fixServerSelect.value = m.server;
+document.getElementById('fixCoordInput').value = m.coord !== '(坐标未知)' ? m.coord : '';
+document.getElementById('correctionModalTitle').innerText = '修正 S怪信息'; document.getElementById('correctionModal').style.display = 'flex';
+};
+
+    window.changeMonsterLocation = function changeMonsterLocation(idx) {
+editingParsedIndex = idx; const m = parsedMonsters[idx];
+fixMonsterSelect.value = `${m.originalName}|${m.area}`; fixServerSelect.value = m.server;
+document.getElementById('fixCoordInput').value = m.coord !== '(坐标未知)' ? m.coord : '';
+document.getElementById('correctionModalTitle').innerText = '临时变更发车地点/服务器'; document.getElementById('correctionModal').style.display = 'flex';
+setTimeout(() => document.getElementById('fixCoordInput').focus(), 100);
+};
+
+    window.openCorrectionModal = function openCorrectionModal(defaultServer) {
+editingParsedIndex = -1; fixMonsterSelect.selectedIndex = 0;
+if(defaultServer && ALL_SERVERS.includes(defaultServer)) fixServerSelect.value = defaultServer; else fixServerSelect.selectedIndex = 0;
+document.getElementById('fixCoordInput').value = ''; document.getElementById('correctionModalTitle').innerText = '添加 S怪'; document.getElementById('correctionModal').style.display = 'flex';
+};
+
+    window.executeCorrection = function executeCorrection() {
+const monsterVal = fixMonsterSelect.value, serverVal = fixServerSelect.value; const coordVal = document.getElementById('fixCoordInput').value.trim() || "(坐标未知)";
+if (!monsterVal || !serverVal) { alert("请选择S怪和服务器！"); return; }
+const [name, area] = monsterVal.split('|'); const dbMonster = S_MONSTERS.find(m => m.name === name);
+if (!dbMonster) { alert("审核失败：词库中不存在该 S怪！"); return; }
+if (editingParsedIndex >= 0) { parsedMonsters[editingParsedIndex] = { name: dbMonster.name, originalName: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: parsedMonsters[editingParsedIndex].hp || '100.00%', trigger: parsedMonsters[editingParsedIndex].trigger || '', isDead: parsedMonsters[editingParsedIndex].isDead || false, isTarget: parsedMonsters[editingParsedIndex].isTarget || false, isSS: false }; showToast("修正成功！"); } 
+else { const isDuplicate = parsedMonsters.some(m => m.name === name && m.server === serverVal); if (isDuplicate) { alert("审核提示：该服务器下已存在这只S怪，无需重复添加！"); return; } parsedMonsters.push({ name: dbMonster.name, originalName: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: coordVal, server: serverVal, hp: '100.00%', trigger: '', isDead: false, isTarget: false, isSS: false }); sortParsedMonstersDefault(); showToast("审核通过，已添加至排车列表！"); }
+document.getElementById('correctionModal').style.display = 'none'; document.getElementById('fixCoordInput').value = ''; renderRouteResult(); 
+};
+
+    window.markManualKilled = function markManualKilled() {
+const server = mServerSelect.value; const name = mMonsterHidden.value.split('|')[0]; const area = mMonsterHidden.value.split('|')[1];
+if (!name || name === '未知' || !server) { showToast('请先选择有效的S怪和服务器'); return; }
+const h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0; const livingMin = h * 60 + m;
+addAllKillRecord(server, name, area, '手动标记击杀', { triggerTimeMs: Date.now() - livingMin * 60000, isGreen: false });
+document.querySelector('input[name="mStatus"][value="red"]').checked = true; mHour.value = 0; mMin.value = 0;
+updateSpecialCounterUI(); autoCorrect(); addToRecentList(); showToast("已记录击杀，该S怪进入 84h CD 并加入追踪列表");
+};
+
+    window.addAllKillRecord = function addAllKillRecord(server, name, area, progress, extra) {
+const now = new Date(); const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+allKillRecords.unshift({ time: timeStr, server: server, name: name, area: area, progress: progress });
+localStorage.setItem('ff14_all_kill_records', JSON.stringify(allKillRecords));
+enrichKillRecordForPredictor(allKillRecords[0], name, extra);
+if (allKillRecords.length > PredictorConfig.MAX_RECORDS) allKillRecords.length = PredictorConfig.MAX_RECORDS;
+localStorage.setItem('ff14_all_kill_records', JSON.stringify(allKillRecords)); if (window.__predictor) window.__predictor.invalidate();
+return allKillRecords[0];
+};
+
+    window.startWeatherCountdown = function startWeatherCountdown() {
+const h = parseInt(mFogHour.value) || 0; const m = parseInt(mFogMin.value) || 0; const s = parseInt(mFogSec.value) || 0; const totalSec = h * 3600 + m * 60 + s;
+const durH = parseInt(document.getElementById('mFogDurHour').value) || 0; const durM = parseInt(document.getElementById('mFogDurMin').value) || 0; let newDurMs = (durH * 3600 + durM * 60) * 1000; if (newDurMs <= 0) newDurMs = WEATHER_DURATION_MS;
+if (totalSec <= 0) { showToast('请设置未来的天气等待时间'); return; }
+weatherTargetEndTime = Date.now() + totalSec * 1000; weatherDurationMs = newDurMs; document.getElementById('weatherStatusBox').style.display = 'block'; document.getElementById('weatherEditPanel').style.display = 'none';
+showToast('天气倒计时已启动，进闸时间将受天气限制'); tickWeatherCountdown(); calcManual(); 
+};
+
+    window.tickWeatherCountdown = function tickWeatherCountdown() {
+if (!weatherTargetEndTime) return;
+const box = document.getElementById('weatherStatusBox'); const textEl = document.getElementById('weatherCountdownText'); const titleTextEl = document.getElementById('weatherTitleText'); const descEl = document.getElementById('weatherStatusDesc');
+const now = Date.now(); const diff = weatherTargetEndTime - now;
+if (diff > 0) { titleTextEl.innerHTML = '距天气出现还有：'; textEl.innerText = formatDHMS(diff); descEl.innerText = '天气存在时间通常为 1 小时 (可点击右上角修正)'; if (diff < 15 * 60 * 1000) { box.style.animation = 'blink 1s infinite'; textEl.style.color = 'var(--red)'; } else { box.style.animation = 'none'; textEl.style.color = 'var(--purple)'; } } 
+else if (diff > -weatherDurationMs) { const remain = weatherDurationMs + diff; titleTextEl.innerHTML = '当前天气持续中，剩余：'; textEl.innerText = formatDHMS(remain); descEl.innerText = '请把握机会尽快触发！ (可点击右上角修正)'; box.style.animation = 'none'; textEl.style.color = 'var(--gold)'; } 
+else { titleTextEl.innerHTML = '天气已结束'; textEl.innerText = '00:00:00'; descEl.innerText = '本次天气前置已失效 (可点击右上角重新输入)'; box.style.animation = 'none'; textEl.style.color = 'var(--text-muted)'; }
+};
+
+    window.calcManual = function calcManual() {
+if (manualTimer) clearInterval(manualTimer);
+const h = parseInt(mHour.value) || 0, m = parseInt(mMin.value) || 0; const isGreenRadio = document.querySelector('input[name="mStatus"]:checked').value === 'green';
+const isWeatherMonster = mMonsterHidden.value.includes('奇里格') || mMonsterHidden.value.includes('布弗鲁') || mMonsterHidden.value.includes('巨大鳐'); const isShanxieya = mMonsterHidden.value.includes('山谢亚');
+const now = new Date(); const timeSec = h * 3600 + m * 60; let targetGateTime, targetForceTime; let isDynamicGate = false; let stateText = ''; let stateColor = ''; let gateDesc = ''; let forceDesc = '';
+let baseGateTimeMs, baseForceTimeMs;
+if (isGreenRadio) { const remainSec = LT_HOURS * 3600 - timeSec; baseForceTimeMs = now.getTime() + remainSec * 1000; baseGateTimeMs = now.getTime() - timeSec * 1000; } 
+else { const waitSec = Math.max(0, CD_HOURS * 3600 - timeSec); baseGateTimeMs = now.getTime() + waitSec * 1000; baseForceTimeMs = baseGateTimeMs + LT_HOURS * 3600 * 1000; }
+let isWeatherOverride = false;
+if (isWeatherMonster && weatherTargetEndTime) { if (weatherTargetEndTime > baseGateTimeMs) { baseGateTimeMs = weatherTargetEndTime; baseForceTimeMs = baseGateTimeMs + LT_HOURS * 3600 * 1000; isWeatherOverride = true; } }
+targetGateTime = new Date(baseGateTimeMs); targetForceTime = new Date(baseForceTimeMs);
+const nowMs = now.getTime(); let isActuallyGreen = false; 
+if (nowMs < targetGateTime.getTime()) {
+isActuallyGreen = false;
+if (isWeatherOverride) { stateText = `等待天气进闸`; stateColor = 'var(--purple)'; gateDesc = `距天气进闸: <span class="fc-timer" data-target="${targetGateTime.getTime()}"></span>`; } 
+else { stateText = `CD中`; stateColor = 'var(--red)'; gateDesc = `进闸倒计时: <span class="fc-timer" data-target="${targetGateTime.getTime()}"></span>`; }
+forceDesc = `强制倒计时: <span class="fc-timer" data-target="${targetForceTime.getTime()}"></span>`;
+} else if (nowMs >= targetGateTime.getTime() && nowMs < targetForceTime.getTime()) { isActuallyGreen = true; stateText = `存活中`; stateColor = 'var(--blue)'; gateDesc = `已进闸: <span class="fc-timer-neg" data-target="${targetGateTime.getTime()}"></span>`; forceDesc = `强制倒计时: <span class="fc-timer" data-target="${targetForceTime.getTime()}"></span>`; } 
+else { isActuallyGreen = true; stateText = `已强制消失`; stateColor = 'var(--red)'; gateDesc = `已进闸: <span class="fc-timer-neg" data-target="${targetGateTime.getTime()}"></span>`; forceDesc = `超时: <span class="fc-timer-neg" data-target="${targetForceTime.getTime()}"></span>`; }
+currentManualCalcData = { isGreen: isActuallyGreen, isShanxieya, h, m, targetGateTime, targetForceTime, isDynamicGate, isWeatherMonster, weatherTargetEndTime, weatherDurationMs };
+const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
+const updateDisplay = () => {
+const cNow = new Date(); let displayGate = targetGateTime; if (isDynamicGate) displayGate = cNow; let warnHtml = !isActuallyGreen ? `<div class="manual-warn">已击杀状态请确保已上传击杀截图作为证据。</div>` : '';
+if (manualBox) { manualBox.innerHTML = `<div class="res-item" style="flex:1;"><span class="res-label">绝对进闸时间</span><span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span><span class="res-desc">${gateDesc}</span></div><div class="res-item" style="flex:1;"><span class="res-label">预计强制时间</span><span class="res-val" style="color:var(--gold)">${fmtDate(targetForceTime)}</span><span class="res-desc">${forceDesc}</span></div><div class="res-item" style="flex:1;"><span class="res-label">状态提示</span><span class="res-val countdown-big" style="color:${stateColor}">${stateText}</span></div><button class="btn-copy-manual" onclick="copyManualResult()">复制手动结果</button>${warnHtml}`; }
+tickTimers(); 
+};
+updateDisplay(); manualTimer = setInterval(updateDisplay, 1000);
+};
+
+    window.tickTimers = function tickTimers() {
+const now = Date.now();
+document.querySelectorAll('.fc-timer').forEach(el => { const target = parseInt(el.getAttribute('data-target')); const diff = target - now; if (diff > 0) { el.innerText = formatDHMS(diff); if (diff < 3600000) el.classList.add('countdown-red', 'blink-warning'); else el.classList.remove('countdown-red', 'blink-warning'); } else el.innerText = "00:00:00"; });
+document.querySelectorAll('.fc-timer-neg').forEach(el => { const target = parseInt(el.getAttribute('data-target')); const diff = now - target; if (diff > 0) el.innerText = formatDHMS(diff); else el.innerText = "00:00:00"; });
+document.querySelectorAll('.cooldown-timer').forEach(el => { const target = parseInt(el.getAttribute('data-target')); const diff = target - Date.now(); const span = el.querySelector('span'); if (diff > 0) { const m = Math.floor(diff / 60000); const s = Math.floor((diff % 60000) / 1000); if(span) span.innerText = `${m}分${s}秒`; } else if(span) span.innerText = `已就绪`; });
+let hasExpiredCooldown = false;
+recentRecords.forEach(r => { if (r.actionCooldownEndTime && r.actionCooldownEndTime <= Date.now()) { r.actionCooldownEndTime = 0; hasExpiredCooldown = true; } });
+if (hasExpiredCooldown) renderRecentList();
+tickWeatherCountdown();
+};
+
+    window.formatDHMS = function formatDHMS(ms) { if (ms < 0) ms = 0; const sec = Math.floor(ms / 1000); const d = Math.floor(sec / 86400); const h = Math.floor((sec % 86400) / 3600); const m = Math.floor((sec % 3600) / 60); const s = sec % 60; let res = ""; if (d > 0) res += `${d}天 `; res += `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; return res; };
+
+    window.copyManualResult = function copyManualResult() {
+const server = mServerSelect.value, name = mMonsterHidden.value.split('|')[0];
+const vals = document.getElementById('manualResultBox').querySelectorAll('.res-val');
+navigator.clipboard.writeText(`[${server}] ${name}\n绝对进闸时间: ${vals[0].innerText}\n预计强制时间: ${vals[1].innerText}\n状态: ${vals[2].innerText}`).then(() => showToast("手动结果已复制！"));
+};
+
+    window.addToRecentList = function addToRecentList() {
+if (!currentManualCalcData) calcManual();
+const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
+const { isGreen, h, m, targetGateTime, targetForceTime, isDynamicGate, weatherTargetEndTime, weatherDurationMs } = currentManualCalcData;
+const record = { id: Date.now(), server: mServerSelect.value, name: mMonsterHidden.value.split('|')[0], area: mMonsterHidden.value.split('|')[1], isGreen, h, m, forceStr: fmtDate(targetForceTime), isDynamicGate, gateTimeMs: targetGateTime ? targetGateTime.getTime() : null, forceTimeMs: targetForceTime.getTime(), weatherTargetEndTime: weatherTargetEndTime, weatherDurationMs: weatherDurationMs, cooldownEndTime: 0, actionCooldownEndTime: 0, shipped: false, failed: false, failCount: 0, isAutoFailed: false };
+recentRecords.unshift(record); 
+document.getElementById('recentListContainer').classList.remove('collapsed'); document.getElementById('recentToggleIcon').innerText = '▼';
+renderRecentList(); saveLocalState(); showToast("已添加到计算记录");
+};
+
+    window.getRecentLimit = function getRecentLimit() {
+let limit = 50; 
+if (isDeveloperMode) return 99999;
+if (isMasterVerified) limit = 20; 
+else limit = 50; 
+return limit + recentLimitOffset;
+};
+
+    window.updateRecentLimitBadge = function updateRecentLimitBadge() {
+const badge = document.getElementById('recentLimitBadge');
+if (isDeveloperMode) badge.innerText = `(已解锁无限制)`;
+else if (isMasterVerified) badge.innerText = `(当前上限 ${getRecentLimit()} 条 - 特殊)`;
+else badge.innerText = `(当前上限 ${getRecentLimit()} 条 - 临时)`;
+};
+
+    window.expandRecentLimit = function expandRecentLimit() {
+if (Date.now() < expandCooldownEnd) { showToast(`扩容冷却中，剩余 ${Math.ceil((expandCooldownEnd - Date.now()) / 1000)} 秒`); return; }
+if (isDeveloperMode) { showToast('开发者模式已无限制，无需扩容'); return; }
+if (isMasterVerified) { recentLimitOffset += 20; showToast('特殊用户扩容成功 (+20)'); } 
+else { recentLimitOffset += 10; showToast('临时用户扩容成功 (+10)'); }
+expandCooldownEnd = Date.now() + 10 * 60 * 1000;
+updateRecentLimitBadge(); renderRecentList();
+};
+
+    window.reportKill = function reportKill(idx) {
+const r = recentRecords[idx]; if (!r) return;
+if (r.actionCooldownEndTime && Date.now() < r.actionCooldownEndTime) { showToast(`操作太频繁，请等待 ${Math.ceil((r.actionCooldownEndTime - Date.now()) / 1000)} 秒`); return; }
+r.isGreen = false; r.h = 0; r.m = 0; r.shipped = false; r.failed = false; r.failCount = 0;
+r.gateTimeMs = Date.now() + CD_HOURS * 3600 * 1000;
+r.forceTimeMs = r.gateTimeMs + LT_HOURS * 3600 * 1000;
+r.actionCooldownEndTime = Date.now() + REPORT_COOLDOWN_MS;
+addAllKillRecord(r.server, r.name, r.area, '击杀重置', { triggerTimeMs: Date.now() });
+showToast('已标记击杀，重置为 84h CD'); renderRecentList();
+};
+
+    window.renderRecentList = function renderRecentList() {
+const container = document.getElementById('recentListContainer');
+if (recentRecords.length === 0) { container.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:10px;">暂无记录</div>`; return; }
+updateRecentLimitBadge();
+let html = ''; const limit = getRecentLimit();
+for (let idx = 0; idx < Math.min(recentRecords.length, limit); idx++) {
+const r = recentRecords[idx]; const now = Date.now();
+if (r.failCount === undefined) r.failCount = 0;
+let gateTimerHtml = '', forceTimerHtml = '', weatherHtml = '', progressVal = 0, progressColor = 'var(--blue)', statusHtml = '';
+gateTimerHtml = `<div class="recent-time-block"><span class="res-label">进闸时间</span><span class="recent-time-val" style="color:var(--blue)">${r.gateTimeMs ? formatDateObj(new Date(r.gateTimeMs)) : '-'}</span></div>`;
+forceTimerHtml = `<div class="recent-time-block"><span class="res-label">强制时间</span><span class="recent-time-val" style="color:var(--gold)">${formatDateObj(new Date(r.forceTimeMs))}</span></div>`;
+let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60); let passedMin = r.h * 60 + r.m; let isForced = now >= r.forceTimeMs;
+if (r.isGreen) { progressVal = Math.min(100, Math.floor((passedMin / totalMin) * 100)); progressColor = 'var(--blue)'; statusHtml = `<span style="font-size:12px; color:var(--accent)">存活</span>`; } 
+else { progressVal = Math.min(100, Math.floor((passedMin / totalMin) * 100)); progressColor = 'var(--red)'; statusHtml = `<span style="font-size:12px; color:var(--red)">CD中</span>`; }
+if (isForced) { progressVal = 100; progressColor = 'var(--red)'; statusHtml = `<span style="font-size:12px; color:var(--red)">已强制</span>`; }
+let progressHtml = `<div class="recent-progress-block"><div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);"><span>进度</span><span class="recent-progress-text">${progressVal}%</span></div><div class="recent-progress-bar"><div class="recent-progress-fill" style="width: ${progressVal}%; background: ${progressColor};"></div></div></div>`;
+let estHtml = '';
+try {
+if (window.__predictor) {
+const _dbM = S_MONSTERS.find(sm => sm.name === r.name); const _ver = (_dbM && _dbM.version) || '6.0';
+const pred = window.__predictor.predict({ name: r.name, version: _ver, gateTimeMs: r.gateTimeMs, forceTimeMs: r.forceTimeMs, isGreen: r.isGreen });
+const cColor = pred.isTail ? 'var(--red)' : (pred.isOverdue ? 'var(--gold)' : 'var(--accent)');
+const confText = pred.stats.sampleCount >= 5 ? `样本×${pred.stats.sampleCount}` : `版本先验预估`;
+const pctShow = pred.progressPct > 100 ? `>100%` : `${pred.progressPct.toFixed(0)}%`;
+estHtml = `<div class="recent-time-block"><span class="res-label">预估出货</span><span class="recent-time-val" style="color:${cColor}">${formatDateObj(pred.predictedKillTime)}</span></div><div class="recent-progress-block" style="border-left:1px solid var(--border); padding-left:15px; width:130px;"><div style="display:flex; justify-content:space-between; font-size:11px;"><span style="color:var(--text-muted);">出货进度</span><span style="font-weight:bold; color:${cColor};">${pctShow}${pred.isTail ? ' ⚠️' : ''}</span></div><div class="recent-progress-bar"><div class="recent-progress-fill" style="width:${Math.min(100, pred.progressPct)}%; background:linear-gradient(90deg, var(--gold), var(--red));"></div></div><div style="font-size:10px; color:var(--text-muted); text-align:right; margin-top:2px;">${r.isGreen ? ('剩余 ' + formatDHMS(pred.remainingMs)) : '等待进闸'} · ${confText}</div></div>`;
+}
+} catch(e) { estHtml = ''; }
+let isCooldown = r.actionCooldownEndTime && Date.now() < r.actionCooldownEndTime;
+let cooldownHtml = isCooldown ? `<div style="font-size:12px; color:var(--red); font-weight:bold; margin-top:5px;" class="cooldown-timer" data-target="${r.actionCooldownEndTime}">操作冷却: <span></span></div>` : '';
+let disableShip = isCooldown; let disableFail = isCooldown;
+let shipClass = r.shipped ? 'btn btn-outline' : 'btn btn-accent'; let shipText = r.shipped ? '已出货' : '出货了';
+let shipStyle = 'padding:6px 10px; font-size:12px;'; if (disableShip) shipStyle += ' opacity:0.5; cursor:not-allowed;';
+let failClass = r.failed ? 'btn btn-outline' : 'btn btn-red'; 
+let failText = r.failed ? `已寄(${r.failCount}次)` : '寄了';
+if (r.failed) { failClass = 'btn btn-red'; } // 如果是寄了状态，保持红色按钮，允许继续点
+let failStyle = 'padding:6px 10px; font-size:12px;'; if (disableFail) failStyle += ' opacity:0.5; cursor:not-allowed;';
+if (r.weatherTargetEndTime) { const wDiff = r.weatherTargetEndTime - now; const wDur = r.weatherDurationMs || WEATHER_DURATION_MS; if (wDiff > 0) weatherHtml = `<div class="recent-time-block"><span class="res-label">天气状态</span><span class="recent-time-val" style="color:var(--purple)">距天气 <span class="fc-timer" data-target="${r.weatherTargetEndTime}"></span></span></div>`; else if (wDiff > -wDur) { const wEnd = r.weatherTargetEndTime + wDur; weatherHtml = `<div class="recent-time-block"><span class="res-label">天气状态</span><span class="recent-time-val" style="color:var(--gold)">天气剩余 <span class="fc-timer" data-target="${wEnd}"></span></span></div>`; } }
+html += `<div class="recent-item" onclick="openRecentDetail(${idx})"><div class="recent-item-info"><div class="recent-item-title">[${r.server}] <span style="color:var(--gold); font-weight:bold;">${r.name}</span> (${r.area}) ${statusHtml}</div><div class="recent-item-times">${gateTimerHtml} ${forceTimerHtml} ${weatherHtml} ${progressHtml} ${estHtml}</div>${cooldownHtml}</div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; gap:5px;"><button class="${shipClass}" onclick="event.stopPropagation(); reportShipment(${idx})" style="${shipStyle}" ${disableShip ? 'disabled' : ''}>${shipText}</button><button class="${failClass}" onclick="event.stopPropagation(); reportFail(${idx})" style="${failStyle}" ${disableFail ? 'disabled' : ''}>${failText}</button></div><div style="display:flex; gap:5px;"><button class="btn btn-red" onclick="event.stopPropagation(); reportKill(${idx})" style="flex:1; padding:6px 10px; font-size:12px;">击杀</button><button class="btn btn-outline" onclick="event.stopPropagation(); summonFloatingCountdownFromRecord(${idx})" style="flex:1; padding:6px 10px; font-size:12px;">浮窗</button><button class="btn btn-red" onclick="event.stopPropagation(); removeRecent(${idx})" style="padding:6px 10px;">✕</button></div><div style="display:flex; gap:5px;"><button class="btn btn-outline" onclick="event.stopPropagation(); addRecentToRoute(${idx})" style="flex:1; padding:6px 10px; font-size:12px; color:var(--gold); border-color:var(--gold);">加入排车</button></div></div></div>`;
+}
+if (recentRecords.length > limit) html += `<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:12px;">已隐藏 ${recentRecords.length - limit} 条记录，点击上方【扩容上限】查看更多</div>`;
+container.innerHTML = html; tickTimers();
+};
+
+    window.openReportCooldownModal = function openReportCooldownModal() {
+if (!isMasterVerified && !isDeveloperMode) { showToast('需要前往【邀请码特权】解锁后操作'); openInviteModal(); return; }
+document.getElementById('reportCooldownInput').value = Math.round(REPORT_COOLDOWN_MS / 1000); document.getElementById('reportCooldownModal').style.display = 'flex';
+};
+
+    window.saveReportCooldown = function saveReportCooldown() { const val = parseInt(document.getElementById('reportCooldownInput').value) || 0; REPORT_COOLDOWN_MS = val * 1000; localStorage.setItem('ff14_report_cooldown_ms', REPORT_COOLDOWN_MS); document.getElementById('reportCooldownModal').style.display = 'none'; showToast(`上报冷却已设置为 ${val} 秒`); };
+
+    window.addRecentToRoute = function addRecentToRoute(idx) {
+const r = recentRecords[idx]; if (!r) return;
+if (!isMasterVerified && !isDeveloperMode) { showToast('需要前往【邀请码特权】解锁后操作'); openInviteModal(); return; }
+const dbMonster = S_MONSTERS.find(m => m.name === r.name); if (!dbMonster) { showToast('未找到该 S怪 词库信息'); return; }
+const isDuplicate = parsedMonsters.some(m => m.name === r.name && m.server === r.server); if (isDuplicate) { showToast('该服务器下已有这只怪'); return; }
+parsedMonsters.push({ name: dbMonster.name, originalName: dbMonster.name, area: dbMonster.area, version: dbMonster.version, coord: "(坐标未知)", server: r.server, hp: '100.00%', trigger: '', isDead: r.failed || false, isTarget: false, isSS: false });
+sortParsedMonstersDefault(); renderRouteResult(); showToast(`已成功将 ${r.name} 加入排车列表`);
+if (document.getElementById('focusRoutePage').style.display !== 'flex') document.getElementById('focusRoutePage').style.display = 'flex';
+};
+
+    window.reportShipment = function reportShipment(idx) {
+const r = recentRecords[idx]; if (!r) return;
+if (r.actionCooldownEndTime && Date.now() < r.actionCooldownEndTime) { showToast(`操作太频繁，请等待 ${Math.ceil((r.actionCooldownEndTime - Date.now()) / 1000)} 秒`); return; }
+if (r.shipped) { showToast('该记录已经是出货状态，如需修正请点击【寄了】'); return; }
+if (r.failed) { r.failed = false; r.failedTimeMs = null; r.isAutoFailed = false; r.failCount = 0; }
+let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60); let pct = ((r.h * 60 + r.m) / totalMin * 100).toFixed(2); if (Date.now() >= r.forceTimeMs) pct = "100.00";
+let remainMs = r.forceTimeMs - Date.now(); let timeStatusText = remainMs > 0 ? `距离强制还有：${(remainMs / 60000).toFixed(2)}分。` : `已强制，距强制已过：${Math.abs(remainMs / 60000).toFixed(2)}分。`;
+let text = `${r.server}-${r.area}-${r.name} 出货啦！\n当前进度为：${pct}%/100.00%。\n${timeStatusText}`;
+showResultNotice("恭喜出货！", text, "success");
+r.shipped = true; r.shippedTimeMs = Date.now(); r.actionCooldownEndTime = Date.now() + REPORT_COOLDOWN_MS;
+if (r.killRecord) { allKillRecords = allKillRecords.filter(x => x !== r.killRecord); localStorage.setItem('ff14_all_kill_records', JSON.stringify(allKillRecords)); if (window.__predictor) window.__predictor.invalidate(); r.killRecord = null; }
+const rec = addAllKillRecord(r.server, r.name, r.area, '点击出货', { triggerTimeMs: r.gateTimeMs, isGreen: r.isGreen }); r.killRecord = rec;
+renderRecentList();
+};
+
+    window.reportFail = function reportFail(idx) {
+const r = recentRecords[idx]; if (!r) return;
+if (r.actionCooldownEndTime && Date.now() < r.actionCooldownEndTime) { showToast(`操作太频繁，请等待 ${Math.ceil((r.actionCooldownEndTime - Date.now()) / 1000)} 秒`); return; }
+// 允许在失败状态继续点击，累计次数
+if (!r.failCount) r.failCount = 0;
+r.failCount++;
+if (r.shipped) { r.shipped = false; r.shippedTimeMs = null; if (r.killRecord) { allKillRecords = allKillRecords.filter(x => x !== r.killRecord); localStorage.setItem('ff14_all_kill_records', JSON.stringify(allKillRecords)); if (window.__predictor) window.__predictor.invalidate(); r.killRecord = null; } }
+let totalMin = r.isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60); let pct = ((r.h * 60 + r.m) / totalMin * 100).toFixed(2); if (Date.now() >= r.forceTimeMs) pct = "100.00";
+let remainMs = r.forceTimeMs - Date.now(); let timeStatusText = remainMs > 0 ? `距离强制还有：${(remainMs / 60000).toFixed(2)}分。` : `已强制，距强制已过：${Math.abs(remainMs / 60000).toFixed(2)}分。`;
+let text = `${r.server}-${r.area}-${r.name} 很遗憾没有东西哎。\n当前进度为：${pct}%/100.00%。\n${timeStatusText} 请稍后再次尝试哦。`;
+showResultNotice("触发失败", text, "danger");
+r.failed = true; r.isAutoFailed = false; r.failedTimeMs = Date.now(); r.actionCooldownEndTime = Date.now() + REPORT_COOLDOWN_MS;
+renderRecentList();
+};
+
+    window.copyResultNotice = function copyResultNotice() { navigator.clipboard.writeText(document.getElementById('resultMarqueeText').innerText).then(() => showToast('结果已复制')); };
+
+    window.renderAllKillRecordsList = function renderAllKillRecordsList() {
+const keyword = document.getElementById('killRecordsSearchInput').value.toLowerCase(); const list = document.getElementById('allKillRecordsList'); list.innerHTML = '';
+const filtered = allKillRecords.filter(r => r.name.toLowerCase().includes(keyword) || r.server.toLowerCase().includes(keyword));
+if (filtered.length === 0) { list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">没有找到记录</div>`; return; }
+filtered.forEach(r => { const div = document.createElement('div'); div.className = 'history-item'; div.innerHTML = `<div><span class="history-type" style="background:var(--accent); color:var(--panel);">${r.progress}</span> <strong>[${r.server}]</strong> ${r.name} <span style="color:var(--text-muted); font-size:12px;">(${r.area})</span></div><div style="color:var(--text-muted); font-size:12px; font-family:monospace;">${r.time}</div>`; list.appendChild(div); });
+};
+
+    window.exportKillRecords = function exportKillRecords() {
+if (allKillRecords.length === 0) { showToast('没有可导出的记录'); return; }
+let text = "时间,服务器,S怪名称,地区,备注\n"; allKillRecords.forEach(r => { text += `${r.time},${r.server},${r.name},${r.area},${r.progress}\n`; });
+const blob = new Blob([text], { type: 'text/csv;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; const now = new Date();
+a.download = `FF14出货记录_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("出货记录已导出！");
+};
+
+    window.clearAllKillRecords = function clearAllKillRecords() { if(confirm("确定要清空所有出货记录吗？此操作不可恢复！")) { allKillRecords = []; localStorage.removeItem('ff14_all_kill_records'); renderAllKillRecordsList(); if (window.__predictor) window.__predictor.invalidate(); showToast("记录已清空"); } };
+
+    window.summonFloatingCountdownFromRecord = function summonFloatingCountdownFromRecord(idx) {
+const r = recentRecords[idx]; let existingWin = activeFloatingWindows.find(w => w.recordId === r.id);
+if (existingWin) { existingWin.el.style.border = '3px solid var(--accent)'; setTimeout(() => { existingWin.el.style.border = '2px solid var(--gold)'; }, 500); return; }
+const gateTime = r.isDynamicGate ? null : new Date(r.gateTimeMs); createFloatingWindow(r.id, gateTime, new Date(r.forceTimeMs), r.isGreen, false, r.h, r.m, r.name, r.server, r.weatherTargetEndTime, r.weatherDurationMs); showToast('倒计时浮窗已召唤');
+};
+
+    window.summonFloatingCountdown = function summonFloatingCountdown() {
+if (!currentManualCalcData) calcManual(); 
+if(currentManualCalcData) {
+const { isGreen, isShanxieya, h, m, targetGateTime, targetForceTime, weatherTargetEndTime, weatherDurationMs } = currentManualCalcData;
+const rName = mMonsterHidden.value.split('|')[0]; const rServer = mServerSelect.value; const tempId = 'temp_' + Date.now();
+let existing = activeFloatingWindows.find(w => w.isTemp && w.rName === rName && w.rServer === rServer);
+if (existing) { existing.el.style.border = '3px solid var(--accent)'; setTimeout(() => { existing.el.style.border = '2px solid var(--gold)'; }, 500); return; }
+createFloatingWindow(tempId, targetGateTime, targetForceTime, isGreen, isShanxieya, h, m, rName, rServer, weatherTargetEndTime, weatherDurationMs); showToast('倒计时浮窗已召唤');
+}
+};
+
+    window.createFloatingWindow = function createFloatingWindow(recordId, gateTime, forceTime, isGreen, isShanxieya, h, m, monsterName, server, weatherTargetEndTime, wDurMs) {
+const container = document.getElementById('floatingWindowContainer'); const winId = 'win_' + recordId; if (!wDurMs) wDurMs = WEATHER_DURATION_MS;
+const div = document.createElement('div'); div.className = 'floating-window glass-panel'; div.id = winId; const offset = activeFloatingWindows.length * 20;
+div.style.bottom = (20 + offset) + 'px'; div.style.right = (20 + offset) + 'px'; div.style.display = 'block';
+div.innerHTML = `<div class="fc-header"><span class="fc-title">${server} - ${monsterName}</span><div class="fc-btns"><button class="fc-copy" title="复制信息">📋</button><button class="fc-close" title="关闭">×</button></div></div><div class="fc-body"><div id="fc-route-sync-${winId}" style="display:none; background:rgba(243,156,18,0.1); border:1px dashed var(--gold); padding:8px; border-radius:6px; margin-bottom:10px;"></div><div class="fc-row"><span class="fc-label">基准状态</span><span class="fc-val" style="color:${isGreen?'var(--accent)':'var(--red)'}">${isGreen?'存活':'CD中'}</span></div><div class="fc-row"><span class="fc-label">进闸时间</span><span class="fc-val" style="color:var(--accent); font-size:12px;">${gateTime ? gateTime.toLocaleTimeString('zh-CN', {hour12:false}) : '-'}</span></div><div class="fc-row"><span class="fc-label">强制时间</span><span class="fc-val" style="color:var(--gold); font-size:12px;">${forceTime.toLocaleTimeString('zh-CN', {hour12:false})}</span></div><div class="fc-row" id="fc-weather-row-${winId}" style="display:none; margin-top:6px; border-top:1px dashed var(--border); padding-top:6px;"><span class="fc-label" style="color:var(--purple);">天气状态</span><span class="fc-val" id="fc-weather-val-${winId}" style="color:var(--purple); font-size:12px;">-</span></div><div class="fc-countdown"><div class="fc-timer-val" style="font-size:18px;"></div><div class="fc-timer-desc" style="font-size:12px; color:var(--text-muted); margin-top:5px;"></div></div><div id="fc-est-${winId}"></div></div>`;
+container.appendChild(div);
+let isDragging = false; let dragOffsetX = 0, dragOffsetY = 0;
+div.addEventListener('mousedown', (e) => { if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return; isDragging = true; const rect = div.getBoundingClientRect(); dragOffsetX = e.clientX - rect.left; dragOffsetY = e.clientY - rect.top; div.style.bottom = 'auto'; div.style.right = 'auto'; div.style.left = rect.left + 'px'; div.style.top = rect.top + 'px'; });
+document.addEventListener('mousemove', (e) => { if (!isDragging) return; let newLeft = e.clientX - dragOffsetX; let newTop = e.clientY - dragOffsetY; newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - div.offsetWidth)); newTop = Math.max(0, Math.min(newTop, window.innerHeight - div.offsetHeight)); div.style.left = newLeft + 'px'; div.style.top = newTop + 'px'; });
+document.addEventListener('mouseup', () => { isDragging = false; });
+div.querySelector('.fc-close').onclick = () => { div.remove(); activeFloatingWindows = activeFloatingWindows.filter(w => w.recordId !== recordId); };
+div.querySelector('.fc-copy').onclick = () => { const text = div.querySelector('.fc-body').innerText; navigator.clipboard.writeText(`[${server}] ${monsterName}\n${text}`).then(() => showToast("浮窗信息已复制")); };
+const _floatDbMonster = S_MONSTERS.find(sm => sm.name === monsterName); const _floatVersion = (_floatDbMonster && _floatDbMonster.version) || '6.0';
+const updateWin = () => {
+if (!div.parentElement) return; const now = new Date(); let actualGateTime = gateTime; if (isGreen && gateTime === null) actualGateTime = now;
+const diffGate = actualGateTime - now; const diffForce = forceTime - now; let countdownText = ''; let descText = ''; let colorClass = '';
+if (isGreen) { if (diffForce <= 0) { countdownText = `已强制`; colorClass = 'countdown-red'; descText = `距已强制已过 ${formatDHMS(-diffForce)}`; } else if (diffForce < 7200000) { countdownText = `距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-red blink-warning'; descText = `已存活 ${h}时${m}分`; } else { countdownText = `距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-blue'; descText = `已存活 ${h}时${m}分`; } } 
+else { if (diffGate > 0) { countdownText = `距进闸: ${formatDHMS(diffGate)}`; colorClass = 'countdown-red'; descText = `进闸后需存活 48时`; } else if (diffForce > 0) { if (diffForce < 7200000) { countdownText = `已进闸！距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-red blink-warning'; } else { countdownText = `已进闸！距强制: ${formatDHMS(diffForce)}`; colorClass = 'countdown-gold'; } descText = `已进闸 ${formatDHMS(-diffGate)}`; } else { countdownText = `已强制`; colorClass = 'countdown-red'; descText = `距已强制已过 ${formatDHMS(-diffForce)}`; } }
+const valEl = div.querySelector('.fc-timer-val'); valEl.innerText = countdownText; valEl.className = 'fc-timer-val ' + colorClass; div.querySelector('.fc-timer-desc').innerText = descText;
+const wRow = div.querySelector(`#fc-weather-row-${winId}`); const wVal = div.querySelector(`#fc-weather-val-${winId}`);
+if (weatherTargetEndTime) { wRow.style.display = 'flex'; const nowMs = Date.now(); const wDiff = weatherTargetEndTime - nowMs; if (wDiff > 0) { wVal.innerText = `距天气 ${formatDHMS(wDiff)}`; wVal.style.color = wDiff < 15*60000 ? 'var(--red)' : 'var(--purple)'; } else if (wDiff > -wDurMs) { const remain = wDurMs + wDiff; wVal.innerText = `存在剩余 ${formatDHMS(remain)}`; wVal.style.color = 'var(--gold)'; } else { wVal.innerText = `已结束`; wVal.style.color = 'var(--text-muted)'; } } else wRow.style.display = 'none';
+const syncBox = div.querySelector(`#fc-route-sync-${winId}`);
+if ((isMasterVerified || isDeveloperMode) && parsedMonsters.length > 0 && document.getElementById('focusRoutePage').style.display !== 'flex') {
+syncBox.style.display = 'block';
+const target = parsedMonsters.find(m => m.isTarget && !m.isDead) || parsedMonsters.find(m => !m.isDead);
+if (target) { syncBox.innerHTML = `<div style="font-size:12px; color:var(--gold); font-weight:bold; margin-bottom:4px;">当前排车目标</div><div style="font-size:13px; color:var(--text);">[${target.server}] ${target.name}</div><div style="font-size:12px; color:var(--purple);">触发: ${target.trigger || '未分配'}</div>`; } 
+else { syncBox.innerHTML = `<div style="font-size:12px; color:var(--red);">排车列表已清空</div>`; }
+} else { syncBox.style.display = 'none'; }
+const estBox = div.querySelector(`#fc-est-${winId}`);
+if (estBox) { try { if (window.__predictor) { const pred = window.__predictor.predict({ name: monsterName, version: _floatVersion, gateTimeMs: gateTime ? gateTime.getTime() : null, forceTimeMs: forceTime.getTime(), isGreen: isGreen }); const cColor = pred.isTail ? 'var(--red)' : (pred.isOverdue ? 'var(--gold)' : 'var(--accent)'); const confText = pred.stats.sampleCount >= 5 ? `样本×${pred.stats.sampleCount}` : `版本先验`; const pctShow = pred.progressPct > 100 ? `>100%` : `${pred.progressPct.toFixed(0)}%`; estBox.innerHTML = `<div class="fc-row" style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--border);"><span class="fc-label">预估出货</span><span class="fc-val" style="color:${cColor}; font-size:12px;">${formatDateObj(pred.predictedKillTime)} (${pctShow})</span></div><div class="fc-row" style="margin-bottom:0;"><span class="fc-label" style="font-size:11px;">进度条</span><span class="fc-val" style="color:var(--text-muted); font-size:11px;">${confText}</span></div><div style="width:100%; height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:4px;"><div style="height:100%; width:${Math.min(100, pred.progressPct)}%; background:linear-gradient(90deg, var(--gold), var(--red)); transition:width 0.3s;"></div></div>`; } else estBox.innerHTML = ''; } catch (e) { estBox.innerHTML = ''; } }
+};
+updateWin(); const timer = setInterval(updateWin, 1000);
+activeFloatingWindows.push({ recordId: recordId, el: div, timer: timer, isTemp: String(recordId).startsWith('temp_'), rName: monsterName, rServer: server });
+};
+
+    window.renderFateRecords = function renderFateRecords() {
+const list = document.getElementById('fateRecordsList'), warnBox = document.getElementById('fateWarningBox');
+if (fateRecords.length === 0) { list.innerHTML = `<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:8px;">暂无记录</div>`; warnBox.innerHTML = ''; return; }
+list.innerHTML = fateRecords.map((r, i) => `<div class="fate-record-item"><span><strong style="color:var(--gold);">#${i+1}</strong> <span class="fate-time">${r.timeStr}</span></span><button class="fate-remove" onclick="removeFateRecord(${i})">✕</button></div>`).join('');
+if (fateRecords.length >= 5) warnBox.innerHTML = `<div class="fate-warning">已完成 5 次 Fate！若 S 怪未触发，请清空记录。<div style="margin-top:8px; display:flex; gap:8px;"><button class="btn btn-outline" onclick="onFateTriggered()" style="margin-left:0; background: var(--accent); color: var(--panel); border:none;">S怪已触发</button><button class="btn btn-red" onclick="clearFateRecords()">清空记录</button></div></div>`;
+else warnBox.innerHTML = '';
+};
+
+    window.recordFateAuto = function recordFateAuto() { const now = new Date(); fateRecords.push({ timeStr: formatFateTime(now), timestamp: now.getTime() }); if (fateRecords.length > 5) fateRecords = fateRecords.slice(-5); renderFateRecords(); saveLocalState(); showToast(`已记录 Fate 完成 (+1)`); };
+
+    window.confirmFateManualInput = function confirmFateManualInput() { const h = parseInt(document.getElementById('fateManualHour').value) || 0, m = parseInt(document.getElementById('fateManualMin').value) || 0, s = parseInt(document.getElementById('fateManualSec').value) || 0; fateRecords.push({ timeStr: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`, timestamp: new Date().getTime() }); if (fateRecords.length > 5) fateRecords = fateRecords.slice(-5); renderFateRecords(); saveLocalState(); document.getElementById('fateManualModal').style.display = 'none'; showToast(`已手动记录 Fate 完成`); };
+
+    window.clearFateRecords = function clearFateRecords() { fateRecords = []; renderFateRecords(); saveLocalState(); showToast(`Fate 记录已清空`); };
+
+    window.onFateTriggered = function onFateTriggered() { fateRecords = []; renderFateRecords(); saveLocalState(); showToast(`已标记触发，清空`); };
+
+    window.executeBatchServerFix = function executeBatchServerFix() { const selectedServers = Array.from(document.querySelectorAll('#batchServerList input:checked')).map(cb => cb.value); if (selectedServers.length === 0) { showToast("请至少勾选一个服务器"); return; } let fixCount = 0; document.querySelectorAll('.calc-row').forEach(tr => { const serverTag = tr.querySelector('.server-tag'); if (serverTag.innerText === '未知' || !serverTag.innerText) { serverTag.innerText = selectedServers[0]; tr.initialData.server = selectedServers[0]; fixCount++; } }); document.getElementById('batchServerModal').style.display = 'none'; saveLocalState(); showToast(fixCount > 0 ? `已修正 ${fixCount} 行服务器` : `未找到“未知”服务器`); };
+
+    window.executeKill = function executeKill() { if (!currentKillRow) return; currentKillRow.isGreen = false; currentKillRow.initialData.h = 0; currentKillRow.initialData.m = 0; const timeText = currentKillRow.querySelector('.time-text'); timeText.innerText = `0 : 0`; const hourInput = currentKillRow.querySelector('.hour-input'), minInput = currentKillRow.querySelector('.min-input'); if(hourInput) hourInput.value = 0; if(minInput) minInput.value = 0; currentKillRow.recalculate(); try { addHistory('击杀', `[${currentKillRow.initialData.server}] ${currentKillRow.initialData.name} 标记已击杀`); } catch(e) {} closeKillModal(); };
+
+    window.undoRow = function undoRow(tr) { const init = tr.initialData; tr.isGreen = init.initialIsGreen; init.h = init.initialH; init.m = init.initialM; const timeText = tr.querySelector('.time-text'); timeText.innerText = `${init.h} : ${init.m}`; const hourInput = tr.querySelector('.hour-input'), minInput = tr.querySelector('.min-input'); if(hourInput) hourInput.value = init.h; if(minInput) minInput.value = init.m; tr.recalculate(); showToast(`已撤销操作`); };
+
+    window.copyResults = function copyResults() { let text = `FF14 S怪 状态表\n`; const isHideServer = document.getElementById('resultTable').classList.contains('hide-server'); document.querySelectorAll('.calc-row').forEach(tr => { const server = isHideServer ? "" : `[${tr.querySelector('.server-tag').innerText}] `; const name = tr.children[1].children[0].innerText; const trigger = tr.querySelector('.select-trigger').value ? `(触发: ${tr.querySelector('.select-trigger').value})` : ''; const status = tr.querySelector('.status-hint').innerText; const force = tr.querySelector('.force-text').innerText; const countdown = tr.querySelector('.countdown-text-val').innerText; const pct = tr.querySelector('.pct-text').innerText; text += `${server}${name} ${trigger} | ${status} | 进度:${pct} | 强制预计:${force} | ${countdown}\n`; }); navigator.clipboard.writeText(text).then(() => showToast("表格已复制到剪贴板")); };
+
+    window.createResultRow = function createResultRow(tbody, server, name, area, h, m, isGreen, percent, trigger) { const tr = document.createElement('tr'); tr.className = 'calc-row'; tr.innerHTML = `<td class="server-col"><span class="server-tag">${server}</span></td><td>${name}<br><span style="font-size:12px;color:var(--text-muted)">${area}</span></td><td><span class="status-hint" style="color:${isGreen ? 'var(--accent)' : 'var(--red)'}">${isGreen ? '存活' : 'CD'}</span></td><td class="action-col"><button class="btn-kill-row" onclick="openKillModal(this.closest('tr'))">击杀</button></td><td><div class="time-text-display"><span class="time-text">${h} : ${m}</span><button class="edit-time-btn" onclick="toggleEditTime(this)">✏️</button></div><div class="time-edit-inputs"><input type="number" class="hour-input" value="${h}"> : <input type="number" class="min-input" value="${m}"><button class="save-time-btn" onclick="saveEditTime(this)">存</button></div></td><td><span class="pct-text">${Math.round(percent)}%</span></td><td><span class="force-text time-force">等待计算...</span></td><td><span class="countdown-text-val countdown-green">--</span></td><td><span class="status-text-col">正常</span></td>`; tbody.appendChild(tr); tr.recalculate = function() {}; tr.toggleEditTime = function() {}; tr.saveEditTime = function() {}; };
+
+    window.submitManualAdd = function submitManualAdd() { if (!hasAddEvidence) { alert("必须上传截图证据！"); return; } const server = addServerSelect.value; const [name, area] = addMonsterSelect.value.split('|'); const isGreen = document.querySelector('input[name="addStatus"]:checked').value === 'green'; let p = parseFloat(document.getElementById('addPercent').value) || 0, h = parseInt(document.getElementById('addHour').value) || 0, m = parseInt(document.getElementById('addMin').value) || 0; const totalMin = isGreen ? (LT_HOURS * 60) : (CD_HOURS * 60); if (p > 0 && h === 0 && m === 0) { const calcMin = Math.floor(totalMin * (p / 100)); h = Math.floor(calcMin / 60); m = calcMin % 60; } else if (h > 0 || m > 0) p = ((h * 60 + m) / totalMin) * 100; const tbody = document.getElementById('tableBody'); document.getElementById('results-container').style.display = 'block'; document.getElementById('copyBtn').style.display = 'block'; createResultRow(tbody, server, name, area, h, m, isGreen, p, ""); showToast("已手动录入"); closeManualAddModal(); saveLocalState(); try { addHistory('手动添加', `[${server}] ${name}`); } catch(e) {} };
+
+    window.addHistory = function addHistory(type, content) { if (!Array.isArray(historyDB)) historyDB = []; const now = new Date(); const timeStr = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; historyDB.unshift({ time: timeStr, type, content }); if (historyDB.length > 200) historyDB.pop(); localStorage.setItem('ff14_history_db', JSON.stringify(historyDB)); };
+
+    window.renderHistoryList = function renderHistoryList() { const keyword = document.getElementById('historySearchInput').value.toLowerCase(); const list = document.getElementById('historyList'); list.innerHTML = ''; if (!historyDB || !Array.isArray(historyDB)) return; const filtered = historyDB.filter(item => item && item.content && item.content.toLowerCase().includes(keyword)); if (filtered.length === 0) { list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">没有找到匹配的记录</div>`; return; } filtered.forEach(item => { const div = document.createElement('div'); div.className = 'history-item'; let actionBtn = ''; if (item.type === '排车保存') actionBtn = `<div class="history-actions"><button onclick="restoreRouteFromHistory()">恢复排车</button></div>`; div.innerHTML = `<div><span class="history-type">${item.type||'记录'}</span> ${item.content}</div><div style="display:flex; align-items:center;"><span class="history-time">${item.time||''}</span>${actionBtn}</div>`; list.appendChild(div); }); };
+
+    window.changeTheme = function changeTheme(theme) { document.documentElement.setAttribute('data-theme', theme === 'dark' ? '' : theme); document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active')); const targetBtn = document.querySelector(`.theme-btn.${theme}`); if (targetBtn) targetBtn.classList.add('active'); localStorage.setItem('ff14_theme', theme); };
+
+    window.clearManualInputs = function clearManualInputs() { mHour.value = 0; mMin.value = 0; mPercent.value = 0; mFogHour.value = 0; mFogMin.value = 0; mFogSec.value = 0; document.getElementById('mFogDurHour').value = 1; document.getElementById('mFogDurMin').value = 0; mMonsterInput.value = ''; mMonsterHidden.value = '未知|未知'; document.querySelector('input[name="mStatus"][value="green"]').checked = true; mFogGroup.style.display = 'none'; mFateGroup.style.display = 'none'; fateRecords = []; updateSpecialCounterUI(); autoCorrect(); showToast("输入已清空"); weatherTargetEndTime = null; weatherDurationMs = WEATHER_DURATION_MS; document.getElementById('weatherStatusBox').style.display = 'none'; document.getElementById('weatherEditPanel').style.display = 'none'; };
+
+    window.updateSpecialCounterUI = function updateSpecialCounterUI() { const panel = document.getElementById('specialCounterPanel'); const name = mMonsterHidden.value.split('|')[0]; if (specialCounters.hasOwnProperty(name)) { panel.style.display = 'block'; document.getElementById('counterName').innerText = name + " 小怪击杀计数"; document.getElementById('counterDisplay').innerText = specialCounters[name]; } else panel.style.display = 'none'; };
+
+    window.addCounter = function addCounter() { const name = mMonsterHidden.value.split('|')[0]; if (specialCounters.hasOwnProperty(name)) { specialCounters[name] += 100; updateSpecialCounterUI(); saveLocalState(); showToast(`计数已增加`); } };
+
+    window.resetCounter = function resetCounter() { const name = mMonsterHidden.value.split('|')[0]; if (specialCounters.hasOwnProperty(name)) { specialCounters[name] = 0; updateSpecialCounterUI(); saveLocalState(); showToast(`计数已重置`); } };
+
+    window.openBatchAddModal = function openBatchAddModal() {
+    if (!isVipUnlocked) { showToast('请先获取临时邀请码解锁基础功能'); openInviteModal(); return; }
+    const serverSel = document.getElementById('batchAddServerSelect');
+    if (serverSel.options.length === 0) { ALL_SERVERS.forEach(s => serverSel.innerHTML += `<option value="${s}">${s}</option>`); }
+    document.getElementById('batchAddModal').style.display = 'flex';
+    document.getElementById('batchAddSearch').value = '';
+    batchSelectedMonsters.clear(); batchQueue = [];
+    renderBatchQueue(); filterBatchAddMonsters();
+    let limitTxt = ''; if (isDeveloperMode) limitTxt = '当前：开发者 (无限制)'; else if (isMasterVerified) limitTxt = '当前：特殊 (同服/异服最多10只)'; else limitTxt = '当前：临时 (同服最多5只，异服最多3只)';
+    document.getElementById('batchAddLimitText').innerText = limitTxt;
+};
+
+    window.addBatchSelectionToQueue = function addBatchSelectionToQueue() {
+    if (batchSelectedMonsters.size === 0) { showToast('请先点击下方选择S怪'); return; }
+    const server = document.getElementById('batchAddServerSelect').value;
+    const status = document.getElementById('batchAddStatusSelect').value;
+    const h = parseInt(document.getElementById('batchAddH').value) || 0;
+    const m = parseInt(document.getElementById('batchAddM').value) || 0;
+    batchSelectedMonsters.forEach(name => {
+        const dbMonster = S_MONSTERS.find(x => x.name === name);
+        if (dbMonster) { batchQueue.push({ id: Date.now() + Math.random(), name: dbMonster.name, area: dbMonster.area, version: dbMonster.version, server: server, isGreen: status === 'green', h: h, m: m }); }
+    });
+    batchSelectedMonsters.clear(); filterBatchAddMonsters(); renderBatchQueue();
+};
+
+    window.renderBatchQueue = function renderBatchQueue() {
+    const tbody = document.getElementById('batchQueueBody'); tbody.innerHTML = '';
+    batchQueue.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><span class="server-tag">${item.server}</span></td><td style="color:var(--gold); font-weight:bold;">${item.name}</td><td style="color:${item.isGreen ? 'var(--accent)' : 'var(--red)'}">${item.isGreen ? '存活' : 'CD中'}</td><td><input type="number" value="${item.h}" min="0" max="99" onchange="batchQueue[${index}].h = parseInt(this.value)||0"> : <input type="number" value="${item.m}" min="0" max="59" onchange="batchQueue[${index}].m = parseInt(this.value)||0"></td><td><button class="batch-remove-btn" onclick="removeBatchQueue(${index})">✕</button></td>`;
+        tbody.appendChild(tr);
+    });
+};
+
+    window.removeBatchQueue = function removeBatchQueue(index) { batchQueue.splice(index, 1); renderBatchQueue(); };
+
+    window.filterBatchAddMonsters = function filterBatchAddMonsters() {
+    const val = document.getElementById('batchAddSearch').value.trim().toLowerCase();
+    const list = document.getElementById('batchAddList'); list.innerHTML = '';
+    const filtered = S_MONSTERS.filter(m => m.name.toLowerCase().includes(val) || (m.alias && m.alias.some(a => a.includes(val))));
+    filtered.forEach(m => {
+        const span = document.createElement('span'); span.className = 'trigger-tag';
+        const isSelected = batchSelectedMonsters.has(m.name);
+        span.style.background = isSelected ? 'var(--accent)' : 'var(--panel-light)';
+        span.style.color = isSelected ? 'var(--panel)' : 'var(--text)';
+        span.innerText = m.name;
+        span.onclick = () => { if (batchSelectedMonsters.has(m.name)) batchSelectedMonsters.delete(m.name); else batchSelectedMonsters.add(m.name); filterBatchAddMonsters(); };
+        list.appendChild(span);
+    });
+};
+
+    window.executeBatchAdd = function executeBatchAdd(target) {
+    if (batchQueue.length === 0) { showToast('表格为空，请先添加数据'); return; }
+    let limitSame = 5, limitDiff = 3;
+    if (isDeveloperMode) { limitSame = 9999; limitDiff = 9999; }
+    else if (isMasterVerified) { limitSame = 10; limitDiff = 10; }
+    const countByServer = {};
+    batchQueue.forEach(item => { countByServer[item.server] = (countByServer[item.server] || 0) + 1; });
+    let valid = true;
+    for (const srv in countByServer) { if (countByServer[srv] > limitSame) { valid = false; showToast(`服务器【${srv}】超出同服限制(${limitSame})`); return; } }
+    if (valid && Object.keys(countByServer).length > limitDiff) { showToast(`超出跨服限制(${limitDiff})`); return; }
+    
+    if (target === 'route') {
+        if (!isMasterVerified && !isDeveloperMode) { showToast('加入排车需要特殊或开发者权限'); return; }
+        let added = 0;
+        batchQueue.forEach(item => {
+            const isDup = parsedMonsters.some(x => x.name === item.name && x.server === item.server);
+            if (!isDup) { parsedMonsters.push({ name: item.name, originalName: item.name, area: item.area, version: item.version, coord: "(坐标未知)", server: item.server, hp: '100.00%', trigger: '', isDead: false, isTarget: false, isSS: false }); added++; }
+        });
+        if (added > 0) { sortParsedMonstersDefault(); renderRouteResult(); showToast(`成功加入排车 ${added} 只`); if (document.getElementById('focusRoutePage').style.display !== 'flex') document.getElementById('focusRoutePage').style.display = 'flex'; }
+    } else {
+        let added = 0;
+        batchQueue.forEach(item => {
+            const isDup = recentRecords.some(x => x.name === item.name && x.server === item.server && x.h === item.h && x.m === item.m);
+            if (!isDup) {
+                const now = new Date(); let targetGateTime, targetForceTime;
+                if (item.isGreen) { const timeSec = item.h * 3600 + item.m * 60; targetGateTime = new Date(now.getTime() - timeSec * 1000); targetForceTime = new Date(now.getTime() + (LT_HOURS * 3600 - timeSec) * 1000); } 
+                else { const timeSec = item.h * 3600 + item.m * 60; const waitSec = Math.max(0, CD_HOURS * 3600 - timeSec); targetGateTime = new Date(now.getTime() + waitSec * 1000); targetForceTime = new Date(targetGateTime.getTime() + LT_HOURS * 3600 * 1000); }
+                recentRecords.unshift({ id: Date.now() + Math.random(), server: item.server, name: item.name, area: item.area, isGreen: item.isGreen, h: item.h, m: item.m, gateTimeMs: targetGateTime.getTime(), forceTimeMs: targetForceTime.getTime(), weatherTargetEndTime: null, weatherDurationMs: WEATHER_DURATION_MS, cooldownEndTime: 0, actionCooldownEndTime: 0, shipped: false, failed: false, failCount: 0, isAutoFailed: false });
+                added++;
+            }
+        });
+        if (added > 0) { document.getElementById('recentListContainer').classList.remove('collapsed'); renderRecentList(); saveLocalState(); showToast(`成功加入计算列表 ${added} 只`); }
+    }
+    document.getElementById('batchAddModal').style.display = 'none'; batchQueue = [];
+};
+    window.openRecentDetail = function openRecentDetail(idx) {
+    const r = recentRecords[idx]; if (!r) return;
+    currentDetailIndex = idx;
+    if (!isMasterVerified && !isDeveloperMode && !tempDetailVerified) {
+        generateTempDetailCode(); return;
+    }
+    renderRecentDetailUI(r);
+};
+window.renderRecentDetailUI = function renderRecentDetailUI(r) {
+    const lastShipment = allKillRecords.find(x => x.server === r.server && x.name === r.name);
+    const failTime = r.failedTimeMs ? formatFullTime(r.failedTimeMs) : '暂无寄了记录';
+    const shipTime = r.shippedTimeMs ? formatFullTime(r.shippedTimeMs) : '暂无出货记录';
+    const lastShipTime = lastShipment ? lastShipment.time : '无历史出货记录';
+    const failCountStr = r.failCount ? `(${r.failCount}次)` : '';
+    const body = document.getElementById('recentDetailBody');
+    body.innerHTML = `
+        <div style="font-size:20px;font-weight:bold;color:var(--gold);margin-bottom:20px;text-align:center;">[${r.server}] ${r.name} (${r.area})</div>
+        <div class="detail-row"><span class="detail-label">当前状态</span><span class="detail-val" style="color:${r.isGreen ? 'var(--accent)' : 'var(--red)'}">${r.isGreen ? '存活' : 'CD中'}</span></div>
+        <div class="detail-row"><span class="detail-label">进闸时间</span><span class="detail-val" style="color:var(--blue);">${r.gateTimeMs ? formatFullTime(r.gateTimeMs) : '-'}</span></div>
+        <div class="detail-row"><span class="detail-label">强制时间</span><span class="detail-val" style="color:var(--gold);">${formatFullTime(r.forceTimeMs)}</span></div>
+        <div class="detail-section-title">📊 上报状态</div>
+        <div class="detail-row"><span class="detail-label">本次出货时间</span><span class="detail-val" style="color:var(--accent);">${shipTime}</span></div>
+        <div class="detail-row"><span class="detail-label">本次寄了时间</span><span class="detail-val" style="color:var(--red);">${failTime} <span style="color:var(--text-muted);">${failCountStr}</span></span></div>
+        <div class="detail-row"><span class="detail-label">上一次出货时间</span><span class="detail-val" style="color:var(--text-muted);">${lastShipTime}</span></div>
+        <div style="margin-top:20px;text-align:center;"><button class="btn btn-outline" onclick="closeRecentDetail()" style="width:100%;">关闭</button></div>
+    `;
+    document.getElementById('recentDetailModal').style.display = 'flex';
+};
+window.closeRecentDetail = function closeRecentDetail() {
+    document.getElementById('recentDetailModal').style.display = 'none';
+    tempDetailVerified = false;
+    if (tempDetailTimer) clearInterval(tempDetailTimer);
+};
+
+    if (mMonsterInput && monsterDropdownPanel && monsterDropdownList && mMonsterHidden) {
+        window.buildMonsterDropdown();
+        mMonsterInput.addEventListener('click', function (e) {
+            e.stopPropagation();
+            monsterDropdownPanel.style.display = monsterDropdownPanel.style.display === 'block' ? 'none' : 'block';
+            const search = document.getElementById('monsterSearchInput');
+            if (search) { search.value = ''; window.filterDropdownMonsters(); if (monsterDropdownPanel.style.display === 'block') search.focus(); }
+        });
+        document.addEventListener('click', function (e) {
+            const wrapper = document.getElementById('mMonsterWrapper');
+            if (wrapper && !wrapper.contains(e.target)) monsterDropdownPanel.style.display = 'none';
+        });
+        mMonsterHidden.addEventListener('change', function () {
+            const value = mMonsterHidden.value || '未知|未知';
+            const name = value.split('|')[0];
+            if (mMonsterInput.value !== name && name !== '未知') mMonsterInput.value = name;
+            if (name === '未知') mMonsterInput.value = '';
+        });
+    }
+    if (typeof window.updateRecentLimitBadge === 'function') window.updateRecentLimitBadge();
+})();
+</script>
+
 </body>
 </html>
