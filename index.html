@@ -6396,10 +6396,16 @@ window.closeRecentDetail = function closeRecentDetail() {
       btn.dataset.monsterIndex = String(idx);
       const found = etQueue.some(q => q.name === m.name && q.server === m.server);
       btn.classList.toggle('is-added', found);
-      btn.textContent = found ? '✓ 已加入 ET' : '🌙 加入 ET';
-      btn.title = found ? '点击可使用当前 ET 目标更新此怪的排车时间' : '将此 S 怪加入 ET 排车清单；使用当前倒计时目标，或输入一个独立 ET 时间';
+      // 重要：routeLogList 的 MutationObserver 会监听子节点变化。
+      // 每次都给 textContent 赋值会不断重建文本节点，从而触发观察器无限循环，导致点击排车后页面卡死。
+      // 只有显示内容确实变化时才改写文本节点，并先计算最终标签，避免“已去世”状态被反复覆盖。
+      const buttonLabel = m.isDead ? '已去世' : (found ? '✓ 已加入 ET' : '🌙 加入 ET');
+      if (btn.textContent !== buttonLabel) btn.textContent = buttonLabel;
+      const buttonTitle = m.isDead
+        ? '已去世的 S 怪不能加入 ET 排车'
+        : (found ? '点击可使用当前 ET 目标更新此怪的排车时间' : '将此 S 怪加入 ET 排车清单；使用当前倒计时目标，或输入一个独立 ET 时间');
+      if (btn.title !== buttonTitle) btn.title = buttonTitle;
       btn.disabled = !!m.isDead;
-      if (m.isDead) { btn.textContent = '已去世'; btn.title = '已去世的 S 怪不能加入 ET 排车'; }
     });
   }
 
