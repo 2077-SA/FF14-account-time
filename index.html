@@ -5600,8 +5600,8 @@ window.closeRecentDetail = function closeRecentDetail() {
             </div>
             <div class="et-box">
                 <label for="etTargetInput" style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:7px;">输入开怪时间或相对时间</label>
-                <input id="etTargetInput" type="text" autocomplete="off" spellcheck="false" placeholder="例如：+3ET、ET 12:00 或 12:00">
-                <div class="et-help">输入 <b>+N ET</b> 表示从现在开始 N 个 ET 小时；输入 <b>ET 12:00</b> 或 <b>12:00</b> 表示下一次到达该游戏时间。</div>
+                <input id="etTargetInput" type="text" autocomplete="off" spellcheck="false" placeholder="例如：+3ET、2100、ET2130、21:00 或 21：00">
+                <div class="et-help">相对时间：<b>+3ET</b>、<b>+1.5ET</b>。开怪时间支持：<b>2100</b>、<b>ET2130</b>、<b>21:00</b>、<b>21：00</b>、<b>ET 9:30</b>、<b>21点00分</b>；会自动兼容全角冒号、空格及常见 OCR 把 O 看成 0、I/l 看成 1 的情况。</div>
                 <div class="et-actions">
                     <button id="etStartBtn" class="btn btn-accent">▶ 开始倒计时</button>
                     <button id="etClearBtn" class="btn btn-outline">清除</button>
@@ -5691,43 +5691,95 @@ window.closeRecentDetail = function closeRecentDetail() {
             localStorage.setItem(ET_STORAGE_KEY, JSON.stringify({ targetMs: etState.targetMs, label: etState.label, input: etState.input, mode: etState.mode, startedAt: etState.startedAt }));
         } catch (e) { /* 浏览器禁止本地存储时仍可使用本页倒计时 */ }
     }
+    // 宽容解析 ET 输入：支持 +3ET、+1.5ET、2100、ET2130、21:00、21：00、21点00分等。
+    function parseETInput(rawInput, nowMs) {
+        const source = String(rawInput == null ? '' : rawInput).trim();
+        let input = source;
+        try { if (typeof input.normalize === 'function') input = input.normalize('NFKC'); } catch (_) {}
+        input = input
+            .replace(/[：﹕︰]/g, ':')
+            .replace(/[＋]/g, '+')
+            .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFF10 + 48))
+            .replace(/\s+/g, '')
+            .toUpperCase();
+
+        if (!input) return { error: '请先输入 ET 时间，例如 2100、ET2130、21:00 或 +3ET。' };
+
+        // 相对时间必须带 +，避免将普通数字误认为相对小时数。
+        const relative = input.match(/^\+([0-9]+(?:[.,][0-9]+)?)(?:ET)?$/i);
+        if (relative) {
+            const etHours = Number(relative[1].replace(',', '.'));
+            if (!Number.isFinite(etHours) || etHours < 0 || etHours > 10000) {
+                return { error: 'ET 小时必须是 0 到 10000 之间的数字。' };
+            }
+            return {
+                targetMs: nowMs + etHours * ET_REAL_SECONDS_PER_HOUR * 1000,
+                label: `+${etHours} ET`,
+                mode: 'relative'
+            };
+        }
+
+        // 去掉 ET 前缀/后缀（包括 E.T. 写法），兼容 ET2130、ET 21:30、2130ET。
+        let clockText = input
+            .replace(/^(?:E\.?T\.?):?/i, '')
+            .replace(/(?:E\.?T\.?)$/i, '');
+
+        // 常见 OCR 混淆只在 ET 标记移除后处理，避免改动 ET 这个前缀。
+        clockText = clockText.replace(/[Oo]/g, '0').replace(/[Il]/g, '1');
+        // 支持 21点00分、21时00、21.00、21;00 等常见输入/识别结果。
+        clockText = clockText.replace(/[点时H]/g, ':').replace(/分$/g, '').replace(/[.。；;,，]/g, ':');
+
+        let hour = null;
+        let minute = 0;
+        let match = clockText.match(/^(\d{1,2}):(\d{1,2})$/);
+        if (match) {
+            hour = Number(match[1]);
+            minute = Number(match[2]);
+        } else if ((match = clockText.match(/^(\d{4})$/))) {
+            // 2100 -> 21:00；0930 -> 09:30；ET2130 -> 21:30
+            hour = Number(match[1].slice(0, 2));
+            minute = Number(match[1].slice(2, 4));
+        } else if ((match = clockText.match(/^(\d)(\d{2})$/))) {
+            // 930 -> 09:30；900 -> 09:00
+            hour = Number(match[1]);
+            minute = Number(match[2]);
+        } else if ((match = clockText.match(/^(\d{1,2})$/))) {
+            // 单独输入小时也可识别，例如 ET21 -> 21:00
+            hour = Number(match[1]);
+            minute = 0;
+        } else {
+            return { error: '格式无法识别。支持 +3ET、+1.5ET、2100、ET2130、21:00、21：00、21点00分。' };
+        }
+
+        if (!Number.isInteger(hour) || hour < 0 || hour > 23 || !Number.isInteger(minute) || minute < 0 || minute > 59) {
+            return { error: 'ET 时间超出范围。小时请输入 00–23，分钟请输入 00–59，例如 2100 或 21:00。' };
+        }
+
+        const targetEtMinute = hour * 60 + minute;
+        const currentEtMinute = etDayMinuteFloat(nowMs);
+        const deltaEtMinute = (targetEtMinute - currentEtMinute + 1440) % 1440;
+        const targetMs = nowMs + deltaEtMinute * (ET_REAL_SECONDS_PER_HOUR * 1000 / 60);
+        return { targetMs, label: `ET ${pad2(hour)}:${pad2(minute)}`, mode: 'absolute' };
+    }
+
     function startETCountdown() {
         const inputEl = $('etTargetInput');
-        const raw = (inputEl && inputEl.value || '').trim().replace(/＋/g, '+');
-        if (!raw) { setETMessage('请先输入 +N ET 或 ET 开怪时间，例如 +3ET / 12:00。', true); return; }
+        const raw = (inputEl && inputEl.value || '').trim();
+        if (!raw) { setETMessage('请先输入 ET 时间，例如 2100、ET2130、21:00 或 +3ET。', true); return; }
+
         const now = Date.now();
-        let targetMs = null, label = '', mode = '';
-        const relative = raw.match(/^\+\s*(\d+(?:\.\d+)?)\s*(?:ET)?$/i);
-        const clock = raw.match(/^(?:ET\s*)?(\d{1,2}):(\d{1,2})$/i) || raw.match(/^ET\s*(\d{1,2})$/i);
-        if (relative) {
-            const etHours = Number(relative[1]);
-            if (!Number.isFinite(etHours) || etHours < 0 || etHours > 10000) { setETMessage('ET 小时必须是 0 到 10000 之间的数字。', true); return; }
-            targetMs = now + etHours * ET_REAL_SECONDS_PER_HOUR * 1000;
-            label = `+${etHours} ET`;
-            mode = 'relative';
-        } else if (clock) {
-            const h = Number(clock[1] || clock[3]);
-            const m = Number(clock[2] || 0);
-            if (!Number.isInteger(h) || h < 0 || h > 23 || !Number.isInteger(m) || m < 0 || m > 59) { setETMessage('ET 时间格式不正确，请使用 00:00 到 23:59。', true); return; }
-            const targetEtMinute = h * 60 + m;
-            const currentEtMinute = etDayMinuteFloat(now);
-            const deltaEtMinute = (targetEtMinute - currentEtMinute + 1440) % 1440;
-            targetMs = now + deltaEtMinute * (ET_REAL_SECONDS_PER_HOUR * 1000 / 60);
-            label = `ET ${pad2(h)}:${pad2(m)}`;
-            mode = 'absolute';
-        } else {
-            setETMessage('格式无法识别。请使用 +3ET、+1.5ET、ET 12:00 或 12:00。', true);
-            return;
-        }
-        etState.targetMs = targetMs;
-        etState.label = label;
+        const parsed = parseETInput(raw, now);
+        if (parsed.error) { setETMessage(parsed.error, true); return; }
+
+        etState.targetMs = parsed.targetMs;
+        etState.label = parsed.label;
         etState.input = raw;
-        etState.mode = mode;
+        etState.mode = parsed.mode;
         etState.startedAt = now;
         saveETState();
-        setETMessage(`倒计时已启动：${label}`);
+        setETMessage(`倒计时已启动：${parsed.label}`);
         updateETUI();
-        showToast(`🌙 ET 倒计时已启动：${label}`);
+        showToast(`🌙 ET 倒计时已启动：${parsed.label}`);
     }
     function clearETCountdown() {
         etState.targetMs = null; etState.label = ''; etState.input = ''; etState.mode = ''; etState.startedAt = null;
@@ -6354,7 +6406,7 @@ window.closeRecentDetail = function closeRecentDetail() {
     if (monster.isDead) { if (typeof showToast === 'function') showToast('这只 S 怪已标记去世，不能加入 ET 排车。'); return; }
     let target = getCurrentETTarget();
     if (!target) {
-      const input = prompt(`为【${monster.server}】${monster.name}设置 ET 开怪时间。\n可以输入 +3ET、+1.5ET、ET 12:00 或 12:00。\n如果不想单独设置，请先在页面顶部 ET 计算器启动倒计时。`);
+      const input = prompt(`为【${monster.server}】${monster.name}设置 ET 开怪时间。\n可以输入 +3ET、+1.5ET、2100、ET2130、21:00 或 21：00。\n如果不想单独设置，请先在页面顶部 ET 计算器启动倒计时。`);
       if (input == null) return;
       const inputEl = document.getElementById('etTargetInput');
       const startBtn = document.getElementById('etStartBtn');
