@@ -5542,5 +5542,458 @@ window.closeRecentDetail = function closeRecentDetail() {
 })();
 </script>
 
+
+<script>
+/* ================================================================
+ * 增量功能：预测未出货后重新估算 + ET 实时时钟/倒计时（完整源代码追加层）
+ * 不替换原有页面和算法；所有新状态均按记录单独保存到当前页面内存。
+ * FFXIV ET：1 ET 小时约 175 秒现实时间（2 分 55 秒）。
+ * ================================================================ */
+(() => {
+    'use strict';
+
+    const ET_REAL_SECONDS_PER_HOUR = 175;
+    const ET_STORAGE_KEY = 'ff14_et_countdown_v1';
+    const etState = { targetMs: null, label: '', input: '', mode: '', startedAt: null };
+    window.__ff14ETTimerState = etState;
+
+    const style = document.createElement('style');
+    style.id = 'ff14-prediction-et-enhancement-style';
+    style.textContent = `
+        #etCountdownCard { border-left: 5px solid var(--blue); }
+        #etCountdownCard .et-main-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:14px; align-items:stretch; }
+        #etCountdownCard .et-box { background:var(--input-bg); border:1px solid var(--border); border-radius:9px; padding:14px; min-width:0; }
+        #etCountdownCard .et-clock { font:700 28px/1.3 monospace; color:var(--blue); letter-spacing:1px; }
+        #etCountdownCard .et-countdown { font:800 25px/1.35 monospace; color:var(--accent); overflow-wrap:anywhere; }
+        #etCountdownCard .et-help { color:var(--text-muted); font-size:12px; line-height:1.6; margin-top:7px; }
+        #etCountdownCard .et-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+        #etCountdownCard .et-actions .btn { flex:1; min-width:115px; }
+        .prediction-recalc-row { display:flex; gap:5px; }
+        .prediction-recalc-btn { width:100%; background:linear-gradient(135deg,#b13b42,#e67e22); color:white; border:1px solid rgba(255,255,255,.12); border-radius:6px; padding:7px 10px; font-size:12px; font-weight:800; cursor:pointer; }
+        .prediction-recalc-btn:hover { filter:brightness(1.1); }
+        .prediction-recalc-btn:disabled { opacity:.5; cursor:not-allowed; filter:none; }
+        .prediction-note { display:block; margin-top:3px; color:var(--gold); font-size:10px; line-height:1.5; }
+        .et-float-panel { margin-top:9px; padding-top:8px; border-top:1px dashed var(--border); font-size:12px; line-height:1.7; }
+        .et-float-panel .et-float-current { color:var(--blue); font-family:monospace; font-weight:bold; }
+        .et-float-panel .et-float-remaining { color:var(--accent); font-family:monospace; font-weight:bold; }
+        @media (max-width:650px) {
+            #etCountdownCard .et-main-grid { grid-template-columns:1fr; }
+            #etCountdownCard .et-clock { font-size:24px; }
+            #etCountdownCard .et-countdown { font-size:22px; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    const card = document.createElement('section');
+    card.className = 'manual-card glass-card';
+    card.id = 'etCountdownCard';
+    card.innerHTML = `
+        <div class="manual-header">
+            <h2>🌙 游戏 ET 时间 / 开怪倒计时</h2>
+            <span style="font-size:12px;color:var(--text-muted);">本地运行 · 每秒更新</span>
+        </div>
+        <div class="et-main-grid">
+            <div class="et-box">
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">当前游戏时间（ET）</div>
+                <div id="etCurrentClock" class="et-clock">--:--:--</div>
+                <div id="etCurrentDate" class="et-help">ET 时钟正在初始化…</div>
+            </div>
+            <div class="et-box">
+                <label for="etTargetInput" style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:7px;">输入开怪时间或相对时间</label>
+                <input id="etTargetInput" type="text" autocomplete="off" spellcheck="false" placeholder="例如：+3ET、ET 12:00 或 12:00">
+                <div class="et-help">输入 <b>+N ET</b> 表示从现在开始 N 个 ET 小时；输入 <b>ET 12:00</b> 或 <b>12:00</b> 表示下一次到达该游戏时间。</div>
+                <div class="et-actions">
+                    <button id="etStartBtn" class="btn btn-accent">▶ 开始倒计时</button>
+                    <button id="etClearBtn" class="btn btn-outline">清除</button>
+                </div>
+            </div>
+        </div>
+        <div class="et-box" style="margin-top:12px;">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:5px;" id="etTargetLabel">尚未设置 ET 目标时间</div>
+            <div id="etTargetCountdown" class="et-countdown">--:--:--</div>
+            <div id="etRealTargetTime" class="et-help">设置后会显示对应的现实时间和实时倒计时。</div>
+        </div>
+    `;
+    const manualCard = document.getElementById('manualCard');
+    if (manualCard && manualCard.parentNode) manualCard.parentNode.insertBefore(card, manualCard);
+    else document.body.insertBefore(card, document.body.firstChild);
+
+    const $ = id => document.getElementById(id);
+    const pad2 = n => String(n).padStart(2, '0');
+    function setTextIfChanged(el, value) {
+        if (!el) return;
+        const next = String(value);
+        if (el.textContent !== next) el.textContent = next;
+    }
+
+    function etDayMinuteFloat(nowMs = Date.now()) {
+        const allMinutes = (nowMs / 1000) * (60 / ET_REAL_SECONDS_PER_HOUR);
+        return ((allMinutes % 1440) + 1440) % 1440;
+    }
+    function getEtClockParts(nowMs = Date.now()) {
+        const etSeconds = (nowMs / 1000) * (3600 / ET_REAL_SECONDS_PER_HOUR);
+        const daySeconds = ((etSeconds % 86400) + 86400) % 86400;
+        const hour = Math.floor(daySeconds / 3600);
+        const minute = Math.floor((daySeconds % 3600) / 60);
+        const second = Math.floor(daySeconds % 60);
+        return { hour, minute, second, minuteOfDay: hour * 60 + minute };
+    }
+    function formatRemain(ms) {
+        if (!Number.isFinite(ms) || ms <= 0) return '00:00:00';
+        let sec = Math.ceil(ms / 1000);
+        const days = Math.floor(sec / 86400); sec %= 86400;
+        const hours = Math.floor(sec / 3600); sec %= 3600;
+        const mins = Math.floor(sec / 60); sec %= 60;
+        return (days ? `${days}天 ` : '') + `${pad2(hours)}:${pad2(mins)}:${pad2(sec)}`;
+    }
+    function formatLocal(ms) {
+        if (!Number.isFinite(ms)) return '-';
+        return new Date(ms).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+    }
+    function setETMessage(msg, isError = false) {
+        const label = $('etTargetLabel');
+        if (label) { label.textContent = msg; label.style.color = isError ? 'var(--red)' : 'var(--text-muted)'; }
+    }
+    function updateETUI() {
+        const now = Date.now();
+        const parts = getEtClockParts(now);
+        const clock = $('etCurrentClock');
+        const date = $('etCurrentDate');
+        if (clock) clock.textContent = `${pad2(parts.hour)}:${pad2(parts.minute)}:${pad2(parts.second)}`;
+        if (date) date.textContent = `1 ET 小时按 175 秒现实时间换算 · 本地时间 ${formatLocal(now)}`;
+        const out = $('etTargetCountdown');
+        const real = $('etRealTargetTime');
+        if (etState.targetMs == null) {
+            if (out) out.textContent = '--:--:--';
+            if (real) real.textContent = '设置后会显示对应的现实时间和实时倒计时。';
+        } else {
+            const remain = etState.targetMs - now;
+            if (out) {
+                out.textContent = remain <= 0 ? '00:00:00' : formatRemain(remain);
+                out.style.color = remain <= 0 ? 'var(--gold)' : 'var(--accent)';
+            }
+            if (real) real.textContent = remain <= 0
+                ? `目标已到达 · 现实时间 ${formatLocal(etState.targetMs)}`
+                : `对应现实时间：${formatLocal(etState.targetMs)} · ${etState.label}`;
+            if (remain <= 0) setETMessage(`✅ 已到达：${etState.label}`);
+        }
+        document.querySelectorAll('.et-float-panel').forEach(panel => {
+            const current = panel.querySelector('.et-float-current');
+            const remaining = panel.querySelector('.et-float-remaining');
+            const target = panel.querySelector('.et-float-target');
+            if (current) current.textContent = `${pad2(parts.hour)}:${pad2(parts.minute)}:${pad2(parts.second)} ET`;
+            if (remaining) remaining.textContent = etState.targetMs == null ? '未设置' : formatRemain(etState.targetMs - now);
+            if (target) target.textContent = etState.targetMs == null ? '尚未设置 ET 倒计时' : `${etState.label} · ${formatLocal(etState.targetMs)}`;
+        });
+    }
+    function saveETState() {
+        try {
+            localStorage.setItem(ET_STORAGE_KEY, JSON.stringify({ targetMs: etState.targetMs, label: etState.label, input: etState.input, mode: etState.mode, startedAt: etState.startedAt }));
+        } catch (e) { /* 浏览器禁止本地存储时仍可使用本页倒计时 */ }
+    }
+    function startETCountdown() {
+        const inputEl = $('etTargetInput');
+        const raw = (inputEl && inputEl.value || '').trim().replace(/＋/g, '+');
+        if (!raw) { setETMessage('请先输入 +N ET 或 ET 开怪时间，例如 +3ET / 12:00。', true); return; }
+        const now = Date.now();
+        let targetMs = null, label = '', mode = '';
+        const relative = raw.match(/^\+\s*(\d+(?:\.\d+)?)\s*(?:ET)?$/i);
+        const clock = raw.match(/^(?:ET\s*)?(\d{1,2}):(\d{1,2})$/i) || raw.match(/^ET\s*(\d{1,2})$/i);
+        if (relative) {
+            const etHours = Number(relative[1]);
+            if (!Number.isFinite(etHours) || etHours < 0 || etHours > 10000) { setETMessage('ET 小时必须是 0 到 10000 之间的数字。', true); return; }
+            targetMs = now + etHours * ET_REAL_SECONDS_PER_HOUR * 1000;
+            label = `+${etHours} ET`;
+            mode = 'relative';
+        } else if (clock) {
+            const h = Number(clock[1] || clock[3]);
+            const m = Number(clock[2] || 0);
+            if (!Number.isInteger(h) || h < 0 || h > 23 || !Number.isInteger(m) || m < 0 || m > 59) { setETMessage('ET 时间格式不正确，请使用 00:00 到 23:59。', true); return; }
+            const targetEtMinute = h * 60 + m;
+            const currentEtMinute = etDayMinuteFloat(now);
+            const deltaEtMinute = (targetEtMinute - currentEtMinute + 1440) % 1440;
+            targetMs = now + deltaEtMinute * (ET_REAL_SECONDS_PER_HOUR * 1000 / 60);
+            label = `ET ${pad2(h)}:${pad2(m)}`;
+            mode = 'absolute';
+        } else {
+            setETMessage('格式无法识别。请使用 +3ET、+1.5ET、ET 12:00 或 12:00。', true);
+            return;
+        }
+        etState.targetMs = targetMs;
+        etState.label = label;
+        etState.input = raw;
+        etState.mode = mode;
+        etState.startedAt = now;
+        saveETState();
+        setETMessage(`倒计时已启动：${label}`);
+        updateETUI();
+        showToast(`🌙 ET 倒计时已启动：${label}`);
+    }
+    function clearETCountdown() {
+        etState.targetMs = null; etState.label = ''; etState.input = ''; etState.mode = ''; etState.startedAt = null;
+        try { localStorage.removeItem(ET_STORAGE_KEY); } catch (e) {}
+        if ($('etTargetInput')) $('etTargetInput').value = '';
+        setETMessage('ET 倒计时已清除。');
+        updateETUI();
+    }
+
+    $('etStartBtn').addEventListener('click', startETCountdown);
+    $('etClearBtn').addEventListener('click', clearETCountdown);
+    $('etTargetInput').addEventListener('keydown', e => { if (e.key === 'Enter') startETCountdown(); });
+    try {
+        const saved = JSON.parse(localStorage.getItem(ET_STORAGE_KEY) || 'null');
+        if (saved && Number.isFinite(Number(saved.targetMs))) {
+            etState.targetMs = Number(saved.targetMs); etState.label = String(saved.label || '已保存的 ET 目标');
+            etState.input = String(saved.input || ''); etState.mode = String(saved.mode || ''); etState.startedAt = Number(saved.startedAt) || null;
+            $('etTargetInput').value = etState.input;
+            setETMessage(etState.targetMs <= Date.now() ? `✅ 已到达：${etState.label}` : `已恢复倒计时：${etState.label}`);
+        }
+    } catch (e) {}
+
+    // 把 ET 倒计时面板附加到新召唤的每个悬浮窗，不覆盖原有悬浮窗内容。
+    const originalCreateFloatingWindow = window.createFloatingWindow;
+    function attachETPanelToFloatingWindow(recordId) {
+        const win = document.getElementById('win_' + recordId);
+        if (!win || win.querySelector('.et-float-panel')) return;
+        const body = win.querySelector('.fc-body') || win;
+        const panel = document.createElement('div');
+        panel.className = 'et-float-panel';
+        panel.innerHTML = `
+            <div style="display:flex;justify-content:space-between;gap:8px;"><span style="color:var(--text-muted);">🌙 当前 ET</span><span class="et-float-current">--:--:-- ET</span></div>
+            <div style="display:flex;justify-content:space-between;gap:8px;"><span style="color:var(--text-muted);">开怪倒计时</span><span class="et-float-remaining">未设置</span></div>
+            <div class="et-float-target" style="color:var(--text-muted);font-size:10px;overflow-wrap:anywhere;">尚未设置 ET 倒计时</div>
+        `;
+        body.appendChild(panel);
+    }
+    if (typeof originalCreateFloatingWindow === 'function') {
+        window.createFloatingWindow = function (...args) {
+            const result = originalCreateFloatingWindow.apply(this, args);
+            attachETPanelToFloatingWindow(args[0]);
+            updateETUI();
+            return result;
+        };
+    }
+    // 已存在/重新绘制的浮窗也补上 ET 面板。
+    function ensureFloatingPanels() {
+        try { (activeFloatingWindows || []).forEach(w => { if (w && w.recordId != null) attachETPanelToFloatingWindow(w.recordId); }); } catch (e) {}
+    }
+
+    // 使用原预测器作基础；若用户上报“预估时间已过但仍未出货”，则以该次上报时间重新锚定。
+    function predictForRecord(record) {
+        if (!record || !window.__predictor) return null;
+        const dbMonster = (typeof S_MONSTERS !== 'undefined' ? S_MONSTERS : []).find(sm => sm.name === record.name);
+        const version = (dbMonster && dbMonster.version) || record.version || '6.0';
+        const pred = window.__predictor.predict({ name: record.name, version, gateTimeMs: record.gateTimeMs, forceTimeMs: record.forceTimeMs, isGreen: record.isGreen });
+        const now = Date.now();
+        if (Number.isFinite(record.nextPredictedKillMs) && record.nextPredictedKillMs > 0) {
+            const anchor = Number(record.predictionAnchorMs || record.failedTimeMs || now);
+            const duration = Math.max(1, record.nextPredictedKillMs - anchor);
+            pred.predictedKillMs = record.nextPredictedKillMs;
+            pred.predictedKillTime = new Date(record.nextPredictedKillMs);
+            pred.remainingMs = Math.max(0, record.nextPredictedKillMs - now);
+            pred.isOverdue = now >= record.nextPredictedKillMs;
+            pred.progressPct = Math.max(0, Math.min(200, ((now - anchor) / duration) * 100));
+            pred.elapsedLivingMin = Math.max(0, (now - anchor) / 60000);
+            pred.isTail = pred.progressPct >= 150;
+            pred.predictionAnchorMs = anchor;
+        }
+        return pred;
+    }
+    window.getFF14RecordPrediction = predictForRecord;
+
+    const originalReportFail = window.reportFail;
+    function clearRecordPredictionOverride(record) {
+        if (!record) return;
+        delete record.nextPredictedKillMs;
+        delete record.predictionAnchorMs;
+        delete record.lastMissedPredictionMs;
+        delete record.lastMissedEstimateMs;
+        delete record.nextPredictionExtraMin;
+        delete record.predictionMissCount;
+    }
+    // 正式出货或重新开始一个击杀/CD周期时，清理旧预测的“延后重算”状态。
+    const originalReportShipment = window.reportShipment;
+    if (typeof originalReportShipment === 'function') {
+        window.reportShipment = function (idx, ...args) {
+            const record = (typeof recentRecords !== 'undefined') ? recentRecords[idx] : null;
+            const wasShipped = !!(record && record.shipped);
+            const result = originalReportShipment.call(this, idx, ...args);
+            if (record && !wasShipped && record.shipped) {
+                clearRecordPredictionOverride(record);
+                try { if (typeof renderRecentList === 'function') renderRecentList(); } catch (e) {}
+                refreshPredictionUI();
+            }
+            return result;
+        };
+    }
+    const originalReportKill = window.reportKill;
+    if (typeof originalReportKill === 'function') {
+        window.reportKill = function (idx, ...args) {
+            const record = (typeof recentRecords !== 'undefined') ? recentRecords[idx] : null;
+            const oldForceTime = record && record.forceTimeMs;
+            const result = originalReportKill.call(this, idx, ...args);
+            if (record && (record.forceTimeMs !== oldForceTime || (!record.isGreen && record.h === 0 && record.m === 0))) {
+                clearRecordPredictionOverride(record);
+                try { if (typeof renderRecentList === 'function') renderRecentList(); } catch (e) {}
+                refreshPredictionUI();
+            }
+            return result;
+        };
+    }
+
+    window.reportMissedPrediction = function reportMissedPrediction(idx) {
+        const record = (typeof recentRecords !== 'undefined' ? recentRecords[idx] : null);
+        if (!record) return;
+        if (record.shipped) { showToast('该记录已经出货，无需重新预估。'); return; }
+        if (!record.isGreen) { showToast('只有存活中的记录可以重新预估。'); return; }
+        if (record.actionCooldownEndTime && Date.now() < record.actionCooldownEndTime) {
+            showToast(`操作冷却中，请等待 ${Math.ceil((record.actionCooldownEndTime - Date.now()) / 1000)} 秒。`); return;
+        }
+        const pred = predictForRecord(record);
+        if (!pred || !pred.isOverdue) { showToast('当前预计出货时间还没到，暂时不需要上报。'); return; }
+
+        const reportAt = Date.now();
+        const previousMissCount = Math.max(0, Number(record.predictionMissCount) || 0);
+        const expectedMin = Math.max(20, Number(pred.stats && pred.stats.expectedLivingMin) || 60);
+        const stddevMin = Math.max(0, Number(pred.stats && pred.stats.stddev) || expectedMin * 0.5);
+        // 以该怪的历史方差和预计存活时长决定延后量：最低 20 分钟、单次基础上限 180 分钟；连续未出时逐步增加，最多 6 小时。
+        const baseExtraMin = Math.max(20, Math.min(180, Math.max(expectedMin * 0.10, stddevMin * 0.35)));
+        const multiplier = 1 + Math.min(2, previousMissCount * 0.35);
+        const extraMin = Math.max(20, Math.min(360, Math.round(baseExtraMin * multiplier)));
+        const previousEstimate = pred.predictedKillMs;
+
+        // 沿用原“寄了”上报流程，保留记录、通知和操作冷却逻辑。
+        if (typeof originalReportFail === 'function') originalReportFail(idx);
+        record.predictionMissCount = previousMissCount + 1;
+        record.lastMissedPredictionMs = reportAt;
+        record.lastMissedEstimateMs = previousEstimate;
+        record.predictionAnchorMs = reportAt;
+        record.nextPredictionExtraMin = extraMin;
+        record.nextPredictedKillMs = reportAt + extraMin * 60000;
+        record.failedTimeMs = reportAt;
+        record.failed = true;
+        record.isAutoFailed = false;
+        try { saveLocalState(); } catch (e) {}
+        try { if (typeof renderRecentList === 'function') renderRecentList(); } catch (e) {}
+        refreshPredictionUI();
+        updateETUI();
+        showToast(`已上报第 ${record.predictionMissCount} 次未出货；根据历史波动延后 ${extraMin} 分钟，下次预估：${formatLocal(record.nextPredictedKillMs)}`);
+    };
+
+    function getRecordIndexFromCard(item) {
+        const failBtn = item.querySelector('button[onclick*="reportFail("]');
+        if (!failBtn) return -1;
+        const match = String(failBtn.getAttribute('onclick') || '').match(/reportFail\((\d+)\)/);
+        return match ? Number(match[1]) : -1;
+    }
+    function refreshPredictionUI() {
+        const container = $('recentListContainer');
+        if (container) {
+            container.querySelectorAll('.recent-item').forEach(item => {
+                const idx = getRecordIndexFromCard(item);
+                const record = (typeof recentRecords !== 'undefined' && idx >= 0) ? recentRecords[idx] : null;
+                const failBtn = item.querySelector('button[onclick*="reportFail("]');
+                const actionColumn = failBtn && failBtn.parentElement && failBtn.parentElement.parentElement;
+                let recalcRow = actionColumn && actionColumn.querySelector('.prediction-recalc-row');
+                const pred = record ? predictForRecord(record) : null;
+                const shouldShow = !!(record && record.isGreen && !record.shipped && pred && pred.isOverdue);
+                if (shouldShow && actionColumn) {
+                    if (!recalcRow) {
+                        recalcRow = document.createElement('div');
+                        recalcRow.className = 'prediction-recalc-row';
+                        const button = document.createElement('button');
+                        button.type = 'button'; button.className = 'prediction-recalc-btn';
+                        recalcRow.appendChild(button);
+                        actionColumn.insertBefore(recalcRow, actionColumn.children[1] || null);
+                    }
+                    const button = recalcRow.querySelector('button');
+                    const cooling = record.actionCooldownEndTime && Date.now() < record.actionCooldownEndTime;
+                    setTextIfChanged(button, cooling ? `未出货 · 冷却 ${Math.ceil((record.actionCooldownEndTime - Date.now()) / 1000)} 秒` : '⏳ 预估时间已过，未出货 · 重新预估');
+                    button.disabled = !!cooling;
+                    button.title = `点击后记录“寄了”上报，并依据该怪历史存活时间波动重新计算下一次预估时间。`;
+                    button.onclick = event => { event.stopPropagation(); window.reportMissedPrediction(idx); };
+                } else if (recalcRow) {
+                    recalcRow.remove();
+                }
+
+                // 把卡片上原有的预计日期同步成重新估算后的日期。
+                if (record && pred) {
+                    const labels = Array.from(item.querySelectorAll('.res-label'));
+                    const estLabel = labels.find(el => /预估出货/.test(el.textContent || ''));
+                    if (estLabel) {
+                        setTextIfChanged(estLabel, record.predictionMissCount ? `预估出货（修正 ${record.predictionMissCount} 次）` : '预估出货');
+                        const block = estLabel.closest('.recent-time-block');
+                        const value = block && block.querySelector('.recent-time-val');
+                        if (value) setTextIfChanged(value, formatLocal(pred.predictedKillMs));
+                        if (value) value.title = record.predictionMissCount ? `依据最近一次未出货上报追加 ${record.nextPredictionExtraMin || 0} 分钟` : '基于历史出货样本与版本先验估算';
+                        if (block) {
+                            let note = block.querySelector('.prediction-note');
+                            if (record.predictionMissCount) {
+                                if (!note) { note = document.createElement('span'); note.className = 'prediction-note'; block.appendChild(note); }
+                                setTextIfChanged(note, `未出上报 ${record.predictionMissCount} 次 · 本次延后 +${record.nextPredictionExtraMin || 0} 分钟`);
+                            } else if (note) note.remove();
+                        }
+                    }
+                    const timeBox = item.querySelector('.recent-item-times');
+                    if (timeBox) {
+                        const progBlocks = timeBox.querySelectorAll('.recent-progress-block');
+                        const estimateProgress = progBlocks.length > 1 ? progBlocks[1] : null;
+                        if (estimateProgress) {
+                            const spans = estimateProgress.querySelectorAll('span');
+                            if (spans.length > 1) setTextIfChanged(spans[spans.length - 1], pred.progressPct > 100 ? '>100%' : `${pred.progressPct.toFixed(0)}%`);
+                            const fill = estimateProgress.querySelector('.recent-progress-fill');
+                            if (fill) fill.style.width = `${Math.min(100, pred.progressPct)}%`;
+                            const desc = estimateProgress.lastElementChild;
+                            if (desc && desc.tagName === 'DIV' && /剩余|等待进闸/.test(desc.textContent || '')) {
+                                setTextIfChanged(desc, record.isGreen ? `剩余 ${formatRemain(pred.remainingMs)} · ${pred.stats.sampleCount >= 5 ? `样本×${pred.stats.sampleCount}` : '版本先验预估'}` : '等待进闸');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 原悬浮窗每秒重画其预估节点；此处再次同步为记录的重新预测值。
+        try {
+            (activeFloatingWindows || []).forEach(winInfo => {
+                if (!winInfo || !winInfo.el) return;
+                const record = (typeof recentRecords !== 'undefined') ? recentRecords.find(r => r && r.id === winInfo.recordId) : null;
+                if (!record) return;
+                const pred = predictForRecord(record);
+                if (!pred) return;
+                const estBox = winInfo.el.querySelector('[id^="fc-est-"]');
+                if (!estBox) return;
+                const row = Array.from(estBox.querySelectorAll('.fc-row')).find(el => /预估出货/.test(el.textContent || ''));
+                if (row) {
+                    const val = row.querySelector('.fc-val');
+                    if (val) val.textContent = `${formatLocal(pred.predictedKillMs)} (${pred.progressPct > 100 ? '>100%' : `${pred.progressPct.toFixed(0)}%`})`;
+                }
+                let note = estBox.querySelector('.prediction-note');
+                if (record.predictionMissCount) {
+                    if (!note) { note = document.createElement('div'); note.className = 'prediction-note'; estBox.appendChild(note); }
+                    setTextIfChanged(note, `未出上报 ${record.predictionMissCount} 次 · 本次延后 +${record.nextPredictionExtraMin || 0} 分钟`);
+                } else if (note) note.remove();
+            });
+        } catch (e) {}
+    }
+
+    // 对列表重绘进行轻量监听，确保新增/删除卡片后按钮仍与当前记录一致。
+    const recentContainer = $('recentListContainer');
+    if (recentContainer && typeof MutationObserver !== 'undefined') {
+        const observer = new MutationObserver(() => refreshPredictionUI());
+        observer.observe(recentContainer, { childList: true, subtree: true });
+    }
+
+    ensureFloatingPanels();
+    updateETUI();
+    refreshPredictionUI();
+    window.setInterval(() => {
+        updateETUI();
+        ensureFloatingPanels();
+        refreshPredictionUI();
+    }, 1000);
+})();
+
+</script>
 </body>
 </html>
