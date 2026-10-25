@@ -5995,5 +5995,807 @@ window.closeRecentDetail = function closeRecentDetail() {
 })();
 
 </script>
+
+<script>
+/* 专注排车 ET 车单 + 毛玻璃 UI 增量层：不删除、不覆盖原文件内容 */
+(() => {
+  'use strict';
+  if (window.__ff14RouteETGlassPatchLoaded) return;
+  window.__ff14RouteETGlassPatchLoaded = true;
+
+  const css = document.createElement('style');
+  css.id = 'ff14-route-et-glass-ui';
+  css.textContent = `
+    /* ===== 专注排车整体层级 ===== */
+    #focusRoutePage {
+      padding: 14px 18px 18px !important;
+      gap: 0 !important;
+      background:
+        radial-gradient(ellipse at 15% 0%, rgba(0,191,255,.11), transparent 42%),
+        radial-gradient(ellipse at 90% 100%, rgba(155,89,182,.10), transparent 40%),
+        var(--bg) !important;
+      backdrop-filter: none;
+    }
+    #focusRoutePage .focus-header {
+      max-width: 1680px !important;
+      margin: 0 auto 12px !important;
+      padding: 4px 2px 12px !important;
+      border-bottom: 1px solid rgba(128,145,180,.24) !important;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #focusRoutePage .focus-title {
+      font-size: 22px !important;
+      line-height: 1.25 !important;
+      letter-spacing: .2px;
+      font-weight: 850 !important;
+    }
+    #focusRoutePage .focus-container {
+      max-width: 1680px !important;
+      width: 100%;
+      gap: 14px !important;
+      min-height: 0 !important;
+      flex: 1 1 auto !important;
+      align-items: stretch;
+    }
+    #focusRoutePage .focus-col-left,
+    #focusRoutePage .focus-col-right {
+      min-width: 0;
+      min-height: 0;
+      padding: 15px !important;
+      border: 1px solid rgba(180,200,235,.16) !important;
+      border-radius: 15px !important;
+      background: rgba(var(--panel-rgb, 26, 26, 46), .70) !important;
+      backdrop-filter: blur(20px) saturate(130%) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
+      box-shadow: 0 12px 32px rgba(0,0,0,.13), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+    #focusRoutePage .focus-col-left { gap: 0; }
+    #focusRoutePage .focus-col-left .section-title,
+    #focusRoutePage .focus-col-right .section-title {
+      display: flex !important;
+      align-items: center !important;
+      min-height: 38px;
+      font-size: 13px !important;
+      line-height: 1.4 !important;
+      font-weight: 800 !important;
+      letter-spacing: .15px;
+      margin: 0 0 12px !important;
+      padding: 9px 11px !important;
+      border-left: 3px solid var(--accent) !important;
+      border-radius: 8px !important;
+      background: linear-gradient(110deg, rgba(0,191,255,.075), rgba(155,89,182,.045)) !important;
+    }
+    #focusRoutePage .focus-col-left details,
+    #focusRoutePage .focus-col-right details {
+      border-radius: 10px;
+    }
+    #focusRoutePage .focus-col-left details > summary,
+    #focusRoutePage .focus-col-right details > summary {
+      font-size: 12px !important;
+      line-height: 1.45 !important;
+      font-weight: 750 !important;
+      padding: 10px 11px !important;
+      border: 1px solid rgba(160,180,220,.17);
+      border-radius: 9px;
+      background: rgba(var(--panel-rgb, 26, 26, 46), .48);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: var(--text) !important;
+    }
+    #focusRoutePage .focus-col-left .btn,
+    #focusRoutePage .focus-col-right .btn {
+      min-height: 34px;
+      border-radius: 8px !important;
+      font-size: 12px;
+      line-height: 1.25;
+      letter-spacing: 0;
+      box-shadow: 0 3px 9px rgba(0,0,0,.09);
+    }
+    #focusRoutePage .focus-col-left input,
+    #focusRoutePage .focus-col-left select,
+    #focusRoutePage .focus-col-left textarea,
+    #focusRoutePage .focus-col-right input,
+    #focusRoutePage .focus-col-right select,
+    #focusRoutePage .focus-col-right textarea {
+      border-radius: 8px !important;
+    }
+    #focusRoutePage .route-textarea {
+      line-height: 1.65 !important;
+      font-size: 13px !important;
+      border-color: rgba(160,180,220,.22) !important;
+      background: rgba(5,10,25,.38) !important;
+    }
+    [data-theme="light"] #focusRoutePage .route-textarea,
+    [data-theme="pink"] #focusRoutePage .route-textarea,
+    [data-theme="sky"] #focusRoutePage .route-textarea {
+      background: rgba(255,255,255,.60) !important;
+    }
+
+    /* ===== ET 计算器在排车页置顶强调 ===== */
+    #focusRoutePage #etCountdownCard {
+      display: block !important;
+      width: 100% !important;
+      max-width: 1680px !important;
+      flex: 0 0 auto !important;
+      margin: 0 auto 13px !important;
+      padding: 13px 16px !important;
+      border: 1px solid rgba(0,191,255,.40) !important;
+      border-left: 5px solid var(--blue) !important;
+      border-radius: 15px !important;
+      background: linear-gradient(118deg, rgba(0,191,255,.13), rgba(155,89,182,.10) 55%, rgba(var(--panel-rgb, 26,26,46), .84)) !important;
+      backdrop-filter: blur(24px) saturate(145%) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+      box-shadow: 0 12px 32px rgba(0,0,0,.17), inset 0 1px 0 rgba(255,255,255,.09) !important;
+    }
+    #focusRoutePage #etCountdownCard .manual-header {
+      align-items: center;
+      padding-bottom: 8px !important;
+      margin-bottom: 10px !important;
+      border-bottom-color: rgba(120,190,255,.22) !important;
+    }
+    #focusRoutePage #etCountdownCard .manual-header h2 {
+      font-size: 15px !important;
+      line-height: 1.3 !important;
+      font-weight: 900 !important;
+      color: var(--blue) !important;
+    }
+    #focusRoutePage #etCountdownCard .et-main-grid {
+      grid-template-columns: minmax(190px,.78fr) minmax(280px,1.2fr) !important;
+      gap: 10px !important;
+    }
+    #focusRoutePage #etCountdownCard .et-box {
+      padding: 10px 12px !important;
+      border-radius: 11px !important;
+      border-color: rgba(150,190,230,.20) !important;
+      background: rgba(var(--panel-rgb, 26,26,46), .55) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+    }
+    #focusRoutePage #etCountdownCard .et-clock { font-size: 27px !important; }
+    #focusRoutePage #etCountdownCard .et-countdown { font-size: 24px !important; }
+    #focusRoutePage #etCountdownCard input#etTargetInput { min-height: 38px; font-size: 14px; font-weight: 800; border-color: rgba(0,191,255,.35); }
+    #focusRoutePage #etCountdownCard .et-help { font-size: 11px !important; line-height: 1.45 !important; }
+    #focusRoutePage #etCountdownCard .et-actions .btn { min-height: 34px; }
+
+    /* ===== 二级菜单、下拉菜单、弹窗统一毛玻璃 ===== */
+    .toolbox-menu,
+    .custom-dropdown-panel,
+    .quick-fix-menu,
+    .dropdown-region-group,
+    .dropdown-region-title,
+    .dropdown-item-list,
+    #focusRoutePage .focus-col-left details > div,
+    #focusRoutePage .advanced-route-panel,
+    #focusRoutePage .advanced-route-body,
+    #focusRoutePage .server-card,
+    #focusRoutePage .server-card-header,
+    #focusRoutePage .announcement-box,
+    #focusRoutePage .trigger-container,
+    #focusRoutePage .stat-box,
+    #focusRoutePage .route-monitor-box,
+    .modal-content,
+    .modal-upload-area {
+      background: rgba(var(--panel-rgb, 26, 26, 46), .72) !important;
+      border-color: rgba(160,185,225,.20) !important;
+      backdrop-filter: blur(18px) saturate(135%) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(135%) !important;
+      box-shadow: 0 12px 30px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+    .toolbox-menu { z-index: 10020 !important; }
+    .custom-dropdown-panel { z-index: 10030 !important; }
+    .quick-fix-menu { z-index: 10025 !important; }
+    .toolbox-menu button,
+    .quick-fix-menu button { border-radius: 7px; margin: 1px 4px; width: calc(100% - 8px); }
+    #focusRoutePage .server-card { border-radius: 12px !important; overflow: hidden; }
+    #focusRoutePage .server-card-header { background: rgba(var(--panel-rgb, 26,26,46), .68) !important; }
+    #focusRoutePage .server-card-title { font-size: 13px !important; line-height: 1.4; }
+    #focusRoutePage .server-card-actions { gap: 5px !important; }
+    #focusRoutePage .route-add-btn { min-height: 29px; padding: 5px 8px !important; border-radius: 7px !important; font-size: 11px !important; }
+    #focusRoutePage .monster-list-item { padding: 11px 10px !important; gap: 10px !important; border-bottom-color: rgba(160,185,225,.14) !important; }
+    #focusRoutePage .monster-list-item:hover { background: rgba(0,191,255,.045) !important; }
+    #focusRoutePage .monster-list-item > div:last-child { flex-wrap: wrap; justify-content: flex-end; gap: 5px !important; }
+    #focusRoutePage .monster-list-item .v7,
+    #focusRoutePage .monster-list-item .v6,
+    #focusRoutePage .monster-list-item .v5,
+    #focusRoutePage .monster-list-item .v4 { font-size: 10px !important; padding: 3px 5px !important; border-radius: 5px; }
+    .et-route-add-btn {
+      min-height: 29px !important;
+      padding: 5px 9px !important;
+      border-radius: 8px !important;
+      border: 1px solid rgba(0,191,255,.50) !important;
+      background: linear-gradient(135deg, rgba(0,191,255,.22), rgba(155,89,182,.24)) !important;
+      color: var(--blue) !important;
+      font-size: 11px !important;
+      line-height: 1.2 !important;
+      font-weight: 850 !important;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.10);
+      transition: transform .16s ease, filter .16s ease, border-color .16s ease;
+    }
+    .et-route-add-btn:hover { transform: translateY(-1px); filter: brightness(1.15); border-color: var(--blue) !important; }
+    .et-route-add-btn.is-added { color: var(--accent) !important; border-color: rgba(0,255,127,.5) !important; background: linear-gradient(135deg, rgba(0,255,127,.13), rgba(0,191,255,.10)) !important; }
+    .et-route-add-btn:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+
+    /* ===== ET 排车清单 ===== */
+    #etRouteQueue { margin-top: 10px; padding: 11px 12px; border-radius: 11px; border: 1px solid rgba(0,191,255,.24); background: rgba(var(--panel-rgb,26,26,46),.40); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    #etRouteQueue .et-queue-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    #etRouteQueue .et-queue-title { font-size:12px; font-weight:900; color:var(--blue); letter-spacing:.2px; }
+    #etRouteQueue .et-queue-count { color:var(--text-muted); font-size:11px; }
+    #etRouteQueue .et-queue-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:7px; }
+    #etRouteQueue .et-queue-empty { padding:8px 4px; font-size:11px; color:var(--text-muted); }
+    #etRouteQueue .et-queue-item { display:flex; align-items:center; justify-content:space-between; gap:10px; min-width:0; padding:8px 9px; border:1px solid rgba(140,175,220,.16); border-radius:9px; background:rgba(255,255,255,.035); }
+    #etRouteQueue .et-queue-meta { min-width:0; flex:1; display:flex; flex-direction:column; gap:3px; }
+    #etRouteQueue .et-queue-monster { color:var(--text); font-size:11px; font-weight:800; overflow-wrap:anywhere; }
+    #etRouteQueue .et-queue-time { color:var(--blue); font:700 11px/1.3 monospace; }
+    #etRouteQueue .et-queue-remain { color:var(--accent); font:800 12px/1.3 monospace; }
+    #etRouteQueue .et-queue-remove { flex:0 0 auto; border:1px solid rgba(255,77,77,.24); color:var(--red); background:rgba(255,77,77,.08); padding:5px 7px; border-radius:7px; cursor:pointer; font-size:10px; }
+    #etRouteQueue .et-queue-remove:hover { background:rgba(255,77,77,.17); }
+    @media (max-width: 900px) {
+      #focusRoutePage { padding: 10px !important; }
+      #focusRoutePage .focus-header { margin-bottom: 10px !important; }
+      #focusRoutePage .focus-container { gap: 10px !important; }
+      #focusRoutePage #etCountdownCard .et-main-grid { grid-template-columns: minmax(0,1fr) minmax(0,1.2fr) !important; }
+      #focusRoutePage .focus-col-left, #focusRoutePage .focus-col-right { padding: 11px !important; }
+    }
+    @media (max-width: 650px) {
+      #focusRoutePage .focus-title { font-size: 18px !important; }
+      #focusRoutePage #etCountdownCard .et-main-grid { grid-template-columns: 1fr !important; }
+      #focusRoutePage #etCountdownCard .et-clock { font-size: 24px !important; }
+      #focusRoutePage #etCountdownCard .et-countdown { font-size: 21px !important; }
+      #focusRoutePage .monster-list-item { align-items:flex-start !important; }
+      #etRouteQueue .et-queue-list { grid-template-columns: 1fr; }
+    }
+  `;
+  document.head.appendChild(css);
+
+  const etCard = document.getElementById('etCountdownCard');
+  const routePage = document.getElementById('focusRoutePage');
+  const focusHeader = routePage && routePage.querySelector('.focus-header');
+  if (!etCard || !routePage || !focusHeader) return;
+  const originalParent = etCard.parentNode;
+  const originalNextSibling = etCard.nextSibling;
+
+  function moveETIntoRoutePage() {
+    if (!etCard.isConnected || routePage.style.display !== 'flex') return;
+    if (etCard.parentNode !== routePage) focusHeader.insertAdjacentElement('afterend', etCard);
+    etCard.classList.add('et-route-mode');
+  }
+  function moveETBackToMainPage() {
+    etCard.classList.remove('et-route-mode');
+    if (!originalParent) return;
+    if (etCard.parentNode === originalParent) return;
+    if (originalNextSibling && originalNextSibling.parentNode === originalParent) originalParent.insertBefore(etCard, originalNextSibling);
+    else originalParent.appendChild(etCard);
+  }
+
+  // ET 车单：保留每只 S 怪独立的目标时间，刷新/重开页面仍存在。
+  const QUEUE_KEY = 'ff14_et_route_queue_v1';
+  let etQueue = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+    if (Array.isArray(saved)) etQueue = saved.filter(x => x && x.name && x.server && Number.isFinite(Number(x.targetMs))).map(x => ({
+      id: String(x.id || `${x.server}|${x.name}`), name:String(x.name), server:String(x.server), area:String(x.area || ''), version:String(x.version || ''), targetMs:Number(x.targetMs), label:String(x.label || 'ET 目标'), addedAt:Number(x.addedAt) || Date.now()
+    }));
+  } catch (e) { etQueue = []; }
+  window.__ff14ETRouteQueue = etQueue;
+
+  const countdownBox = etCard.querySelector('#etRealTargetTime');
+  const queuePanel = document.createElement('div');
+  queuePanel.id = 'etRouteQueue';
+  queuePanel.innerHTML = `<div class="et-queue-head"><div><div class="et-queue-title">🌙 ET 排车清单</div><div class="et-queue-count" id="etRouteQueueCount">0 只 S 怪已加入</div></div><button type="button" class="btn btn-outline" id="etRouteQueueClear" style="min-height:28px;padding:5px 9px;font-size:10px;">清空 ET 车单</button></div><div class="et-queue-list" id="etRouteQueueList"><div class="et-queue-empty">还没有 S 怪加入 ET 排车。先设置一个 ET 目标时间，再点每只 S 怪旁边的「加入 ET 排车」。</div></div>`;
+  const lastEtBox = countdownBox && countdownBox.closest('.et-box');
+  if (lastEtBox) lastEtBox.appendChild(queuePanel);
+  else etCard.appendChild(queuePanel);
+
+  const pad2 = n => String(n).padStart(2, '0');
+  function getETParts(ts) {
+    const totalSeconds = (ts / 1000) * (3600 / 175);
+    const day = ((totalSeconds % 86400) + 86400) % 86400;
+    const h = Math.floor(day / 3600), m = Math.floor((day % 3600) / 60), s = Math.floor(day % 60);
+    return { h, m, s };
+  }
+  function fmtRemain(ms) {
+    if (ms <= 0) return '时间已到';
+    let s = Math.ceil(ms / 1000);
+    const d = Math.floor(s / 86400); s %= 86400;
+    const h = Math.floor(s / 3600); s %= 3600;
+    const m = Math.floor(s / 60); s %= 60;
+    return `${d ? `${d}天 ` : ''}${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+  }
+  function saveQueue() {
+    try { localStorage.setItem(QUEUE_KEY, JSON.stringify(etQueue)); } catch (e) { if (typeof showToast === 'function') showToast('浏览器本地存储不可用，ET 车单无法持久保存。'); }
+    window.__ff14ETRouteQueue = etQueue;
+    decorateETButtons();
+  }
+  function renderQueue() {
+    const list = document.getElementById('etRouteQueueList');
+    const count = document.getElementById('etRouteQueueCount');
+    if (!list || !count) return;
+    count.textContent = `${etQueue.length} 只 S 怪已加入`;
+    list.textContent = '';
+    if (!etQueue.length) {
+      const empty = document.createElement('div'); empty.className = 'et-queue-empty';
+      empty.textContent = '还没有 S 怪加入 ET 排车。设置一个 ET 目标时间，再点每只 S 怪旁边的「加入 ET 排车」。'; list.appendChild(empty); return;
+    }
+    const now = Date.now();
+    etQueue.sort((a,b) => a.targetMs - b.targetMs);
+    etQueue.forEach(item => {
+      const row = document.createElement('div'); row.className = 'et-queue-item';
+      const meta = document.createElement('div'); meta.className = 'et-queue-meta';
+      const name = document.createElement('div'); name.className = 'et-queue-monster'; name.textContent = `[${item.server}] ${item.name}${item.area ? ` · ${item.area}` : ''}`;
+      const et = getETParts(item.targetMs);
+      const time = document.createElement('div'); time.className = 'et-queue-time'; time.textContent = `${item.label} · ET ${pad2(et.h)}:${pad2(et.m)} · ${new Date(item.targetMs).toLocaleTimeString('zh-CN',{hour12:false,hour:'2-digit',minute:'2-digit'})}`;
+      const remain = document.createElement('div'); remain.className = 'et-queue-remain'; remain.dataset.etQueueId = item.id; remain.textContent = fmtRemain(item.targetMs - now);
+      meta.append(name,time,remain);
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'et-queue-remove'; remove.textContent = '移除'; remove.title = '从 ET 排车清单移除';
+      remove.addEventListener('click', () => { etQueue = etQueue.filter(q => q.id !== item.id); saveQueue(); renderQueue(); if (typeof showToast === 'function') showToast(`已从 ET 排车移除：${item.name}`); });
+      row.append(meta,remove); list.appendChild(row);
+    });
+    decorateETButtons();
+  }
+  function updateQueueTimers() {
+    const now = Date.now();
+    document.querySelectorAll('#etRouteQueue .et-queue-remain').forEach(el => {
+      const item = etQueue.find(q => q.id === el.dataset.etQueueId);
+      if (item) el.textContent = fmtRemain(item.targetMs - now);
+    });
+  }
+
+  function getCurrentETTarget() {
+    const state = window.__ff14ETTimerState;
+    if (state && Number.isFinite(Number(state.targetMs)) && Number(state.targetMs) > Date.now()) return state;
+    return null;
+  }
+  function addMonsterToETRoute(idx) {
+    const monster = (typeof parsedMonsters !== 'undefined' && parsedMonsters) ? parsedMonsters[idx] : null;
+    if (!monster) { if (typeof showToast === 'function') showToast('未找到这只 S 怪，请重新渲染排车列表。'); return; }
+    if (monster.isDead) { if (typeof showToast === 'function') showToast('这只 S 怪已标记去世，不能加入 ET 排车。'); return; }
+    let target = getCurrentETTarget();
+    if (!target) {
+      const input = prompt(`为【${monster.server}】${monster.name}设置 ET 开怪时间。\n可以输入 +3ET、+1.5ET、ET 12:00 或 12:00。\n如果不想单独设置，请先在页面顶部 ET 计算器启动倒计时。`);
+      if (input == null) return;
+      const inputEl = document.getElementById('etTargetInput');
+      const startBtn = document.getElementById('etStartBtn');
+      if (!inputEl || !startBtn) { if (typeof showToast === 'function') showToast('没有找到 ET 计算器。'); return; }
+      inputEl.value = input.trim();
+      startBtn.click();
+      target = getCurrentETTarget();
+      if (!target) { if (typeof showToast === 'function') showToast('ET 时间输入无效或目标时间已到，请检查后重试。'); return; }
+    }
+    const existing = etQueue.find(q => q.server === monster.server && q.name === monster.name);
+    const id = existing ? existing.id : `${monster.server}|${monster.name}`;
+    const next = { id, name:String(monster.name), server:String(monster.server), area:String(monster.area || ''), version:String(monster.version || ''), targetMs:Number(target.targetMs), label:String(target.label || 'ET 目标'), addedAt:Date.now() };
+    if (existing) Object.assign(existing, next); else etQueue.push(next);
+    saveQueue(); renderQueue();
+    const parts = getETParts(next.targetMs);
+    if (typeof showToast === 'function') showToast(`${existing ? '已更新' : '已加入'} ET 排车：${monster.name} · ET ${pad2(parts.h)}:${pad2(parts.m)}`);
+  }
+  window.addMonsterToETRoute = addMonsterToETRoute;
+
+  function decorateETButtons() {
+    const list = document.getElementById('routeLogList');
+    if (!list) return;
+    list.querySelectorAll('.monster-list-item').forEach(row => {
+      const edit = Array.from(row.querySelectorAll('button[onclick]')).find(btn => /editParsedMonster\(\s*\d+\s*\)/.test(btn.getAttribute('onclick') || ''));
+      if (!edit) return;
+      const match = (edit.getAttribute('onclick') || '').match(/editParsedMonster\(\s*(\d+)\s*\)/);
+      if (!match) return;
+      const idx = Number(match[1]);
+      const m = (typeof parsedMonsters !== 'undefined' && parsedMonsters) ? parsedMonsters[idx] : null;
+      if (!m) return;
+      let btn = row.querySelector('.et-route-add-btn');
+      if (!btn) {
+        btn = document.createElement('button'); btn.type = 'button'; btn.className = 'et-route-add-btn';
+        btn.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); addMonsterToETRoute(Number(btn.dataset.monsterIndex)); });
+        const versionBadge = row.querySelector('.v7,.v6,.v5,.v4');
+        if (versionBadge && versionBadge.parentNode) versionBadge.insertAdjacentElement('afterend', btn);
+        else { const actions = row.lastElementChild; if (actions) actions.appendChild(btn); }
+      }
+      btn.dataset.monsterIndex = String(idx);
+      const found = etQueue.some(q => q.name === m.name && q.server === m.server);
+      btn.classList.toggle('is-added', found);
+      btn.textContent = found ? '✓ 已加入 ET' : '🌙 加入 ET';
+      btn.title = found ? '点击可使用当前 ET 目标更新此怪的排车时间' : '将此 S 怪加入 ET 排车清单；使用当前倒计时目标，或输入一个独立 ET 时间';
+      btn.disabled = !!m.isDead;
+      if (m.isDead) { btn.textContent = '已去世'; btn.title = '已去世的 S 怪不能加入 ET 排车'; }
+    });
+  }
+
+  const clearBtn = document.getElementById('etRouteQueueClear');
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    if (!etQueue.length) { if (typeof showToast === 'function') showToast('ET 排车清单已经是空的。'); return; }
+    if (!confirm(`确定清空全部 ${etQueue.length} 只 S 怪的 ET 排车清单吗？这不会清除主排车列表。`)) return;
+    etQueue = []; saveQueue(); renderQueue(); if (typeof showToast === 'function') showToast('ET 排车清单已清空。');
+  });
+
+  // 包装最终版本的渲染函数，在每次排车刷新后加入 ET 按钮，不改动原排车算法。
+  const originalRenderRouteResult = window.renderRouteResult;
+  if (typeof originalRenderRouteResult === 'function') {
+    window.renderRouteResult = function (...args) {
+      const result = originalRenderRouteResult.apply(this, args);
+      decorateETButtons();
+      return result;
+    };
+  }
+  const routeLog = document.getElementById('routeLogList');
+  if (routeLog && typeof MutationObserver !== 'undefined') {
+    const observer = new MutationObserver(() => decorateETButtons());
+    observer.observe(routeLog, { childList:true, subtree:true });
+  }
+
+  const originalOpenFocusRoute = window.openFocusRoute;
+  if (typeof originalOpenFocusRoute === 'function') {
+    window.openFocusRoute = function (...args) {
+      const result = originalOpenFocusRoute.apply(this, args);
+      if (routePage.style.display === 'flex') {
+        moveETIntoRoutePage();
+        renderQueue();
+        decorateETButtons();
+      }
+      return result;
+    };
+  }
+  const originalCloseFocusRoute = window.closeFocusRoute;
+  if (typeof originalCloseFocusRoute === 'function') {
+    window.closeFocusRoute = function (...args) {
+      const result = originalCloseFocusRoute.apply(this, args);
+      moveETBackToMainPage();
+      return result;
+    };
+  }
+  // 某些原有按钮会直接设置排车页面 display，不经过 openFocusRoute；监听可见性确保 ET 卡片始终跟随。
+  if (typeof MutationObserver !== 'undefined') {
+    const visibilityObserver = new MutationObserver(() => {
+      if (routePage.style.display === 'flex') {
+        moveETIntoRoutePage();
+        renderQueue();
+        decorateETButtons();
+      } else {
+        moveETBackToMainPage();
+      }
+    });
+    visibilityObserver.observe(routePage, { attributes: true, attributeFilter: ['style'] });
+  }
+
+  renderQueue();
+  decorateETButtons();
+  window.setInterval(() => { updateQueueTimers(); decorateETButtons(); }, 1000);
+})();
+
+</script>
+
+<script>
+/* 排车页 ET 面板可拖动调高/调低：增量补丁，不改写此前任何代码 */
+(() => {
+  'use strict';
+  if (window.__ff14RouteETResizablePatch) return;
+  window.__ff14RouteETResizablePatch = true;
+
+  const HEIGHT_KEY = 'ff14_route_et_panel_height_v1';
+  const COLLAPSED_KEY = 'ff14_route_et_panel_collapsed_v1';
+  const DEFAULT_HEIGHT = 220;
+  const MIN_HEIGHT = 110;
+  const getMaxHeight = () => Math.max(MIN_HEIGHT, Math.min(Math.round(window.innerHeight * 0.66), window.innerHeight - 150));
+  const clampHeight = value => Math.max(MIN_HEIGHT, Math.min(getMaxHeight(), Math.round(Number(value) || DEFAULT_HEIGHT)));
+
+  const style = document.createElement('style');
+  style.id = 'ff14-route-et-resizable-style';
+  style.textContent = `
+    /* ET 面板在排车页面中占用可调的固定高度，下面的排车主区域自动使用剩余空间 */
+    #focusRoutePage #etCountdownCard.et-route-resizable {
+      box-sizing: border-box !important;
+      height: var(--ff14-route-et-height, 220px) !important;
+      min-height: ${MIN_HEIGHT}px !important;
+      max-height: calc(100vh - 125px) !important;
+      flex: 0 0 auto !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain;
+      margin: 0 auto 0 !important;
+      padding: 8px 12px !important;
+      scrollbar-width: thin;
+      resize: none !important;
+      transition: none !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .manual-header {
+      min-height: 27px !important;
+      padding-bottom: 5px !important;
+      margin-bottom: 6px !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .manual-header h2 {
+      font-size: 13px !important;
+      line-height: 1.3 !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .manual-header > span {
+      font-size: 10px !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .et-main-grid {
+      grid-template-columns: minmax(145px,.72fr) minmax(220px,1.28fr) !important;
+      gap: 7px !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .et-box {
+      padding: 7px 9px !important;
+      border-radius: 9px !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .et-clock {
+      font-size: 21px !important;
+      line-height: 1.22 !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .et-countdown {
+      font-size: 19px !important;
+      line-height: 1.25 !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .et-help {
+      font-size: 10px !important;
+      line-height: 1.35 !important;
+      margin-top: 4px !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable input#etTargetInput {
+      min-height: 31px !important;
+      padding: 6px 9px !important;
+      font-size: 12px !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable .et-actions { margin-top: 6px !important; gap: 6px !important; }
+    #focusRoutePage #etCountdownCard.et-route-resizable .et-actions .btn { min-height: 28px !important; padding: 5px 9px !important; font-size: 11px !important; }
+    #focusRoutePage #etCountdownCard.et-route-resizable #etRouteQueue { margin-top: 6px !important; padding: 7px 8px !important; }
+    #focusRoutePage #etCountdownCard.et-route-resizable #etRouteQueue .et-queue-head { margin-bottom: 5px !important; }
+    #focusRoutePage #etCountdownCard.et-route-resizable #etRouteQueue .et-queue-list { gap: 5px !important; }
+    #focusRoutePage #etCountdownCard.et-route-resizable #etRouteQueue .et-queue-item { padding: 6px 7px !important; }
+    #focusRoutePage #etCountdownCard.et-route-resizable.et-route-collapsed {
+      height: 49px !important;
+      min-height: 49px !important;
+      overflow: hidden !important;
+      padding-top: 6px !important;
+      padding-bottom: 5px !important;
+    }
+    #focusRoutePage #etCountdownCard.et-route-resizable.et-route-collapsed > :not(.manual-header) { display: none !important; }
+    #focusRoutePage #etCountdownCard.et-route-resizable.et-route-collapsed .manual-header {
+      margin: 0 !important; padding: 2px 0 5px !important; border: 0 !important;
+    }
+    #etRoutePanelToggle { display: none !important; }
+    #focusRoutePage #etCountdownCard #etRoutePanelToggle { display: inline-flex !important; align-items: center; justify-content: center; }
+    #etRouteResizeHandle {
+      z-index: 10001;
+      position: relative;
+      flex: 0 0 16px;
+      width: min(420px, 72%);
+      height: 16px;
+      min-height: 16px;
+      margin: 0 auto 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(0,191,255,.22);
+      border-top: 0;
+      border-radius: 0 0 10px 10px;
+      background: linear-gradient(180deg, rgba(0,191,255,.10), rgba(155,89,182,.10));
+      color: var(--text-muted);
+      backdrop-filter: blur(14px) saturate(135%);
+      -webkit-backdrop-filter: blur(14px) saturate(135%);
+      cursor: ns-resize;
+      user-select: none;
+      touch-action: none;
+      font: 600 9px/1 sans-serif;
+      letter-spacing: .2px;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    #etRouteResizeHandle::before {
+      content: '';
+      width: 36px;
+      height: 4px;
+      border-radius: 4px;
+      background: rgba(0,191,255,.52);
+      box-shadow: 0 0 8px rgba(0,191,255,.16);
+    }
+    #etRouteResizeHandle:hover,
+    #etRouteResizeHandle.is-dragging {
+      color: var(--blue);
+      border-color: rgba(0,191,255,.55);
+      background: linear-gradient(180deg, rgba(0,191,255,.18), rgba(155,89,182,.14));
+    }
+    body.ff14-et-resizing,
+    body.ff14-et-resizing * { cursor: ns-resize !important; user-select: none !important; }
+    .et-route-panel-toggle {
+      flex: 0 0 auto;
+      min-height: 25px !important;
+      padding: 4px 8px !important;
+      border: 1px solid rgba(0,191,255,.35) !important;
+      border-radius: 7px !important;
+      background: rgba(0,191,255,.10) !important;
+      color: var(--blue) !important;
+      font-size: 10px !important;
+      line-height: 1.2 !important;
+      font-weight: 800 !important;
+      cursor: pointer;
+    }
+    .et-route-panel-toggle:hover { background: rgba(0,191,255,.18) !important; }
+    #focusRoutePage .focus-container.et-route-workspace {
+      min-height: 0 !important;
+      flex: 1 1 0 !important;
+      overflow: hidden !important;
+    }
+    @media (max-width: 650px) {
+      #focusRoutePage #etCountdownCard.et-route-resizable .et-main-grid { grid-template-columns: minmax(0,1fr) minmax(0,1.15fr) !important; }
+      #etRouteResizeHandle { width: 82%; }
+    }
+    @media (max-width: 440px) {
+      #focusRoutePage #etCountdownCard.et-route-resizable .et-main-grid { grid-template-columns: 1fr !important; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const routePage = document.getElementById('focusRoutePage');
+  const etCard = document.getElementById('etCountdownCard');
+  if (!routePage || !etCard) return;
+
+  const focusHeader = routePage.querySelector('.focus-header');
+  const focusContainer = routePage.querySelector('.focus-container');
+  if (!focusHeader || !focusContainer) return;
+
+  let savedHeight = DEFAULT_HEIGHT;
+  let savedCollapsed = false;
+  try {
+    const storedHeight = Number(localStorage.getItem(HEIGHT_KEY));
+    if (Number.isFinite(storedHeight) && storedHeight >= MIN_HEIGHT) savedHeight = clampHeight(storedHeight);
+    savedCollapsed = localStorage.getItem(COLLAPSED_KEY) === '1';
+  } catch (_) {}
+
+  let handle = document.getElementById('etRouteResizeHandle');
+  if (!handle) {
+    handle = document.createElement('div');
+    handle.id = 'etRouteResizeHandle';
+    handle.setAttribute('role', 'separator');
+    handle.setAttribute('aria-orientation', 'horizontal');
+    handle.setAttribute('aria-label', '上下拖动调整 ET 计算器高度；双击恢复默认高度');
+    handle.title = '上下拖动调整 ET 计算器高度；双击恢复默认高度';
+    handle.innerHTML = '<span>上下拖动调整 ET 面板高度</span>';
+  }
+
+  const collapseBtn = document.createElement('button');
+  collapseBtn.type = 'button';
+  collapseBtn.className = 'et-route-panel-toggle';
+  collapseBtn.id = 'etRoutePanelToggle';
+  collapseBtn.textContent = savedCollapsed ? '展开 ET' : '收起 ET';
+  collapseBtn.title = '收起 ET 面板，让下方排车界面占用更多空间';
+  collapseBtn.setAttribute('aria-expanded', String(!savedCollapsed));
+
+  const header = etCard.querySelector('.manual-header');
+  if (header && !header.querySelector('#etRoutePanelToggle')) {
+    header.appendChild(collapseBtn);
+  }
+
+  function applyHeight(value, persist = false) {
+    savedHeight = clampHeight(value);
+    etCard.style.setProperty('--ff14-route-et-height', `${savedHeight}px`);
+    if (persist) {
+      try { localStorage.setItem(HEIGHT_KEY, String(savedHeight)); } catch (_) {}
+    }
+    handle.setAttribute('aria-valuenow', String(savedHeight));
+  }
+
+  function applyCollapsed(collapsed, persist = false) {
+    savedCollapsed = !!collapsed;
+    etCard.classList.toggle('et-route-collapsed', savedCollapsed);
+    collapseBtn.textContent = savedCollapsed ? '展开 ET' : '收起 ET';
+    collapseBtn.setAttribute('aria-expanded', String(!savedCollapsed));
+    collapseBtn.title = savedCollapsed ? '展开 ET 时间计算器' : '收起 ET 面板，让下方排车界面占用更多空间';
+    if (persist) {
+      try { localStorage.setItem(COLLAPSED_KEY, savedCollapsed ? '1' : '0'); } catch (_) {}
+    }
+    if (savedCollapsed) {
+      etCard.style.setProperty('--ff14-route-et-height', '49px');
+    } else {
+      applyHeight(savedHeight, false);
+    }
+  }
+
+  function ensureRouteResizer() {
+    if (routePage.style.display !== 'flex') {
+      handle.remove();
+      etCard.classList.remove('et-route-resizable', 'et-route-collapsed');
+      etCard.style.removeProperty('--ff14-route-et-height');
+      if (focusContainer) focusContainer.classList.remove('et-route-workspace');
+      return;
+    }
+    if (etCard.parentElement !== routePage) focusHeader.insertAdjacentElement('afterend', etCard);
+    etCard.classList.add('et-route-resizable');
+    if (etCard.nextElementSibling !== handle) etCard.insertAdjacentElement('afterend', handle);
+    focusContainer.classList.add('et-route-workspace');
+    if (!etCard.dataset.etResizeInitialized) {
+      etCard.dataset.etResizeInitialized = '1';
+      applyHeight(savedHeight, false);
+      applyCollapsed(savedCollapsed, false);
+    } else if (savedCollapsed) {
+      applyCollapsed(true, false);
+    } else {
+      applyHeight(savedHeight, false);
+    }
+  }
+
+  collapseBtn.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    applyCollapsed(!savedCollapsed, true);
+    ensureRouteResizer();
+  });
+
+  let dragStartY = 0;
+  let dragStartHeight = DEFAULT_HEIGHT;
+  let dragging = false;
+  function beginDrag(event) {
+    if (routePage.style.display !== 'flex' || event.button !== undefined && event.button !== 0) return;
+    event.preventDefault();
+    dragging = true;
+    if (savedCollapsed) applyCollapsed(false, false);
+    dragStartY = event.clientY;
+    dragStartHeight = etCard.getBoundingClientRect().height || savedHeight;
+    handle.classList.add('is-dragging');
+    document.body.classList.add('ff14-et-resizing');
+    if (handle.setPointerCapture && event.pointerId !== undefined) {
+      try { handle.setPointerCapture(event.pointerId); } catch (_) {}
+    }
+  }
+  function moveDrag(event) {
+    if (!dragging) return;
+    const nextHeight = clampHeight(dragStartHeight + (event.clientY - dragStartY));
+    applyHeight(nextHeight, false);
+  }
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('is-dragging');
+    document.body.classList.remove('ff14-et-resizing');
+    try { localStorage.setItem(HEIGHT_KEY, String(savedHeight)); localStorage.setItem(COLLAPSED_KEY, '0'); } catch (_) {}
+  }
+  handle.addEventListener('pointerdown', beginDrag);
+  window.addEventListener('pointermove', moveDrag, { passive: false });
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+  handle.addEventListener('dblclick', event => {
+    event.preventDefault();
+    applyCollapsed(false, true);
+    applyHeight(DEFAULT_HEIGHT, true);
+  });
+  handle.addEventListener('keydown', event => {
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      applyCollapsed(false, true);
+      applyHeight(savedHeight + (event.key === 'ArrowDown' ? 20 : -20), true);
+    } else if (event.key === 'Home') {
+      event.preventDefault(); applyCollapsed(false, true); applyHeight(MIN_HEIGHT, true);
+    } else if (event.key === 'End') {
+      event.preventDefault(); applyCollapsed(false, true); applyHeight(getMaxHeight(), true);
+    }
+  });
+  handle.tabIndex = 0;
+
+  window.addEventListener('resize', () => {
+    savedHeight = clampHeight(savedHeight);
+    if (!savedCollapsed && routePage.style.display === 'flex') applyHeight(savedHeight, true);
+  });
+
+  let previousVisibleState = routePage.style.display === 'flex';
+  const observer = new MutationObserver(() => {
+    const currentVisibleState = routePage.style.display === 'flex';
+    if (currentVisibleState !== previousVisibleState) {
+      previousVisibleState = currentVisibleState;
+      ensureRouteResizer();
+    }
+  });
+  observer.observe(routePage, { attributes: true, attributeFilter: ['style'] });
+  // ET 卡片可能先由上一层增量代码移动到排车页；等 DOM 更新后确保拉手紧贴卡片。
+  const routeObserver = new MutationObserver(() => {
+    if (routePage.style.display === 'flex' && etCard.parentElement === routePage && etCard.nextElementSibling !== handle) {
+      etCard.insertAdjacentElement('afterend', handle);
+    }
+  });
+  routeObserver.observe(routePage, { childList: true });
+  ensureRouteResizer();
+})();
+
+</script>
 </body>
 </html>
