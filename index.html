@@ -2149,16 +2149,45 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
             "7.0": "水晶化身之王"
         };
 
+        function normalizeTriggerAliasKey(value) {
+            return String(value == null ? '' : value)
+                .normalize('NFKC')
+                .toLocaleLowerCase()
+                .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                .replace(/[\s·•._\-，,。:：;；\/\\|@'’"“”‘’()（）\[\]【】<>《》{}]+/g, '');
+        }
+
         function resolveTrigger(id) {
             if (!id) return "";
-            let cleanId = id.trim();
-            if (TRIGGER_ALIASES[cleanId]) return TRIGGER_ALIASES[cleanId];
-            let parts = cleanId.split(/[+＋,，、]/);
-            let resolvedParts = parts.map(p => {
-                let trimP = p.trim();
-                return TRIGGER_ALIASES[trimP] ? TRIGGER_ALIASES[trimP] : trimP;
-            });
-            return resolvedParts.join('、');
+            const cleanId = String(id).normalize('NFKC').trim();
+            // 先尝试原始精确命中，保证已有别名继续按原规则工作。
+            if (Object.prototype.hasOwnProperty.call(TRIGGER_ALIASES, cleanId)) return TRIGGER_ALIASES[cleanId];
+
+            const aliasTargets = new Map();
+            for (const [alias, target] of Object.entries(TRIGGER_ALIASES)) {
+                const key = normalizeTriggerAliasKey(alias);
+                if (!key) continue;
+                if (!aliasTargets.has(key)) aliasTargets.set(key, new Set());
+                aliasTargets.get(key).add(target);
+            }
+
+            const resolveOne = rawPart => {
+                const part = String(rawPart || '').normalize('NFKC').trim();
+                if (!part) return '';
+                if (Object.prototype.hasOwnProperty.call(TRIGGER_ALIASES, part)) return TRIGGER_ALIASES[part];
+                const key = normalizeTriggerAliasKey(part);
+                const targets = aliasTargets.get(key);
+                // 同一个标准化黑话若指向多人，宁可保留原输入，也不乱猜。
+                if (targets && targets.size === 1) return targets.values().next().value;
+                if (targets && targets.size > 1) return part;
+
+                const known = (Array.isArray(allTriggers) ? allTriggers : []).find(name => normalizeTriggerAliasKey(name) === key);
+                return known || part;
+            };
+
+            // 支持同时填写多个触发者；保持未知文本原样，防止误分配给错误玩家。
+            const parts = cleanId.split(/[+＋,，、;；\/|]+/).map(part => part.trim()).filter(Boolean);
+            return parts.map(resolveOne).filter(Boolean).join('、');
         }
 
         function matchTriggerSearch(t, search) {
@@ -3071,6 +3100,134 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
             reader.readAsDataURL(file);
         }
 
+        function normalizeRouteMonsterKey(value) {
+            return String(value == null ? '' : value)
+                .normalize('NFKC')
+                .toLocaleLowerCase()
+                .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                .replace(/[\s·•._\-，,。:：;；\/\\|@'’"“”‘’()（）\[\]【】<>《》{}!?！？、+＋=％%]/g, '');
+        }
+
+        function escapeRouteRegex(value) {
+            return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function routeFlexibleRegex(value) {
+            return String(value).trim().split(/\s+/).map(escapeRouteRegex).join('\\s*');
+        }
+
+        /*
+         * 排车黑话匹配规则：
+         * 1) 完整怪物名优先；2) 明确的别名精确命中；3) 多字正式名片段/地区；
+         * 4) 最后才使用较长的别名包含匹配。单字别名不参与模糊包含匹配；
+         *    重复缩写（例如 mg、dz）返回歧义而不是随数组顺序乱匹配。
+         */
+        function resolveRouteMonsterText(rawValue) {
+            const raw = String(rawValue == null ? '' : rawValue).normalize('NFKC').trim();
+            const key = normalizeRouteMonsterKey(raw);
+            if (!key) return { monster: null, ambiguous: false, candidates: [], matchedText: '', matchedBy: 'none' };
+
+            const monsters = Array.isArray(S_MONSTERS) ? S_MONSTERS : [];
+            const chooseBest = candidates => {
+                if (!candidates.length) return null;
+                const maxScore = Math.max(...candidates.map(item => item.score));
+                const top = candidates.filter(item => item.score === maxScore);
+                const unique = Array.from(new Map(top.map(item => [item.monster.name, item])).values());
+                if (unique.length === 1) return { monster: unique[0].monster, ambiguous: false, candidates: [unique[0].monster.name], matchedText: unique[0].matchedText || '', matchedBy: unique[0].matchedBy || 'match' };
+                return { monster: null, ambiguous: true, candidates: unique.map(item => item.monster.name), matchedText: '', matchedBy: 'ambiguous' };
+            };
+
+            // 优先完整正式名，避免一条文本中出现另一个普通黑话时抢走匹配结果。
+            const fullNameHits = [];
+            for (const monster of monsters) {
+                const nameKey = normalizeRouteMonsterKey(monster.name);
+                if (nameKey.length >= 3 && key.includes(nameKey)) {
+                    fullNameHits.push({ monster, score: 10000 + nameKey.length, matchedText: monster.name, matchedBy: 'full-name' });
+                }
+            }
+            if (fullNameHits.length) return chooseBest(fullNameHits);
+
+            // 构建别名 -> 怪物集合，遇到同名缩写不再“谁先出现就选谁”。
+            const aliasOwners = new Map();
+            for (const monster of monsters) {
+                for (const alias of (Array.isArray(monster.alias) ? monster.alias : [])) {
+                    const aliasKey = normalizeRouteMonsterKey(alias);
+                    if (!aliasKey) continue;
+                    if (!aliasOwners.has(aliasKey)) aliasOwners.set(aliasKey, []);
+                    if (!aliasOwners.get(aliasKey).some(owner => owner.monster.name === monster.name)) {
+                        aliasOwners.get(aliasKey).push({ monster, alias: String(alias) });
+                    }
+                }
+            }
+
+            // 精确别名命中适用于少爷、奥山、mg 等短写；重复缩写会给出歧义提示。
+            const exactAliasOwners = aliasOwners.get(key);
+            if (exactAliasOwners && exactAliasOwners.length) {
+                const exact = exactAliasOwners.map(owner => ({ monster: owner.monster, score: 9000, matchedText: owner.alias, matchedBy: 'exact-alias' }));
+                return chooseBest(exact);
+            }
+
+            // 行文本还会带服务器、血量等字段：允许识别其中独立出现的别名 token，
+            // 但单字中文简称不自动参与，避免“花”等泛词从整行文字里误命中。
+            const tokenPattern = /[^\s,，。:：;；/\\|@'’"“”‘’()（）\[\]【】<>!?！？、+＋=％%]+/g;
+            const tokenHits = [];
+            for (const token of raw.match(tokenPattern) || []) {
+                const tokenKey = normalizeRouteMonsterKey(token);
+                if (!tokenKey) continue;
+                const owners = aliasOwners.get(tokenKey);
+                if (!owners || !owners.length) continue;
+                const tokenLength = Array.from(tokenKey).length;
+                if (tokenLength < 2 && tokenKey !== key) continue;
+                for (const owner of owners) tokenHits.push({ monster: owner.monster, score: 8500, matchedText: owner.alias, matchedBy: 'alias-token' });
+            }
+            if (tokenHits.length) return chooseBest(tokenHits);
+
+            // 较长正式名片段（如“阿提卡斯”）可以识别，但短词不作为正式名片段。
+            const namePartHits = [];
+            for (const monster of monsters) {
+                const parts = String(monster.name || '').split(/[\s·•]+/).map(part => ({ raw: part, key: normalizeRouteMonsterKey(part) }))
+                    .filter(part => Array.from(part.key).length >= 3 && key.includes(part.key));
+                for (const part of parts) namePartHits.push({ monster, score: 7000 + Array.from(part.key).length, matchedText: part.raw, matchedBy: 'name-part' });
+            }
+            if (namePartHits.length) return chooseBest(namePartHits);
+
+            // 移除文本中出现的完整触发者名字后再找黑话，避免“牛排大王”中的“牛排”误判成怪物。
+            let aliasSearchKey = key;
+            const personNames = new Set();
+            for (const value of Object.values(TRIGGER_ALIASES || {})) {
+                const name = String(value || '').split('@')[0].trim();
+                if (name) personNames.add(name);
+            }
+            for (const value of (Array.isArray(DEFAULT_TRIGGERS) ? DEFAULT_TRIGGERS : [])) {
+                const name = String(value || '').split('@')[0].trim();
+                if (name) personNames.add(name);
+            }
+            for (const value of (Array.isArray(customTriggers) ? customTriggers : [])) {
+                const name = String(value || '').split('@')[0].trim();
+                if (name) personNames.add(name);
+            }
+            const sortedPersonNames = Array.from(personNames).sort((a, b) => normalizeRouteMonsterKey(b).length - normalizeRouteMonsterKey(a).length);
+            for (const personName of sortedPersonNames) {
+                const personKey = normalizeRouteMonsterKey(personName);
+                if (personKey.length >= 3 && aliasSearchKey.includes(personKey)) aliasSearchKey = aliasSearchKey.split(personKey).join('');
+            }
+
+            const aliasHits = [];
+            for (const [aliasKey, owners] of aliasOwners.entries()) {
+                const isAsciiAlias = /^[a-z0-9]+$/i.test(aliasKey);
+                const aliasLength = Array.from(aliasKey).length;
+                // 不用单字中文、两位拼音缩写做包含模糊匹配；它们只允许独立精确输入。
+                if (aliasLength < 2 || (isAsciiAlias && aliasLength < 3)) continue;
+                if (!aliasSearchKey.includes(aliasKey)) continue;
+                for (const owner of owners) {
+                    aliasHits.push({ monster: owner.monster, score: 4000 + aliasLength, matchedText: owner.alias, matchedBy: 'alias-contains' });
+                }
+            }
+            const aliasResult = chooseBest(aliasHits);
+            if (aliasResult) return aliasResult;
+            return { monster: null, ambiguous: false, candidates: [], matchedText: '', matchedBy: 'none' };
+        }
+
         function generateRoute() {
             const routeInputEl = document.getElementById('routeInput'); if (!routeInputEl) return;
             let text = routeInputEl.value;
@@ -3079,6 +3236,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
             const lines = text.split('\n'); 
             if (currentParseMode === 'overwrite') parsedMonsters = []; 
             let lastServer = "未知";
+            const routeAmbiguities = [];
             
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim(); if (!line) continue;
@@ -3116,18 +3274,9 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
                 }
                 if (parsedFromGroups.length > 0) {
                     for (let item of parsedFromGroups) {
-                        let matchedMonster = null; let cleanName = item.name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9γ]/g, ''); let matchLen = 0;
-                        for (let sm of S_MONSTERS) {
-                            if (sm.alias) {
-                                for (let al of sm.alias) { if (cleanName.includes(al)) { if (al.length > matchLen) { matchedMonster = sm; matchLen = al.length; } } }
-                            }
-                        }
-                        if (!matchedMonster) {
-                            for (let sm of S_MONSTERS) {
-                                let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, '');
-                                if (cleanName.includes(areaStr) || cleanName.includes(nameStr)) { matchedMonster = sm; break; }
-                            }
-                        }
+                        const monsterMatch = resolveRouteMonsterText(item.name);
+                        const matchedMonster = monsterMatch.monster;
+                        if (monsterMatch.ambiguous) routeAmbiguities.push({ text: item.name, candidates: monsterMatch.candidates });
                         if (matchedMonster) {
                             let existingM = parsedMonsters.find(m => (m.name === matchedMonster.name || m.originalName === matchedMonster.name) && m.server === currentServer);
                             if (!existingM) {
@@ -3136,22 +3285,18 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
                         }
                     }
                 } else {
-                    let matchedMonster = null; let matchLen = 0;
-                    for (let sm of S_MONSTERS) {
-                        if (sm.alias) {
-                            for (let al of sm.alias) { if (currentLine.includes(al)) { if (al.length > matchLen) { matchedMonster = sm; matchLen = al.length; } } }
-                        }
-                    }
-                    if (!matchedMonster) {
-                        for (let sm of S_MONSTERS) {
-                            let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, '');
-                            if (currentLine.includes(areaStr) || currentLine.includes(nameStr)) { matchedMonster = sm; break; }
-                        }
-                    }
+                    const monsterMatch = resolveRouteMonsterText(currentLine);
+                    const matchedMonster = monsterMatch.monster;
+                    if (monsterMatch.ambiguous) routeAmbiguities.push({ text: currentLine, candidates: monsterMatch.candidates });
                     if (matchedMonster) {
                         let nameStr = matchedMonster.name, areaStr = matchedMonster.area;
-                        if (matchedMonster.alias) { for (let al of matchedMonster.alias) currentLine = currentLine.replace(al, ' '); }
-                        currentLine = currentLine.replace(nameStr, ' ').replace(areaStr, ' ');
+                        // 只移除这次实际命中的别名，不再把该怪的所有别名从整行文本中删掉。
+                        if (monsterMatch.matchedText) {
+                            const flexibleAlias = routeFlexibleRegex(monsterMatch.matchedText);
+                            try { currentLine = currentLine.replace(new RegExp(flexibleAlias, 'i'), ' '); } catch (_) {}
+                        }
+                        currentLine = currentLine.replace(new RegExp(routeFlexibleRegex(nameStr), 'i'), ' ')
+                            .replace(new RegExp(routeFlexibleRegex(areaStr), 'i'), ' ');
                         let triggerId = currentLine.replace(/[\(（\)）\[\]【】\<\>\s,，]/g, '').trim();
                         triggerId = resolveTrigger(triggerId);
                         let existingM = parsedMonsters.find(m => (m.name === matchedMonster.name || m.originalName === matchedMonster.name) && m.server === currentServer);
@@ -3162,6 +3307,11 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
                 }
             }
             sortParsedMonstersDefault(); editingRouteServers.clear(); isSimpleRouteLocked = false; renderRouteResult();
+            if (routeAmbiguities.length) {
+                const uniqueWarnings = Array.from(new Set(routeAmbiguities.map(item => `${item.text} => ${item.candidates.join(' / ')}`))).slice(0, 3);
+                const rest = routeAmbiguities.length > uniqueWarnings.length ? `，另有 ${routeAmbiguities.length - uniqueWarnings.length} 条` : '';
+                showToast(`⚠️ 有简称存在歧义，已跳过未自动误判：${uniqueWarnings.join('；')}${rest}。请使用更完整黑话或怪物全名。`);
+            }
         }
 
         function toggleRouteArrows(server) {
@@ -4864,6 +5014,7 @@ text = text.replace(/[＜《]/g, '<').replace(/[＞》]/g, '>').replace(/[（【
 const lines = text.split('\n'); 
 if (currentParseMode === 'overwrite') parsedMonsters = []; 
 let lastServer = "未知";
+const routeAmbiguities = [];
 for (let i = 0; i < lines.length; i++) {
 let line = lines[i].trim(); if (!line) continue;
 let currentLine = line; let coord = "(坐标未知)"; let hp = "100.00%"; let serverFound = false; let currentServer = lastServer;
@@ -4888,22 +5039,22 @@ for (let nameStr of namesArr) { if (nameStr.trim()) parsedFromGroups.push({ name
 }
 if (parsedFromGroups.length > 0) {
 for (let item of parsedFromGroups) {
-let matchedMonster = null; let cleanName = item.name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9γ]/g, ''); let matchLen = 0;
-for (let sm of S_MONSTERS) { if (sm.alias) { for (let al of sm.alias) { if (cleanName.includes(al)) { if (al.length > matchLen) { matchedMonster = sm; matchLen = al.length; } } } } }
-if (!matchedMonster) { for (let sm of S_MONSTERS) { let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, ''); if (cleanName.includes(areaStr) || cleanName.includes(nameStr)) { matchedMonster = sm; break; } } }
+const monsterMatch = resolveRouteMonsterText(item.name);
+const matchedMonster = monsterMatch.monster;
+if (monsterMatch.ambiguous) routeAmbiguities.push({ text: item.name, candidates: monsterMatch.candidates });
 if (matchedMonster) {
 let existingM = parsedMonsters.find(m => (m.name === matchedMonster.name || m.originalName === matchedMonster.name) && m.server === currentServer);
 if (!existingM) { parsedMonsters.push({ name: matchedMonster.name, originalName: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: currentServer, hp: hp, trigger: item.trigger, isDead: false, isTarget: false, isSS: false }); } else if (coord !== "(坐标未知)") existingM.coord = coord;
 }
 }
 } else {
-let matchedMonster = null; let matchLen = 0;
-for (let sm of S_MONSTERS) { if (sm.alias) { for (let al of sm.alias) { if (currentLine.includes(al)) { if (al.length > matchLen) { matchedMonster = sm; matchLen = al.length; } } } } }
-if (!matchedMonster) { for (let sm of S_MONSTERS) { let nameStr = sm.name.replace(/\s/g, ''), areaStr = sm.area.replace(/\s/g, ''); if (currentLine.includes(areaStr) || currentLine.includes(nameStr)) { matchedMonster = sm; break; } } }
+const monsterMatch = resolveRouteMonsterText(currentLine);
+const matchedMonster = monsterMatch.monster;
+if (monsterMatch.ambiguous) routeAmbiguities.push({ text: currentLine, candidates: monsterMatch.candidates });
 if (matchedMonster) {
 let nameStr = matchedMonster.name, areaStr = matchedMonster.area;
-if (matchedMonster.alias) { for (let al of matchedMonster.alias) currentLine = currentLine.replace(al, ' '); }
-currentLine = currentLine.replace(nameStr, ' ').replace(areaStr, ' ');
+if (monsterMatch.matchedText) { try { currentLine = currentLine.replace(new RegExp(routeFlexibleRegex(monsterMatch.matchedText), 'i'), ' '); } catch (_) {} }
+currentLine = currentLine.replace(new RegExp(routeFlexibleRegex(nameStr), 'i'), ' ').replace(new RegExp(routeFlexibleRegex(areaStr), 'i'), ' ');
 let triggerId = currentLine.replace(/[\(（\)）\[\]【】\<\>\s,，]/g, '').trim(); triggerId = resolveTrigger(triggerId);
 let existingM = parsedMonsters.find(m => (m.name === matchedMonster.name || m.originalName === matchedMonster.name) && m.server === currentServer);
 if (!existingM) { parsedMonsters.push({ name: matchedMonster.name, originalName: matchedMonster.name, area: matchedMonster.area, version: matchedMonster.version, coord: coord, server: currentServer, hp: hp, trigger: triggerId, isDead: false, isTarget: false, isSS: false }); } else if (coord !== "(坐标未知)") existingM.coord = coord;
@@ -4911,6 +5062,11 @@ if (!existingM) { parsedMonsters.push({ name: matchedMonster.name, originalName:
 }
 }
 sortParsedMonstersDefault(); editingRouteServers.clear(); isSimpleRouteLocked = false; renderRouteResult();
+if (routeAmbiguities.length) {
+  const uniqueWarnings = Array.from(new Set(routeAmbiguities.map(item => `${item.text} => ${item.candidates.join(' / ')}`))).slice(0, 3);
+  const rest = routeAmbiguities.length > uniqueWarnings.length ? `，另有 ${routeAmbiguities.length - uniqueWarnings.length} 条` : '';
+  showToast(`⚠️ 有简称存在歧义，已跳过未自动误判：${uniqueWarnings.join('；')}${rest}。请使用更完整黑话或怪物全名。`);
+}
 };
 
     window.setServerAsFirst = function setServerAsFirst(serverName) { const targetServerMonsters = parsedMonsters.filter(m => m.server === serverName); const otherMonsters = parsedMonsters.filter(m => m.server !== serverName); parsedMonsters = [...targetServerMonsters, ...otherMonsters]; renderRouteResult(); showToast(`已将 ${serverName} 设为始发站`); };
@@ -6855,5 +7011,75 @@ window.closeRecentDetail = function closeRecentDetail() {
 })();
 
 </script>
+
+<style id="ff14-route-details-scroll-fix">
+/* 修复“识别解析与发车明细”底部不可达：统一交给排车整页滚动，去掉多层嵌套滚动与 overflow 裁切。 */
+#focusRoutePage {
+  box-sizing: border-box !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-bottom: 28px;
+}
+#focusRoutePage .focus-container.et-route-workspace,
+#focusRoutePage .focus-container {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  align-items: stretch !important;
+}
+#focusRoutePage .focus-col-left,
+#focusRoutePage .focus-col-right {
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+#focusRoutePage #routeResultBox.route-result-box {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+#focusRoutePage #routeResultBox details.collapse-box {
+  display: block !important;
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  margin-bottom: 14px !important;
+}
+#focusRoutePage #routeLogList.route-log-list {
+  display: block !important;
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding-bottom: 30px !important;
+  overscroll-behavior: auto !important;
+}
+#focusRoutePage #routeLogList .server-card:last-child,
+#focusRoutePage #routeLogList .monster-list-item:last-child {
+  margin-bottom: 24px !important;
+  padding-bottom: 18px !important;
+}
+@media (max-width: 900px) {
+  #focusRoutePage .focus-container,
+  #focusRoutePage .focus-container.et-route-workspace {
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  #focusRoutePage .focus-col-left,
+  #focusRoutePage .focus-col-right { overflow: visible !important; }
+}
+</style>
+
 </body>
 </html>
