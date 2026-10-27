@@ -7081,5 +7081,1847 @@ window.closeRecentDetail = function closeRecentDetail() {
 }
 </style>
 
+<script id="ff14-ux-enhancement-layer">
+/*
+ * FF14 S怪工具 - 体验增强增量层（2026-10-27）
+ * 只追加，不移除或替换原文件中的功能；通过原有词库对象进行绑定。
+ */
+(() => {
+  'use strict';
+  if (window.__ff14UXEnhancementLayerLoaded) return;
+  window.__ff14UXEnhancementLayerLoaded = true;
+
+  const ALIAS_STORAGE_KEY = 'ff14_alias_project_library_v1';
+  const BACKGROUND_STORAGE_KEY = 'ff14_background_settings_v1';
+  const CHANGELOG_VIEWED_KEY = 'ff14_update_20261027_viewed';
+  const PROJECT_SCHEMA = 'ff14-alias-project-library';
+
+  const normalizeKey = value => String(value == null ? '' : value)
+    .normalize('NFKC')
+    .toLocaleLowerCase()
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\s·•._\-，,。:：;；/\\|@'’"“”‘’()（）\[\]【】<>《》{}!?！？、+＋=％%]/g, '');
+
+  const deepCopy = value => JSON.parse(JSON.stringify(value));
+  const safeToast = message => {
+    if (typeof window.showToast === 'function') window.showToast(message);
+    else console.info('[FF14 UX]', message);
+  };
+
+  // 当前文件已有的优化词库在此前脚本中已并入；记录基线，保证删除自定义项时不碰内置项。
+  const baseMonsterAliases = new Map((Array.isArray(S_MONSTERS) ? S_MONSTERS : []).map(monster => [
+    monster.name, Array.isArray(monster.alias) ? [...monster.alias] : []
+  ]));
+  const baseServerAliasKeys = new Set(Object.keys(SERVER_ALIASES || {}));
+  const baseTriggerAliasKeys = new Set(Object.keys(TRIGGER_ALIASES || {}));
+  const appliedProjectBindings = [];
+
+  function loadAliasLibrary() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(ALIAS_STORAGE_KEY) || '[]');
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(item => item && ['monster', 'server', 'trigger'].includes(item.type) &&
+        typeof item.alias === 'string' && typeof item.target === 'string' && item.alias.trim() && item.target.trim())
+        .map(item => ({
+          id: String(item.id || `${item.type}|${normalizeKey(item.alias)}|${item.target}`),
+          type: item.type,
+          alias: item.alias.trim(),
+          target: item.target.trim(),
+          createdAt: Number(item.createdAt) || 0
+        }));
+    } catch (_) { return []; }
+  }
+  let aliasLibrary = loadAliasLibrary();
+
+  function findMonsterTarget(target) {
+    const key = normalizeKey(target);
+    return (Array.isArray(S_MONSTERS) ? S_MONSTERS : []).find(monster =>
+      monster.name === target || normalizeKey(monster.name) === key
+    ) || null;
+  }
+
+  function existingAliasOwners(type, alias) {
+    const key = normalizeKey(alias);
+    if (!key) return [];
+    if (type === 'monster') {
+      const owners = [];
+      (Array.isArray(S_MONSTERS) ? S_MONSTERS : []).forEach(monster => {
+        const aliases = [monster.name, ...(Array.isArray(monster.alias) ? monster.alias : [])];
+        if (aliases.some(value => normalizeKey(value) === key)) owners.push({ target: monster.name, alias });
+      });
+      return owners;
+    }
+    const dictionary = type === 'server' ? SERVER_ALIASES : TRIGGER_ALIASES;
+    return Object.entries(dictionary || {}).filter(([keyAlias]) => normalizeKey(keyAlias) === key)
+      .map(([keyAlias, target]) => ({ alias: keyAlias, target }));
+  }
+
+  function removeAppliedProjectBindings() {
+    // S怪黑话：重建为进入本增量层时的原始别名，再由存储项目重新绑定。
+    (Array.isArray(S_MONSTERS) ? S_MONSTERS : []).forEach(monster => {
+      if (baseMonsterAliases.has(monster.name)) monster.alias = [...baseMonsterAliases.get(monster.name)];
+    });
+    // 服务器 / 触发者别名：仅移除本增量层之前新增且目标仍匹配的键，保留其他脚本的动态修改。
+    for (const binding of appliedProjectBindings) {
+      if (binding.type === 'server' && !baseServerAliasKeys.has(binding.alias) && SERVER_ALIASES[binding.alias] === binding.target) {
+        delete SERVER_ALIASES[binding.alias];
+      }
+      if (binding.type === 'trigger' && !baseTriggerAliasKeys.has(binding.alias) && TRIGGER_ALIASES[binding.alias] === binding.target) {
+        delete TRIGGER_ALIASES[binding.alias];
+      }
+    }
+    appliedProjectBindings.length = 0;
+  }
+
+  function applyAliasLibrary() {
+    removeAppliedProjectBindings();
+    const applied = [];
+    aliasLibrary.forEach(item => {
+      if (!item || !item.alias || !item.target) return;
+      if (item.type === 'monster') {
+        const monster = findMonsterTarget(item.target);
+        if (!monster) return;
+        const key = normalizeKey(item.alias);
+        const currentAliases = [monster.name, ...(monster.alias || [])];
+        // 自定义别名若与其他正式名/内置别名重名，则不强行绑定，避免错误识别。
+        const conflicts = (Array.isArray(S_MONSTERS) ? S_MONSTERS : []).some(other => other.name !== monster.name &&
+          [other.name, ...(other.alias || [])].some(alias => normalizeKey(alias) === key));
+        if (conflicts) return;
+        if (!currentAliases.some(alias => normalizeKey(alias) === key)) monster.alias.push(item.alias);
+        applied.push(item);
+      } else if (item.type === 'server') {
+        const knownServer = (Array.isArray(ALL_SERVERS) ? ALL_SERVERS : []).find(server => server === item.target);
+        if (!knownServer) return;
+        const sameKey = Object.keys(SERVER_ALIASES).find(alias => normalizeKey(alias) === normalizeKey(item.alias));
+        if (sameKey && SERVER_ALIASES[sameKey] !== item.target) return;
+        if (!Object.prototype.hasOwnProperty.call(SERVER_ALIASES, item.alias)) SERVER_ALIASES[item.alias] = item.target;
+        applied.push(item);
+      } else if (item.type === 'trigger') {
+        const sameKey = Object.keys(TRIGGER_ALIASES).find(alias => normalizeKey(alias) === normalizeKey(item.alias));
+        if (sameKey && TRIGGER_ALIASES[sameKey] !== item.target) return;
+        if (!Object.prototype.hasOwnProperty.call(TRIGGER_ALIASES, item.alias)) TRIGGER_ALIASES[item.alias] = item.target;
+        applied.push(item);
+      }
+    });
+    appliedProjectBindings.push(...applied);
+    try {
+      if (typeof window.buildMonsterDropdown === 'function') window.buildMonsterDropdown();
+      if (typeof window.updateGlobalTriggers === 'function') window.updateGlobalTriggers();
+      if (typeof window.renderQuickMonsterTags === 'function') window.renderQuickMonsterTags(S_MONSTERS);
+      if (typeof window.initMonsterSelects === 'function') window.initMonsterSelects();
+      if (typeof window.filterDropdownMonsters === 'function' && document.getElementById('monsterSearchInput')?.value) window.filterDropdownMonsters();
+    } catch (error) { console.warn('[FF14 UX] 词库刷新提示：', error); }
+  }
+
+  function persistAliasLibrary() {
+    try {
+      localStorage.setItem(ALIAS_STORAGE_KEY, JSON.stringify(aliasLibrary));
+      applyAliasLibrary();
+      return true;
+    } catch (error) {
+      safeToast('保存失败：浏览器本地存储空间可能不足');
+      console.warn('[FF14 UX] alias storage error', error);
+      return false;
+    }
+  }
+
+  function getTypeLabel(type) {
+    return type === 'monster' ? 'S怪黑话' : type === 'server' ? '服务器黑话' : '触发者黑话';
+  }
+
+  function getAllRows() {
+    const rows = [];
+    (Array.isArray(S_MONSTERS) ? S_MONSTERS : []).forEach(monster => {
+      rows.push({ type: 'monster', alias: monster.name, target: monster.name, builtin: true, label: '正式名称' });
+      (monster.alias || []).forEach(alias => rows.push({ type: 'monster', alias, target: monster.name, builtin: !aliasLibrary.some(item => item.type === 'monster' && item.alias === alias && item.target === monster.name) }));
+    });
+    Object.entries(SERVER_ALIASES || {}).forEach(([alias, target]) => rows.push({ type: 'server', alias, target, builtin: !aliasLibrary.some(item => item.type === 'server' && item.alias === alias && item.target === target) }));
+    Object.entries(TRIGGER_ALIASES || {}).forEach(([alias, target]) => rows.push({ type: 'trigger', alias, target, builtin: !aliasLibrary.some(item => item.type === 'trigger' && item.alias === alias && item.target === target) }));
+    aliasLibrary.forEach(item => {
+      const isApplied = appliedProjectBindings.some(applied => applied.type === item.type && applied.alias === item.alias && applied.target === item.target);
+      if (!isApplied) rows.push({ ...item, builtin: false, notApplied: true });
+    });
+    const dedup = new Map();
+    rows.forEach(row => {
+      const rowKey = `${row.type}|${normalizeKey(row.alias)}|${row.target}`;
+      if (!dedup.has(rowKey)) dedup.set(rowKey, row);
+      else if (!row.builtin) dedup.set(rowKey, row);
+    });
+    return [...dedup.values()];
+  }
+
+  function createModalShell(id, title, subtitle) {
+    const overlay = document.createElement('div');
+    overlay.className = 'ff14-ux-modal-overlay';
+    overlay.id = id;
+    overlay.innerHTML = `<section class="ff14-ux-modal" role="dialog" aria-modal="true" aria-labelledby="${id}-title">
+      <header class="ff14-ux-modal-header"><div><h2 id="${id}-title"></h2><p></p></div><button class="ff14-ux-close" type="button" aria-label="关闭">×</button></header>
+      <div class="ff14-ux-modal-body"></div></section>`;
+    overlay.querySelector('h2').textContent = title;
+    overlay.querySelector('header p').textContent = subtitle;
+    overlay.querySelector('.ff14-ux-close').addEventListener('click', () => overlay.dispatchEvent(new CustomEvent('ff14close')));
+    overlay.addEventListener('click', event => { if (event.target === overlay) overlay.dispatchEvent(new CustomEvent('ff14close')); });
+    overlay.addEventListener('ff14close', () => { overlay.style.display = 'none'; });
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function injectStyles() {
+    if (document.getElementById('ff14-ux-enhancement-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'ff14-ux-enhancement-styles';
+    style.textContent = `
+      .ff14-ux-modal-overlay{display:none;position:fixed;inset:0;z-index:40000;padding:18px;align-items:center;justify-content:center;background:rgba(3,7,18,.68);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+      .ff14-ux-modal{width:min(980px,96vw);max-height:92vh;overflow:hidden;display:flex;flex-direction:column;background:rgba(var(--panel-rgb,26,26,46),.94);color:var(--text);border:1px solid var(--border);border-radius:16px;box-shadow:0 22px 70px rgba(0,0,0,.42);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+      .ff14-ux-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:19px 22px 14px;border-bottom:1px solid var(--border)}
+      .ff14-ux-modal-header h2{margin:0 0 6px;font-size:20px;line-height:1.35;color:var(--accent)}
+      .ff14-ux-modal-header p{margin:0;color:var(--text-muted);font-size:12px;line-height:1.5}
+      .ff14-ux-close{border:1px solid var(--border);background:var(--panel-light);color:var(--text-muted);border-radius:8px;font-size:23px;line-height:1;width:34px;height:34px;cursor:pointer;flex-shrink:0}
+      .ff14-ux-close:hover{color:var(--red);border-color:var(--red)}
+      .ff14-ux-modal-body{padding:18px 22px 22px;overflow:auto;min-height:0}
+      .ff14-ux-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+      .ff14-ux-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+      .ff14-ux-field label,.ff14-ux-label{font-size:12px;font-weight:800;color:var(--text-muted)}
+      .ff14-ux-input,.ff14-ux-select{width:100%;min-width:0;box-sizing:border-box;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:8px;padding:10px 11px;font:inherit;font-size:13px;outline:none}
+      .ff14-ux-input:focus,.ff14-ux-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,191,255,.10)}
+      .ff14-ux-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+      .ff14-ux-btn{border:1px solid var(--border);border-radius:8px;background:var(--panel-light);color:var(--text);padding:9px 12px;font-weight:800;font-size:12px;cursor:pointer;transition:transform .15s,border-color .15s,filter .15s}
+      .ff14-ux-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+      .ff14-ux-btn.primary{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+      .ff14-ux-btn.danger{color:var(--red);border-color:rgba(255,77,77,.42)}
+      .ff14-ux-note{margin:12px 0 0;padding:10px 12px;border:1px dashed var(--border);border-radius:8px;font-size:12px;line-height:1.6;color:var(--text-muted)}
+      .ff14-ux-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+      .ff14-ux-stat{border:1px solid var(--border);background:var(--panel-light);border-radius:999px;padding:5px 9px;font-size:11px;color:var(--text-muted)}
+      .ff14-ux-alias-list{display:flex;flex-direction:column;gap:7px;margin-top:13px;max-height:36vh;overflow:auto;padding-right:2px}
+      .ff14-ux-alias-row{display:grid;grid-template-columns:minmax(100px,.75fr) minmax(100px,.9fr) minmax(120px,1.35fr) auto;gap:8px;align-items:center;border:1px solid var(--border);border-radius:9px;padding:9px 10px;background:rgba(var(--panel-rgb,26,26,46),.46);font-size:12px;min-width:0}
+      .ff14-ux-alias-word{font-weight:850;overflow-wrap:anywhere}.ff14-ux-alias-target{color:var(--text-muted);overflow-wrap:anywhere}.ff14-ux-tag{display:inline-block;border-radius:5px;padding:3px 5px;font-size:10px;background:var(--panel-light);color:var(--blue);white-space:nowrap}
+      .ff14-ux-range-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.ff14-ux-range-row input{width:100%;accent-color:var(--accent)}.ff14-ux-range-value{font-family:monospace;font-weight:900;color:var(--accent);min-width:48px;text-align:right}
+      #ff14-bg-preview{height:150px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;color:var(--text-muted);font-size:12px;margin-bottom:14px;background-position:center;background-size:cover}
+      .ff14-ux-file-name{color:var(--text-muted);font-size:11px;overflow-wrap:anywhere}
+      #ff14-ux-project-menu-button{color:var(--accent)!important}#ff14-ux-background-menu-button{color:var(--blue)!important}#ff14-ux-changelog-menu-button{color:var(--gold)!important}
+      html.ff14-user-bg-active body{background:transparent!important;position:relative;isolation:isolate}
+      #ff14-bg-image-layer,#ff14-bg-dim-layer{position:fixed;inset:-22px;pointer-events:none;display:none}
+      #ff14-bg-image-layer{z-index:-2;background-position:center;background-repeat:no-repeat;background-size:cover;transform:translateZ(0)}
+      #ff14-bg-dim-layer{z-index:-1;background:rgba(5,8,20,.24)}
+      html.ff14-user-bg-active #ff14-bg-image-layer,html.ff14-user-bg-active #ff14-bg-dim-layer{display:block}
+      html.ff14-bg-route-active #focusRoutePage{background:transparent!important}
+      html.ff14-bg-glass .manual-card,html.ff14-bg-glass #focusRoutePage .focus-col-left,html.ff14-bg-glass #focusRoutePage .focus-col-right,html.ff14-bg-glass .server-card,html.ff14-bg-glass .route-monitor-box{background:rgba(var(--panel-rgb,26,26,46),.76)!important;backdrop-filter:blur(15px) saturate(125%);-webkit-backdrop-filter:blur(15px) saturate(125%);border-color:rgba(140,170,215,.25)!important}
+      html.ff14-bg-glass .input-section{background:rgba(var(--panel-rgb,26,26,46),.42)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+      html.ff14-bg-glass .server-card-header{background:rgba(var(--panel-rgb,26,26,46),.48)!important}
+      .ff14-ux-floating-entry{position:fixed;right:14px;bottom:14px;z-index:15000;border:1px solid var(--border);border-radius:999px;background:rgba(var(--panel-rgb,26,26,46),.88);color:var(--text);padding:8px 12px;font-weight:850;font-size:11px;box-shadow:0 5px 20px rgba(0,0,0,.16);cursor:pointer;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+      .ff14-ux-floating-entry:hover{border-color:var(--accent);color:var(--accent)}
+      @media(max-width:680px){.ff14-ux-modal-overlay{padding:8px}.ff14-ux-modal{width:100%;max-height:94vh;border-radius:12px}.ff14-ux-modal-header{padding:15px}.ff14-ux-modal-body{padding:14px}.ff14-ux-grid{grid-template-columns:1fr}.ff14-ux-alias-row{grid-template-columns:1fr 1fr}.ff14-ux-alias-row .ff14-ux-tag{justify-self:start}.ff14-ux-alias-row button{justify-self:end}.ff14-ux-alias-list{max-height:42vh}.ff14-ux-floating-entry{right:8px;bottom:8px}}
+      @media(prefers-reduced-motion:reduce){.ff14-ux-btn{transition:none}.ff14-ux-floating-entry{transition:none}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  // ===== 词库与黑话项目库 =====
+  let projectModal;
+  function buildProjectModal() {
+    if (projectModal) return projectModal;
+    projectModal = createModalShell('ff14AliasProjectModal', '📚 词库与黑话项目库', '自定义别名会保存在当前浏览器，并绑定到现有 S怪、服务器和触发者识别链路；内置词条不会被删除或覆盖。');
+    const body = projectModal.querySelector('.ff14-ux-modal-body');
+    body.innerHTML = `
+      <div class="ff14-ux-grid">
+        <div class="ff14-ux-field"><label for="ff14-alias-type">绑定类型</label><select id="ff14-alias-type" class="ff14-ux-select"><option value="monster">S怪黑话 / OCR纠错别名</option><option value="server">服务器黑话</option><option value="trigger">触发者黑话</option></select></div>
+        <div class="ff14-ux-field"><label for="ff14-alias-target">绑定目标（正式名称）</label><input id="ff14-alias-target" class="ff14-ux-input" list="ff14-alias-target-list" placeholder="先选择或输入正式名称"><datalist id="ff14-alias-target-list"></datalist></div>
+        <div class="ff14-ux-field"><label for="ff14-alias-word">别名 / 黑话</label><input id="ff14-alias-word" class="ff14-ux-input" maxlength="60" placeholder="例如：你自己常用的黑话、OCR易错写法"></div>
+        <div class="ff14-ux-field"><label for="ff14-alias-search">搜索项目库</label><input id="ff14-alias-search" class="ff14-ux-input" placeholder="搜索正式名、别名或目标"></div>
+      </div>
+      <div class="ff14-ux-actions"><button class="ff14-ux-btn primary" id="ff14-alias-add">＋ 添加并绑定</button><button class="ff14-ux-btn" id="ff14-alias-export">导出完整词库 JSON</button><button class="ff14-ux-btn" id="ff14-alias-import">导入词库 JSON</button><button class="ff14-ux-btn" id="ff14-alias-rebind">重新绑定 / 刷新词库</button><input type="file" id="ff14-alias-import-file" accept=".json,application/json" hidden></div>
+      <div class="ff14-ux-note" id="ff14-alias-hint">识别原则：正式名称优先；重名黑话会提示冲突，避免系统随意猜测。新加的 S怪别名会同步进入下拉搜索和排车黑话匹配。触发者目标建议填写“角色名@服务器”。</div>
+      <div class="ff14-ux-stats" id="ff14-alias-stats"></div>
+      <div class="ff14-ux-alias-list" id="ff14-alias-list" aria-live="polite"></div>`;
+
+    const typeSelect = body.querySelector('#ff14-alias-type');
+    const targetInput = body.querySelector('#ff14-alias-target');
+    const targetList = body.querySelector('#ff14-alias-target-list');
+    const aliasInput = body.querySelector('#ff14-alias-word');
+    const searchInput = body.querySelector('#ff14-alias-search');
+
+    function updateTargets() {
+      const type = typeSelect.value;
+      targetList.replaceChildren();
+      let targets = [];
+      if (type === 'monster') targets = S_MONSTERS.map(monster => monster.name);
+      else if (type === 'server') targets = [...ALL_SERVERS];
+      else targets = [...new Set([
+        ...(Array.isArray(DEFAULT_TRIGGERS) ? DEFAULT_TRIGGERS : []), ...(Array.isArray(allTriggers) ? allTriggers : []),
+        ...Object.values(TRIGGER_ALIASES || {}), ...Object.keys(TRIGGER_ALIASES || {}).map(alias => TRIGGER_ALIASES[alias])
+      ])].filter(Boolean);
+      targets.forEach(target => { const option = document.createElement('option'); option.value = target; targetList.appendChild(option); });
+      targetInput.placeholder = type === 'monster' ? '选择 S怪正式名称' : type === 'server' ? '选择服务器正式名称' : '填写角色名@服务器或正式触发者名';
+    }
+
+    function renderRows() {
+      const q = normalizeKey(searchInput.value);
+      const allRows = getAllRows().filter(row => !q || [row.alias, row.target, getTypeLabel(row.type)].some(value => normalizeKey(value).includes(q)));
+      const rowsContainer = body.querySelector('#ff14-alias-list');
+      rowsContainer.replaceChildren();
+      const builtinsCount = allRows.filter(row => row.builtin).length;
+      body.querySelector('#ff14-alias-stats').innerHTML = '';
+      [
+        `匹配 ${allRows.length} 条`,
+        `S怪 ${S_MONSTERS.length} 个`,
+        `自定义绑定 ${aliasLibrary.length} 条`,
+        `内置词条约 ${builtinsCount} 条`
+      ].forEach(label => { const chip = document.createElement('span'); chip.className = 'ff14-ux-stat'; chip.textContent = label; body.querySelector('#ff14-alias-stats').appendChild(chip); });
+      if (!allRows.length) {
+        const empty = document.createElement('div'); empty.className = 'ff14-ux-note'; empty.textContent = '没有找到匹配词条。可在上方添加自己的黑话绑定。'; rowsContainer.appendChild(empty); return;
+      }
+      allRows.slice(0, 500).forEach(row => {
+        const item = document.createElement('div'); item.className = 'ff14-ux-alias-row';
+        const alias = document.createElement('div'); alias.className = 'ff14-ux-alias-word'; alias.textContent = row.alias;
+        const kind = document.createElement('span'); kind.className = 'ff14-ux-tag'; kind.textContent = getTypeLabel(row.type) + (row.builtin ? ' · 现有绑定' : ' · 项目库自定义');
+        const target = document.createElement('div'); target.className = 'ff14-ux-alias-target'; target.textContent = `→ ${row.target}${row.notApplied ? '（未绑定：目标可能已变更或存在冲突）' : ''}`;
+        item.append(alias, kind, target);
+        if (!row.builtin) {
+          const remove = document.createElement('button'); remove.className = 'ff14-ux-btn danger'; remove.type = 'button'; remove.textContent = '移除';
+          remove.title = '只移除本地自定义绑定，不会删除内置词库';
+          remove.addEventListener('click', () => {
+            aliasLibrary = aliasLibrary.filter(entry => !(entry.type === row.type && entry.alias === row.alias && entry.target === row.target));
+            if (persistAliasLibrary()) { renderRows(); safeToast('已移除自定义绑定，内置词条保持不变'); }
+          });
+          item.appendChild(remove);
+        } else {
+          const locked = document.createElement('span'); locked.className = 'ff14-ux-tag'; locked.textContent = '只读'; item.appendChild(locked);
+        }
+        rowsContainer.appendChild(item);
+      });
+      if (allRows.length > 500) {
+        const note = document.createElement('div'); note.className = 'ff14-ux-note'; note.textContent = `结果较多，当前显示前 500 条。请继续输入关键词缩小范围。`; rowsContainer.appendChild(note);
+      }
+    }
+
+    function addAlias() {
+      const type = typeSelect.value;
+      const alias = aliasInput.value.trim();
+      let target = targetInput.value.trim();
+      if (!alias || !target) { safeToast('请填写别名和绑定目标'); return; }
+      if (normalizeKey(alias) === normalizeKey(target)) { safeToast('别名与正式名称相同，无需重复添加'); return; }
+      if (type === 'monster') {
+        const monster = findMonsterTarget(target);
+        if (!monster) { safeToast('未找到该 S怪正式名称，请从提示列表选择'); return; }
+        target = monster.name;
+      } else if (type === 'server') {
+        if (!ALL_SERVERS.includes(target)) { safeToast('未找到该服务器，请从提示列表选择正式名称'); return; }
+      } else {
+        if (!target || target.length > 100) { safeToast('触发者目标无效，请检查内容'); return; }
+      }
+      const duplicateCustom = aliasLibrary.find(entry => entry.type === type && normalizeKey(entry.alias) === normalizeKey(alias));
+      if (duplicateCustom) {
+        if (duplicateCustom.target === target) { safeToast('该绑定已经存在'); return; }
+        safeToast(`这个黑话已绑定到“${duplicateCustom.target}”，请先处理旧绑定，避免识别歧义`); return;
+      }
+      const owners = existingAliasOwners(type, alias);
+      const differentTargets = [...new Set(owners.map(owner => type === 'monster' ? owner.target : owner.target).filter(ownerTarget => ownerTarget !== target))];
+      if (differentTargets.length) {
+        const warning = type === 'monster'
+          ? `“${alias}”已在内置词库中指向其他 S怪：${differentTargets.join('、')}。为避免排车 OCR 误判，本次不添加。`
+          : `“${alias}”已在词库中绑定到其他目标：${differentTargets.join('、')}。为避免覆盖原功能，本次不添加。`;
+        safeToast(warning);
+        return;
+      }
+      if (owners.some(owner => owner.target === target)) { safeToast('该别名已经由内置词库绑定到同一目标'); return; }
+      aliasLibrary.push({ id: `${type}|${normalizeKey(alias)}|${target}`, type, alias, target, createdAt: Date.now() });
+      if (persistAliasLibrary()) {
+        aliasInput.value = '';
+        renderRows();
+        safeToast(`已添加并绑定：${alias} → ${target}`);
+      }
+    }
+
+    body.querySelector('#ff14-alias-add').addEventListener('click', addAlias);
+    aliasInput.addEventListener('keydown', event => { if (event.key === 'Enter') addAlias(); });
+    typeSelect.addEventListener('change', updateTargets);
+    searchInput.addEventListener('input', renderRows);
+    body.querySelector('#ff14-alias-rebind').addEventListener('click', () => { applyAliasLibrary(); renderRows(); safeToast('已重新检查并刷新词库绑定'); });
+    body.querySelector('#ff14-alias-export').addEventListener('click', () => {
+      const payload = {
+        schema: PROJECT_SCHEMA, version: 1, exportedAt: new Date().toISOString(),
+        customAliases: aliasLibrary,
+        builtInSnapshot: {
+          monsters: S_MONSTERS.map(monster => ({ name: monster.name, area: monster.area, version: monster.version, aliases: [...(monster.alias || [])] })),
+          serverAliases: { ...SERVER_ALIASES }, triggerAliases: { ...TRIGGER_ALIASES }
+        }
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob); const link = document.createElement('a');
+      link.href = url; link.download = `FF14_词库黑话项目库_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      safeToast('完整词库项目库已导出（包含内置词库快照与本地绑定）');
+    });
+    const importInput = body.querySelector('#ff14-alias-import-file');
+    body.querySelector('#ff14-alias-import').addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', async () => {
+      const file = importInput.files && importInput.files[0]; if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        const incoming = Array.isArray(parsed) ? parsed : (parsed && (parsed.customAliases || parsed.data?.customAliases));
+        if (!Array.isArray(incoming)) throw new Error('文件中未找到 customAliases 数组');
+        let added = 0, skipped = 0;
+        for (const item of incoming) {
+          if (!item || !['monster','server','trigger'].includes(item.type) || typeof item.alias !== 'string' || typeof item.target !== 'string') { skipped++; continue; }
+          const alias = item.alias.trim(), target = item.target.trim(); if (!alias || !target) { skipped++; continue; }
+          const duplicate = aliasLibrary.some(old => old.type === item.type && normalizeKey(old.alias) === normalizeKey(alias));
+          if (duplicate) { skipped++; continue; }
+          if (item.type === 'monster' && !findMonsterTarget(target)) { skipped++; continue; }
+          if (item.type === 'server' && !ALL_SERVERS.includes(target)) { skipped++; continue; }
+          const owners = existingAliasOwners(item.type, alias);
+          if (owners.length) { skipped++; continue; }
+          aliasLibrary.push({ id: `${item.type}|${normalizeKey(alias)}|${target}`, type: item.type, alias, target, createdAt: Number(item.createdAt) || Date.now() }); added++;
+        }
+        const saved = persistAliasLibrary(); renderRows();
+        safeToast(saved ? `导入完成：新增 ${added} 条，跳过 ${skipped} 条冲突或重复词条` : '导入未保存，请检查本地存储空间');
+      } catch (error) { alert(`导入失败：${error.message || error}`); }
+      finally { importInput.value = ''; }
+    });
+    projectModal.addEventListener('ff14close', () => { projectModal.style.display = 'none'; });
+    projectModal.__refresh = () => { updateTargets(); renderRows(); };
+    updateTargets(); renderRows();
+    return projectModal;
+  }
+
+  window.openAliasProjectLibrary = function openAliasProjectLibrary() {
+    const modal = buildProjectModal();
+    if (modal.__refresh) modal.__refresh();
+    modal.style.display = 'flex';
+    const field = modal.querySelector('#ff14-alias-search');
+    if (field) setTimeout(() => field.focus(), 40);
+  };
+
+  // ===== 背景显示设置 =====
+  const defaultBackgroundSettings = {
+    imageData: '', imageName: '', imageOpacity: 86, dim: 28, blur: 0,
+    fit: 'cover', position: 'center center', glass: true, showOnFocusRoute: true
+  };
+  function loadBackgroundSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(BACKGROUND_STORAGE_KEY) || '{}');
+      return { ...defaultBackgroundSettings, ...(saved && typeof saved === 'object' ? saved : {}) };
+    } catch (_) { return { ...defaultBackgroundSettings }; }
+  }
+  let backgroundSettings = loadBackgroundSettings();
+  let backgroundModal;
+
+  function ensureBackgroundLayers() {
+    if (!document.getElementById('ff14-bg-image-layer')) {
+      const image = document.createElement('div'); image.id = 'ff14-bg-image-layer'; image.setAttribute('aria-hidden', 'true');
+      const dim = document.createElement('div'); dim.id = 'ff14-bg-dim-layer'; dim.setAttribute('aria-hidden', 'true');
+      document.body.insertBefore(dim, document.body.firstChild);
+      document.body.insertBefore(image, document.body.firstChild);
+    }
+  }
+  function applyBackgroundSettings(settings = backgroundSettings) {
+    ensureBackgroundLayers();
+    const root = document.documentElement;
+    const imageLayer = document.getElementById('ff14-bg-image-layer');
+    const dimLayer = document.getElementById('ff14-bg-dim-layer');
+    const hasImage = typeof settings.imageData === 'string' && settings.imageData.startsWith('data:image/');
+    root.classList.toggle('ff14-user-bg-active', hasImage);
+    root.classList.toggle('ff14-bg-glass', hasImage && !!settings.glass);
+    root.classList.toggle('ff14-bg-route-active', hasImage && !!settings.showOnFocusRoute);
+    if (!hasImage) {
+      imageLayer.style.display = 'none'; dimLayer.style.display = 'none';
+      imageLayer.style.backgroundImage = 'none';
+      return;
+    }
+    imageLayer.style.display = 'block'; dimLayer.style.display = 'block';
+    imageLayer.style.backgroundImage = `url("${settings.imageData}")`;
+    imageLayer.style.backgroundSize = settings.fit === 'repeat' ? 'auto' : (settings.fit === 'contain' ? 'contain' : 'cover');
+    imageLayer.style.backgroundRepeat = settings.fit === 'repeat' ? 'repeat' : 'no-repeat';
+    imageLayer.style.backgroundPosition = settings.position || 'center center';
+    imageLayer.style.opacity = String(Math.max(0, Math.min(100, Number(settings.imageOpacity))) / 100);
+    imageLayer.style.filter = `blur(${Math.max(0, Math.min(20, Number(settings.blur) || 0))}px) saturate(108%)`;
+    dimLayer.style.background = `rgba(5, 8, 20, ${Math.max(0, Math.min(85, Number(settings.dim))) / 100})`;
+  }
+
+  function buildBackgroundModal() {
+    if (backgroundModal) return backgroundModal;
+    backgroundModal = createModalShell('ff14BackgroundSettingsModal', '🖼️ 背景显示与磨砂设置', '支持本地图片、强度、遮罩、模糊、显示比例和磨砂面板；图片会压缩后保存在当前浏览器，不会上传到服务器。');
+    const body = backgroundModal.querySelector('.ff14-ux-modal-body');
+    body.innerHTML = `
+      <div id="ff14-bg-preview">选择一张本地图片后，可在这里预览背景效果</div>
+      <div class="ff14-ux-grid">
+        <div class="ff14-ux-field"><label for="ff14-bg-file">背景图片（JPG / PNG / WEBP 等）</label><input id="ff14-bg-file" class="ff14-ux-input" type="file" accept="image/*"><div id="ff14-bg-file-name" class="ff14-ux-file-name">未选择背景图片</div></div>
+        <div class="ff14-ux-field"><label for="ff14-bg-fit">图片显示方式</label><select id="ff14-bg-fit" class="ff14-ux-select"><option value="cover">铺满屏幕（推荐）</option><option value="contain">完整显示图片</option><option value="repeat">平铺显示</option></select></div>
+        <div class="ff14-ux-field"><label>背景图片显示强度</label><div class="ff14-ux-range-row"><input type="range" id="ff14-bg-opacity" min="0" max="100" step="1"><output class="ff14-ux-range-value" id="ff14-bg-opacity-val"></output></div></div>
+        <div class="ff14-ux-field"><label>暗色遮罩（越高越暗，文字越清楚）</label><div class="ff14-ux-range-row"><input type="range" id="ff14-bg-dim" min="0" max="85" step="1"><output class="ff14-ux-range-value" id="ff14-bg-dim-val"></output></div></div>
+        <div class="ff14-ux-field"><label>背景模糊程度</label><div class="ff14-ux-range-row"><input type="range" id="ff14-bg-blur" min="0" max="20" step="1"><output class="ff14-ux-range-value" id="ff14-bg-blur-val"></output></div></div>
+        <div class="ff14-ux-field"><label for="ff14-bg-position">图片对齐位置</label><select id="ff14-bg-position" class="ff14-ux-select"><option value="center center">居中</option><option value="center top">顶部</option><option value="center bottom">底部</option><option value="left center">靠左</option><option value="right center">靠右</option></select></div>
+      </div>
+      <div style="display:flex;gap:15px;flex-wrap:wrap;margin-top:14px">
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800"><input type="checkbox" id="ff14-bg-glass" checked> 开启磨砂透明面板</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800"><input type="checkbox" id="ff14-bg-route" checked> 专注排车页面也显示背景</label>
+      </div>
+      <div class="ff14-ux-note">建议：背景图显示强度 65–90%、暗色遮罩 20–40%、模糊 0–5。若文字不够清楚，可增加遮罩或关闭背景图强度。图片会自动缩放压缩，减少浏览器本地存储占用。</div>
+      <div class="ff14-ux-actions"><button id="ff14-bg-save" class="ff14-ux-btn primary">应用并保存</button><button id="ff14-bg-remove" class="ff14-ux-btn danger">移除背景图片</button><button id="ff14-bg-cancel" class="ff14-ux-btn">取消 / 恢复上次保存</button><button id="ff14-bg-reset" class="ff14-ux-btn">恢复默认背景设置</button></div>`;
+
+    const el = id => body.querySelector('#' + id);
+    function readControls() {
+      return {
+        ...backgroundSettings,
+        imageData: backgroundSettings.imageData,
+        imageName: backgroundSettings.imageName,
+        imageOpacity: Number(el('ff14-bg-opacity').value), dim: Number(el('ff14-bg-dim').value), blur: Number(el('ff14-bg-blur').value),
+        fit: el('ff14-bg-fit').value, position: el('ff14-bg-position').value,
+        glass: el('ff14-bg-glass').checked, showOnFocusRoute: el('ff14-bg-route').checked
+      };
+    }
+    function syncPreview() {
+      const current = readControls();
+      applyBackgroundSettings(current);
+      const preview = el('ff14-bg-preview');
+      preview.textContent = current.imageData ? '' : '选择一张本地图片后，可在这里预览背景效果';
+      preview.style.backgroundImage = current.imageData ? `linear-gradient(rgba(5,8,20,${current.dim / 100}),rgba(5,8,20,${current.dim / 100})),url("${current.imageData}")` : 'none';
+      preview.style.backgroundSize = current.fit === 'repeat' ? 'auto' : current.fit;
+      preview.style.backgroundRepeat = current.fit === 'repeat' ? 'repeat' : 'no-repeat';
+      preview.style.backgroundPosition = current.position;
+      preview.style.opacity = String(Math.max(.25, current.imageOpacity / 100));
+      preview.style.filter = `blur(${Math.min(3, current.blur / 5)}px)`;
+      el('ff14-bg-opacity-val').textContent = `${current.imageOpacity}%`;
+      el('ff14-bg-dim-val').textContent = `${current.dim}%`;
+      el('ff14-bg-blur-val').textContent = `${current.blur}px`;
+      el('ff14-bg-file-name').textContent = current.imageName || (current.imageData ? '已加载背景图片' : '未选择背景图片');
+    }
+    function fillControls(settings) {
+      backgroundSettings = { ...defaultBackgroundSettings, ...settings };
+      el('ff14-bg-opacity').value = backgroundSettings.imageOpacity;
+      el('ff14-bg-dim').value = backgroundSettings.dim;
+      el('ff14-bg-blur').value = backgroundSettings.blur;
+      el('ff14-bg-fit').value = backgroundSettings.fit;
+      el('ff14-bg-position').value = backgroundSettings.position;
+      el('ff14-bg-glass').checked = !!backgroundSettings.glass;
+      el('ff14-bg-route').checked = !!backgroundSettings.showOnFocusRoute;
+      el('ff14-bg-file').value = '';
+      syncPreview();
+    }
+    ['ff14-bg-opacity','ff14-bg-dim','ff14-bg-blur','ff14-bg-fit','ff14-bg-position','ff14-bg-glass','ff14-bg-route'].forEach(id => {
+      el(id).addEventListener('input', syncPreview); el(id).addEventListener('change', syncPreview);
+    });
+    el('ff14-bg-file').addEventListener('change', async () => {
+      const file = el('ff14-bg-file').files && el('ff14-bg-file').files[0]; if (!file) return;
+      if (!file.type.startsWith('image/')) { safeToast('请选择有效的图片文件'); return; }
+      if (file.size > 20 * 1024 * 1024) { safeToast('图片过大，请选择小于 20MB 的图片'); el('ff14-bg-file').value = ''; return; }
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader(); reader.onerror = () => reject(new Error('图片读取失败'));
+          reader.onload = () => resolve(reader.result); reader.readAsDataURL(file);
+        });
+        const compressed = await new Promise((resolve, reject) => {
+          const image = new Image(); image.onerror = () => reject(new Error('无法解析该图片格式'));
+          image.onload = () => {
+            const maxDimension = 1920; const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+            const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
+            const context = canvas.getContext('2d'); if (!context) { reject(new Error('浏览器无法处理图片')); return; }
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            let result = canvas.toDataURL('image/jpeg', .82);
+            if (result.length > 2800000) result = canvas.toDataURL('image/jpeg', .68);
+            resolve(result);
+          };
+          image.src = dataUrl;
+        });
+        backgroundSettings.imageData = compressed; backgroundSettings.imageName = file.name;
+        syncPreview(); safeToast('背景图片已加载，可预览后保存');
+      } catch (error) { alert(`背景图片处理失败：${error.message || error}`); }
+    });
+    el('ff14-bg-save').addEventListener('click', () => {
+      const next = readControls();
+      try {
+        localStorage.setItem(BACKGROUND_STORAGE_KEY, JSON.stringify(next));
+        backgroundSettings = next; applyBackgroundSettings(backgroundSettings);
+        backgroundModal.style.display = 'none'; safeToast('背景显示设置已应用并保存');
+      } catch (error) {
+        safeToast('保存失败：图片可能超出浏览器本地存储容量，请换用更小的图片');
+        console.warn('[FF14 UX] background storage error', error);
+      }
+    });
+    el('ff14-bg-remove').addEventListener('click', () => { backgroundSettings.imageData = ''; backgroundSettings.imageName = ''; syncPreview(); safeToast('背景图片已移除，保存后生效'); });
+    el('ff14-bg-cancel').addEventListener('click', () => { fillControls(loadBackgroundSettings()); backgroundModal.style.display = 'none'; });
+    el('ff14-bg-reset').addEventListener('click', () => { fillControls({ ...defaultBackgroundSettings }); safeToast('已恢复默认预览，点击“应用并保存”后写入设置'); });
+    backgroundModal.addEventListener('ff14close', () => { fillControls(loadBackgroundSettings()); backgroundModal.style.display = 'none'; });
+    backgroundModal.__fill = fillControls;
+    fillControls(backgroundSettings);
+    return backgroundModal;
+  }
+  window.openBackgroundSettings = function openBackgroundSettings() {
+    const modal = buildBackgroundModal(); modal.__fill(loadBackgroundSettings()); modal.style.display = 'flex';
+  };
+
+  // ===== 更新公告：保留既有公告，并向网页版本中追加本次真实变更 =====
+  const UX_CHANGELOG_ITEMS = [
+    '<li><strong>新增词库与黑话项目库</strong>：可为 S怪、服务器、触发者添加自己的别名；自定义内容会保存在本地，并绑定到原来的搜索和排车识别路径。</li>',
+    '<li><strong>别名冲突与 OCR 纠错</strong>：新增与导入时检查重复、冲突和无效目标；搜索支持文本归一化，原匹配无结果时启用保守的编辑距离纠错，歧义候选仍会提示而不乱猜。</li>',
+    '<li><strong>项目库导入 / 导出</strong>：可导出自定义绑定和内置词库快照，也可导入 JSON 并自动跳过重复或冲突条目。</li>',
+    '<li><strong>背景显示升级</strong>：支持本地背景图片、图片强度、暗色遮罩、模糊、显示比例、位置，以及专注排车页背景开关。</li>',
+    '<li><strong>磨砂面板与可读性</strong>：背景图片会经过本地压缩；可搭配磨砂透明面板和遮罩调整观感。图片仅保存在当前浏览器本地。</li>',
+    '<li><strong>细节体验优化</strong>：新增快捷入口、搜索筛选、移动端布局适配、减少动态效果偏好兼容；原计算、计时、记录、OCR 和排车功能保留。</li>'
+  ];
+
+  function mergeChangeLogContent() {
+    const list = document.getElementById('updateContentList');
+    if (!list) return;
+    const saved = localStorage.getItem('ff14_custom_update_text');
+    let prior = saved || '';
+    if (!prior) {
+      const existing = Array.from(list.querySelectorAll('li')).map(item => item.outerHTML).join('');
+      prior = existing;
+    }
+    if (prior && !prior.includes('<li')) {
+      prior = prior.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+        .map(line => `<li><strong>原有更新</strong>：${line.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}</li>`).join('');
+    }
+    list.innerHTML = `${prior}${UX_CHANGELOG_ITEMS.join('')}`;
+    const title = document.querySelector('#updatePreviewModal .update-title');
+    if (title) title.textContent = '✨ 版本更新说明 · 2026.10.27';
+  }
+
+  window.showUXChangeLog = function showUXChangeLog() {
+    mergeChangeLogContent();
+    const modal = document.getElementById('updatePreviewModal');
+    if (modal) modal.style.display = 'flex';
+  };
+  window.closeUpdateModal = function closeUpdateModal() {
+    const modal = document.getElementById('updatePreviewModal'); if (modal) modal.style.display = 'none';
+    try { localStorage.setItem('ff14_update_169_viewed', 'true'); localStorage.setItem(CHANGELOG_VIEWED_KEY, 'true'); } catch (_) {}
+  };
+  window.checkUpdateModal = function checkUpdateModal() {
+    mergeChangeLogContent();
+    try {
+      if (!localStorage.getItem(CHANGELOG_VIEWED_KEY)) {
+        const modal = document.getElementById('updatePreviewModal'); if (modal) modal.style.display = 'flex';
+      }
+    } catch (_) {}
+  };
+
+  function addQuickAccessButtons() {
+    const menu = document.querySelector('.toolbox-menu');
+    if (menu) {
+      const definitions = [
+        { id: 'ff14-ux-project-menu-button', text: '📚 词库与黑话项目库', action: window.openAliasProjectLibrary },
+        { id: 'ff14-ux-background-menu-button', text: '🖼️ 背景显示设置', action: window.openBackgroundSettings },
+        { id: 'ff14-ux-changelog-menu-button', text: '🧾 查看本次更新内容', action: window.showUXChangeLog }
+      ];
+      definitions.forEach(definition => {
+        if (document.getElementById(definition.id)) return;
+        const button = document.createElement('button'); button.id = definition.id; button.type = 'button';
+        const span = document.createElement('span'); span.textContent = definition.text; button.appendChild(span);
+        button.addEventListener('click', definition.action); menu.appendChild(button);
+      });
+    }
+    if (!document.getElementById('ff14-ux-floating-entry')) {
+      const entry = document.createElement('button'); entry.id = 'ff14-ux-floating-entry'; entry.className = 'ff14-ux-floating-entry';
+      entry.type = 'button'; entry.textContent = '⚙ 体验设置'; entry.title = '打开词库项目库与背景显示设置';
+      entry.addEventListener('click', () => window.openAliasProjectLibrary());
+      document.body.appendChild(entry);
+    }
+  }
+
+  function enhanceMonsterSearch() {
+    // 保留原来的下拉 DOM 与选择函数，只增强搜索归一化和区域 / 别名匹配。
+    window.filterDropdownMonsters = function filterDropdownMonstersEnhanced() {
+      const input = document.getElementById('monsterSearchInput');
+      const list = document.getElementById('monsterDropdownList');
+      if (!input || !list) return;
+      const rawQuery = input.value.trim(); const query = normalizeKey(rawQuery);
+      list.querySelectorAll('.dropdown-region-group').forEach(group => {
+        let visibleCount = 0;
+        group.querySelectorAll('.dropdown-item').forEach(item => {
+          const monster = S_MONSTERS.find(entry => entry.name === item.textContent.trim());
+          const haystacks = monster ? [monster.name, monster.area, ...(monster.alias || [])] : [item.textContent];
+          const match = !query || haystacks.some(value => {
+            const key = normalizeKey(value);
+            return key.includes(query) || (query.length >= 3 && query.includes(key));
+          });
+          item.style.display = match ? 'block' : 'none';
+          if (match) visibleCount++;
+        });
+        group.style.display = visibleCount ? 'block' : 'none';
+        if (rawQuery && visibleCount) group.classList.remove('collapsed');
+        if (!rawQuery) group.classList.add('collapsed');
+      });
+    };
+  }
+
+  function enhanceRouteResolver() {
+    if (window.__ff14FuzzyRouteResolverInstalled || typeof window.resolveRouteMonsterText !== 'function') return;
+    const originalResolver = window.resolveRouteMonsterText;
+    window.__ff14FuzzyRouteResolverInstalled = true;
+    function editDistanceBounded(a, b, limit) {
+      const left = Array.from(a), right = Array.from(b);
+      if (Math.abs(left.length - right.length) > limit) return limit + 1;
+      let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+      for (let i = 1; i <= left.length; i++) {
+        const current = [i]; let rowMin = i;
+        for (let j = 1; j <= right.length; j++) {
+          const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+          current[j] = Math.min(current[j - 1] + 1, previous[j] + 1, previous[j - 1] + cost);
+          rowMin = Math.min(rowMin, current[j]);
+        }
+        if (rowMin > limit) return limit + 1;
+        previous = current;
+      }
+      return previous[right.length];
+    }
+    window.resolveRouteMonsterText = function resolveRouteMonsterTextWithOCRFallback(rawValue) {
+      const firstPass = originalResolver.call(this, rawValue);
+      if (firstPass && (firstPass.monster || firstPass.ambiguous)) return firstPass;
+      const raw = String(rawValue == null ? '' : rawValue).normalize('NFKC').toLocaleLowerCase();
+      const tokens = (raw.match(/[a-z0-9]+|[\u3400-\u9fff]{3,}/g) || []).map(normalizeKey).filter(key => key.length >= 3);
+      const full = normalizeKey(raw);
+      if (full.length >= 3 && full.length <= 16 && !tokens.includes(full)) tokens.push(full);
+      if (!tokens.length) return firstPass;
+      const bestByMonster = new Map();
+      for (const monster of (Array.isArray(S_MONSTERS) ? S_MONSTERS : [])) {
+        const aliases = [monster.name, ...(Array.isArray(monster.alias) ? monster.alias : [])];
+        for (const alias of aliases) {
+          const aliasKey = normalizeKey(alias);
+          const aliasLength = Array.from(aliasKey).length;
+          if (aliasLength < 3 || (/^[a-z0-9]+$/i.test(aliasKey) && aliasLength < 4)) continue;
+          const maxDistance = aliasLength >= 10 ? 2 : 1;
+          for (const token of tokens) {
+            const tokenLength = Array.from(token).length;
+            if (tokenLength < 3 || Math.abs(tokenLength - aliasLength) > maxDistance) continue;
+            const distance = editDistanceBounded(token, aliasKey, maxDistance);
+            if (distance > maxDistance) continue;
+            const previous = bestByMonster.get(monster.name);
+            if (!previous || distance < previous.distance) bestByMonster.set(monster.name, { monster, distance, matchedText: alias });
+          }
+        }
+      }
+      if (!bestByMonster.size) return firstPass;
+      const minDistance = Math.min(...[...bestByMonster.values()].map(result => result.distance));
+      const best = [...bestByMonster.values()].filter(result => result.distance === minDistance);
+      if (best.length === 1) {
+        return { monster: best[0].monster, ambiguous: false, candidates: [best[0].monster.name], matchedText: best[0].matchedText, matchedBy: 'ocr-fuzzy-distance-1' };
+      }
+      return { monster: null, ambiguous: true, candidates: best.map(result => result.monster.name), matchedText: '', matchedBy: 'ocr-fuzzy-ambiguous' };
+    };
+  }
+
+  function initializeEnhancements() {
+    injectStyles();
+    ensureBackgroundLayers();
+    applyAliasLibrary();
+    applyBackgroundSettings(backgroundSettings);
+    addQuickAccessButtons();
+    enhanceMonsterSearch();
+    enhanceRouteResolver();
+    // 新版本独立使用新的已读标记，不依赖旧公告是否曾被看过。
+    setTimeout(() => {
+      mergeChangeLogContent();
+      try {
+        if (!localStorage.getItem(CHANGELOG_VIEWED_KEY)) {
+          const modal = document.getElementById('updatePreviewModal'); if (modal) modal.style.display = 'flex';
+        }
+      } catch (_) {}
+    }, 450);
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      [projectModal, backgroundModal].forEach(modal => { if (modal && modal.style.display === 'flex') modal.dispatchEvent(new CustomEvent('ff14close')); });
+    });
+  }
+
+  // 页面已有脚本都位于本增量层前；稍作延迟，避开旧脚本的首轮 UI 初始化。
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(initializeEnhancements, 80), { once: true });
+  else setTimeout(initializeEnhancements, 80);
+})();
+</script>
+
+
+<script>
+/* ================================================================
+ * FF14 UX enhancement layer v2 (append-only)
+ * Keep the original HTML/JS in place; add a compatibility layer only.
+ * ================================================================ */
+(() => {
+  'use strict';
+  if (window.__ff14UXEnhancementLayerV2Loaded) return;
+  window.__ff14UXEnhancementLayerV2Loaded = true;
+
+  const EVENT_KEY = 'ff14_monster_event_history_v2';
+  const TOOLBOX_POS_KEY = 'ff14_toolbox_position_v2';
+  const GLASS_STRENGTH_KEY = 'ff14_liquid_glass_strength_v1';
+  const CHANGELOG_V2_FLAG = 'data-ff14-ux-v2-note';
+  const $ = (id) => document.getElementById(id);
+  const round3 = value => Number.isFinite(Number(value)) ? Math.round(Number(value) * 1000) / 1000 : 0;
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));
+  const safeToast = message => {
+    try { if (typeof window.showToast === 'function') window.showToast(message); else console.info('[FF14 UX v2]', message); }
+    catch (_) { console.info('[FF14 UX v2]', message); }
+  };
+  const parseTime = value => {
+    if (Number.isFinite(Number(value)) && Number(value) > 0) return Number(value);
+    if (!value) return 0;
+    const parsed = new Date(String(value).replace(/-/g, '/')).getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const getLtHours = () => { try { return Number(LT_HOURS) || 48; } catch (_) { return 48; } };
+  const getCdHours = () => { try { return Number(CD_HOURS) || 84; } catch (_) { return 84; } };
+  const fmtDateTime = ms => {
+    const d = new Date(Number(ms));
+    if (!Number.isFinite(d.getTime())) return '时间未知';
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+  };
+  const fmtElapsed = ms => {
+    if (!Number.isFinite(Number(ms))) return '未知';
+    let seconds = Math.max(0, Number(ms)) / 1000;
+    const days = Math.floor(seconds / 86400); seconds -= days * 86400;
+    const hours = Math.floor(seconds / 3600); seconds -= hours * 3600;
+    const minutes = Math.floor(seconds / 60); seconds -= minutes * 60;
+    const sec = seconds.toFixed(3).padStart(6, '0');
+    return `${days ? `${days}天 ` : ''}${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${sec}`;
+  };
+  const escapeHTML = value => String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+  // ---------- Theme: pale green liquid glass ----------
+  function injectV2Styles() {
+    if ($('ff14-ux-v2-style')) return;
+    const style = document.createElement('style');
+    style.id = 'ff14-ux-v2-style';
+    style.textContent = `
+      :root{--ff14-glass-alpha:.74;--ff14-glass-blur:24px}
+      [data-theme="mint"]{--bg:#e6fff1;--panel:#effff7;--panel-rgb:234,255,244;--panel-light:#dff9eb;--accent:#159b68;--text:#153e2e;--text-muted:#557b69;--red:#d84a64;--gold:#b87819;--blue:#218bba;--border:rgba(67,155,119,.24);--purple:#7e63b7;--input-bg:rgba(255,255,255,.48);--input-border:rgba(62,152,113,.34)}
+      html[data-theme="mint"] body{background:radial-gradient(ellipse at 12% 4%,rgba(255,255,255,.96),transparent 33%),radial-gradient(ellipse at 88% 18%,rgba(150,239,196,.50),transparent 34%),linear-gradient(145deg,#eafff4 0%,#d7f8e8 48%,#effff8 100%);background-attachment:fixed}
+      [data-theme="mint"] #focusRoutePage{background:linear-gradient(135deg,rgba(231,255,242,.76),rgba(197,242,219,.67))!important;backdrop-filter:blur(24px) saturate(155%);-webkit-backdrop-filter:blur(24px) saturate(155%)}
+      [data-theme="mint"] .theme-btn.mint{background:linear-gradient(135deg,#d4ffea,#54cc92 48%,#e9fff5);border-color:#159b68}
+      [data-theme="mint"] .manual-card,[data-theme="mint"] .input-section,[data-theme="mint"] .server-card,[data-theme="mint"] .focus-col-left,[data-theme="mint"] .focus-col-right,[data-theme="mint"] .modal-content,[data-theme="mint"] .ff14-ux-modal,[data-theme="mint"] .toolbox-menu,[data-theme="mint"] .floating-window,[data-theme="mint"] .announcement-box,[data-theme="mint"] .route-monitor-box,[data-theme="mint"] .advanced-route-panel{
+        background-image:linear-gradient(138deg,rgba(255,255,255,.78) 0%,rgba(255,255,255,.30) 18%,rgba(216,255,233,.20) 48%,rgba(255,255,255,.12) 76%,rgba(172,239,203,.30) 100%)!important;
+        background-color:rgba(238,255,246,var(--ff14-glass-alpha,.74))!important;background-blend-mode:screen,normal;
+        border:1px solid rgba(255,255,255,.78)!important;box-shadow:0 18px 46px rgba(58,133,97,.14),inset 0 1px 0 rgba(255,255,255,.92),inset 0 -1px 0 rgba(71,164,116,.10)!important;
+        backdrop-filter:blur(var(--ff14-glass-blur,24px)) saturate(168%) brightness(1.035)!important;-webkit-backdrop-filter:blur(var(--ff14-glass-blur,24px)) saturate(168%) brightness(1.035)!important
+      }
+      [data-theme="mint"] .manual-card{border-left:5px solid var(--accent)!important}
+      [data-theme="mint"] .input-section,[data-theme="mint"] .announcement-box,[data-theme="mint"] .advanced-route-panel{background-color:rgba(245,255,249,.48)!important}
+      [data-theme="mint"] .input-section,[data-theme="mint"] .dropdown-item,[data-theme="mint"] .recent-item,[data-theme="mint"] .fate-record-item{box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 8px 22px rgba(60,133,96,.06)}
+      [data-theme="mint"] input,[data-theme="mint"] select,[data-theme="mint"] textarea{background:rgba(255,255,255,.54)!important;border-color:rgba(62,152,113,.29)!important;box-shadow:inset 0 1px 1px rgba(25,93,63,.04)}
+      [data-theme="mint"] .btn-outline{border-color:rgba(52,146,101,.42)!important;background:rgba(255,255,255,.34)!important}
+      [data-theme="mint"] .toolbox-menu button:hover,[data-theme="mint"] .dropdown-item:hover{background:rgba(255,255,255,.72)!important}
+      .ff14-toolbox-launcher{position:fixed;right:16px;bottom:16px;z-index:48000;border:1px solid rgba(255,255,255,.42);border-radius:999px;padding:10px 15px;font:800 12px/1.2 'Segoe UI',sans-serif;color:var(--text);background:linear-gradient(135deg,rgba(255,255,255,.88),rgba(var(--panel-rgb,26,26,46),.72));box-shadow:0 10px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.75);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);cursor:pointer}
+      .ff14-toolbox-launcher:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--accent)}
+      #ff14-floating-toolbox-v2{position:fixed;right:16px;bottom:68px;z-index:48001;width:min(355px,calc(100vw - 20px));max-height:min(78vh,720px);display:none;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.42);border-radius:17px;color:var(--text);background:linear-gradient(145deg,rgba(255,255,255,.60),rgba(var(--panel-rgb,26,26,46),.90));box-shadow:0 24px 70px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.65);backdrop-filter:blur(30px) saturate(160%);-webkit-backdrop-filter:blur(30px) saturate(160%)}
+      #ff14-floating-toolbox-v2.open{display:flex}
+      #ff14-floating-toolbox-v2 .ff14-toolbox-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 12px;border-bottom:1px solid var(--border);cursor:move;touch-action:none;background:linear-gradient(120deg,rgba(255,255,255,.35),transparent)}
+      #ff14-floating-toolbox-v2 .ff14-toolbox-head strong{font-size:13px;color:var(--accent);letter-spacing:.3px}
+      #ff14-floating-toolbox-v2 .ff14-toolbox-head button{border:1px solid var(--border);border-radius:7px;padding:4px 7px;background:rgba(255,255,255,.16);color:var(--text);cursor:pointer;font-weight:800}
+      #ff14-floating-toolbox-v2 .ff14-toolbox-body{overflow:auto;padding:8px;min-height:0}
+      #ff14-floating-toolbox-v2 .toolbox-menu{display:flex!important;position:static!important;inset:auto!important;width:100%!important;min-width:0!important;max-width:none!important;max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+      #ff14-floating-toolbox-v2 .toolbox-menu button{width:100%;margin:2px 0;padding:10px 11px;border-radius:9px;text-align:left;white-space:normal;line-height:1.4}
+      #ff14-floating-toolbox-v2 .toolbox-menu button:hover{background:rgba(255,255,255,.20)}
+      .ff14-image-viewer-toolbar{position:absolute;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:60010;display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100vw - 90px);padding:9px 12px;border:1px solid rgba(255,255,255,.22);border-radius:14px;color:#fff;background:rgba(8,13,24,.75);box-shadow:0 12px 30px rgba(0,0,0,.35);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+      .ff14-image-viewer-toolbar button{border:1px solid rgba(255,255,255,.22);border-radius:7px;padding:6px 9px;background:rgba(255,255,255,.10);color:#fff;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+      .ff14-image-viewer-toolbar button:hover{background:rgba(255,255,255,.23)}
+      .ff14-image-viewer-toolbar input{width:90px;accent-color:#8ae8bf}
+      #imageViewerModal{z-index:60000!important;background:rgba(4,8,16,.90)!important;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+      #imageViewerModal>div{overflow:auto!important;padding:82px 12px 18px!important;align-items:center!important;overscroll-behavior:contain}
+      #originalImageViewer{max-width:min(92vw,1800px)!important;max-height:calc(100vh - 112px)!important;object-fit:contain;transform-origin:center center;user-select:none;-webkit-user-drag:none;cursor:grab}
+      #ff14-route-preview-card{display:flex;flex-direction:column;gap:7px;margin-top:10px;padding:8px;border:1px solid var(--border);border-radius:10px;background:rgba(var(--panel-rgb,26,26,46),.58);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+      #ff14-route-preview-card img{display:block;width:100%;height:clamp(95px,18vh,180px);object-fit:contain;background:rgba(0,0,0,.75);border-radius:7px;cursor:zoom-in}
+      #ff14-route-preview-card .ff14-preview-actions{display:flex;gap:7px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:11px;color:var(--text-muted)}
+      .ff14-live-statline{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:7px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:rgba(var(--panel-rgb,26,26,46),.35);font-size:11px;line-height:1.55;color:var(--text-muted)}
+      .ff14-live-statline strong{color:var(--accent);font-weight:900}
+      .ff14-clickable-history{cursor:pointer!important;border-radius:7px;transition:background .15s}
+      .ff14-clickable-history:hover{background:rgba(0,191,255,.09)}
+      #ff14-monster-history-modal{position:fixed;inset:0;z-index:61000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(3,8,18,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+      #ff14-monster-history-modal .ff14-history-panel{width:min(920px,96vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.28);border-radius:16px;background:rgba(var(--panel-rgb,26,26,46),.94);color:var(--text);box-shadow:0 24px 80px rgba(0,0,0,.46);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px)}
+      #ff14-monster-history-modal .ff14-history-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}
+      #ff14-monster-history-modal .ff14-history-title{font-size:18px;font-weight:900;color:var(--accent);line-height:1.35}
+      #ff14-monster-history-modal .ff14-history-subtitle{font-size:12px;color:var(--text-muted);margin-top:4px}
+      #ff14-monster-history-modal .ff14-history-controls{display:flex;gap:7px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--border)}
+      #ff14-monster-history-modal .ff14-history-controls button{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--panel-light);color:var(--text);cursor:pointer;font-size:12px;font-weight:800}
+      #ff14-monster-history-modal .ff14-history-controls button.active{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+      #ff14-monster-history-modal .ff14-history-list{padding:12px 16px 18px;overflow:auto;min-height:100px}
+      #ff14-monster-history-modal .ff14-history-event{margin-bottom:9px;border:1px solid var(--border);border-radius:10px;background:rgba(var(--panel-rgb,26,26,46),.44);overflow:hidden}
+      #ff14-monster-history-modal .ff14-history-event summary{list-style:none;display:grid;grid-template-columns:minmax(90px,.7fr) minmax(160px,1.2fr) minmax(110px,.8fr);gap:8px;align-items:center;padding:11px 12px;cursor:pointer}
+      #ff14-monster-history-modal .ff14-history-event summary::-webkit-details-marker{display:none}
+      #ff14-monster-history-modal .ff14-history-event[open] summary{border-bottom:1px solid var(--border);background:rgba(255,255,255,.045)}
+      .ff14-history-type{font-size:11px;font-weight:900;padding:4px 7px;border-radius:6px;white-space:nowrap;width:max-content}
+      .ff14-history-type.ship{color:var(--accent);background:rgba(0,200,120,.13);border:1px solid rgba(0,200,120,.30)}
+      .ff14-history-type.fail{color:var(--red);background:rgba(255,70,80,.12);border:1px solid rgba(255,70,80,.28)}
+      .ff14-history-event-detail{padding:11px 13px;font-size:12px;line-height:1.8;color:var(--text-muted)}
+      .ff14-history-event-detail strong{color:var(--text)}
+      .ff14-history-empty{padding:30px 16px;text-align:center;color:var(--text-muted);font-size:13px}
+      @media(max-width:650px){.ff14-image-viewer-toolbar{gap:5px;padding:7px;width:auto}.ff14-image-viewer-toolbar input{width:65px}#ff14-monster-history-modal{padding:7px}#ff14-monster-history-modal .ff14-history-event summary{grid-template-columns:1fr;gap:5px}.ff14-toolbox-launcher{right:9px;bottom:9px}#ff14-floating-toolbox-v2{right:9px;bottom:58px}}
+      @media(prefers-reduced-motion:reduce){#originalImageViewer,.ff14-toolbox-launcher{transition:none!important}}
+    `;
+    document.head.appendChild(style);
+    const strength = clamp(localStorage.getItem(GLASS_STRENGTH_KEY) || 74, 0, 100);
+    applyGlassStrength(strength);
+  }
+  function applyGlassStrength(value) {
+    const strength = clamp(value, 0, 100);
+    document.documentElement.style.setProperty('--ff14-glass-alpha', String(0.42 + strength / 100 * 0.42));
+    document.documentElement.style.setProperty('--ff14-glass-blur', `${8 + strength * 0.27}px`);
+    document.documentElement.style.setProperty('--ff14-liquid-glass-strength', String(strength));
+  }
+  function ensureMintThemeButton() {
+    const switcher = document.querySelector('.theme-switcher');
+    if (!switcher || document.querySelector('.theme-btn.mint')) return;
+    const button = document.createElement('div');
+    button.className = 'theme-btn mint'; button.title = '浅绿液态玻璃'; button.setAttribute('role','button'); button.setAttribute('aria-label','浅绿液态玻璃主题'); button.tabIndex = 0;
+    button.addEventListener('click', () => window.changeTheme('mint'));
+    button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.changeTheme('mint'); } });
+    switcher.appendChild(button);
+  }
+  const originalChangeTheme = window.changeTheme;
+  if (typeof originalChangeTheme === 'function') {
+    window.changeTheme = function changeThemeWithMint(theme, ...args) {
+      if (theme === 'mint') {
+        document.documentElement.setAttribute('data-theme', 'mint');
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.toggle('active', btn.classList.contains('mint')));
+        try { localStorage.setItem('ff14_theme', 'mint'); } catch (_) {}
+        applyGlassStrength(localStorage.getItem(GLASS_STRENGTH_KEY) || 74);
+        return;
+      }
+      const result = originalChangeTheme.call(this, theme, ...args);
+      ensureMintThemeButton();
+      applyGlassStrength(localStorage.getItem(GLASS_STRENGTH_KEY) || 74);
+      return result;
+    };
+  } else {
+    window.changeTheme = function(theme){ document.documentElement.setAttribute('data-theme',theme==='dark'?'':theme); try{localStorage.setItem('ff14_theme',theme)}catch(_){};ensureMintThemeButton(); };
+  }
+  ensureMintThemeButton();
+
+  // ---------- Better original-image viewer and compact OCR preview ----------
+  function openImageData(dataUrl) {
+    if (!dataUrl) return;
+    const modal = $('imageViewerModal'), image = $('originalImageViewer');
+    if (!modal || !image) return;
+    image.src = dataUrl;
+    image.style.maxWidth = 'min(92vw,1800px)'; image.style.maxHeight = 'calc(100vh - 112px)';
+    image.style.width = 'auto'; image.style.height = 'auto'; image.style.transform = 'translate(0px,0px) scale(1)';
+    image.dataset.zoom = '1'; image.dataset.panX = '0'; image.dataset.panY = '0'; image.dataset.originalMode = 'fit';
+    modal.style.display = 'flex';
+  }
+  function initImageViewer() {
+    const modal = $('imageViewerModal'), image = $('originalImageViewer');
+    if (!modal || !image || modal.dataset.ff14V2Viewer) return;
+    modal.dataset.ff14V2Viewer = '1';
+    const toolbar = document.createElement('div');
+    toolbar.className = 'ff14-image-viewer-toolbar'; toolbar.innerHTML = `
+      <button type="button" data-action="fit">适应窗口</button><button type="button" data-action="actual">原始大小</button>
+      <button type="button" data-action="minus">−</button><input aria-label="图片缩放比例" type="range" min="25" max="300" step="5" value="100"><button type="button" data-action="plus">＋</button>
+      <button type="button" data-action="reset">重置</button><span data-zoom-label style="font:800 11px monospace;min-width:42px;text-align:center">100%</span>`;
+    toolbar.addEventListener('click', event => event.stopPropagation());
+    toolbar.addEventListener('pointerdown', event => event.stopPropagation());
+    modal.appendChild(toolbar);
+    const viewport = image.parentElement;
+    let panX = 0, panY = 0, zoom = 1, dragging = false, startX = 0, startY = 0, baseX = 0, baseY = 0, actualMode = false;
+    const slider = toolbar.querySelector('input'); const zoomLabel = toolbar.querySelector('[data-zoom-label]');
+    function fit() { actualMode = false; panX = 0; panY = 0; zoom = 1; image.style.width='auto'; image.style.height='auto'; image.style.maxWidth='min(92vw,1800px)'; image.style.maxHeight='calc(100vh - 112px)'; paint(); }
+    function paint() { image.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`; image.style.cursor = zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in'; slider.value = String(Math.round(zoom*100)); zoomLabel.textContent = `${Math.round(zoom*100)}%`; image.dataset.zoom=String(zoom); image.dataset.panX=String(panX); image.dataset.panY=String(panY); }
+    function setZoom(next) { zoom = clamp(next,.25,3); paint(); }
+    toolbar.addEventListener('click', event => {
+      const button = event.target.closest('button'); if(!button) return;
+      const action = button.dataset.action;
+      if(action==='fit'||action==='reset') fit();
+      else if(action==='actual') { actualMode=true;panX=0;panY=0;image.style.maxWidth='none';image.style.maxHeight='none';image.style.width='auto';image.style.height='auto';setZoom(1);viewport.scrollTop=0;viewport.scrollLeft=0; }
+      else if(action==='minus') setZoom(zoom-.15);
+      else if(action==='plus') setZoom(zoom+.15);
+    });
+    slider.addEventListener('input', () => setZoom(Number(slider.value)/100));
+    image.addEventListener('dblclick', event => { event.stopPropagation(); if(zoom===1) setZoom(1.75); else fit(); });
+    image.addEventListener('pointerdown', event => { if(zoom<=1) return; dragging=true;startX=event.clientX;startY=event.clientY;baseX=panX;baseY=panY;image.setPointerCapture?.(event.pointerId);paint();event.stopPropagation(); });
+    image.addEventListener('pointermove', event => { if(!dragging) return;panX=baseX+(event.clientX-startX);panY=baseY+(event.clientY-startY);paint(); });
+    image.addEventListener('pointerup', () => {dragging=false;paint();});
+    image.addEventListener('pointercancel', () => {dragging=false;paint();});
+    viewport.addEventListener('wheel', event => { if(modal.style.display!=='flex') return; event.preventDefault();setZoom(zoom+(event.deltaY<0?.08:-.08)); }, {passive:false});
+    modal.addEventListener('click', event => { if(event.target===modal) window.closeImageViewer?.(); });
+    const originalClose = window.closeImageViewer;
+    window.closeImageViewer = function closeImageViewerV2(...args) { modal.style.display='none'; if(typeof originalClose==='function') { try { originalClose.apply(this,args); } catch(_){} } };
+    document.addEventListener('keydown', event => { if(modal.style.display!=='flex') return; if(event.key==='Escape') window.closeImageViewer(); else if(event.key==='+'||event.key==='=') setZoom(zoom+.15); else if(event.key==='-') setZoom(zoom-.15); else if(event.key==='0') fit(); });
+    const originalOpen = window.openRouteOriginalImage;
+    window.openRouteOriginalImage = function openRouteOriginalImageV2(...args) {
+      if(window.__ff14OriginalRouteImageData) { openImageData(window.__ff14OriginalRouteImageData); return; }
+      if(typeof originalOpen==='function') return originalOpen.apply(this,args);
+    };
+    window.openOriginalImageModal = function openOriginalImageModalV2(...args) {
+      if(window.__ff14OriginalRouteImageData) { openImageData(window.__ff14OriginalRouteImageData); return; }
+      if(typeof window.openRouteOriginalImage==='function') return window.openRouteOriginalImage(...args);
+    };
+  }
+  function fileToDataURL(file) {
+    return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('图片读取失败'));reader.onload=()=>resolve(String(reader.result||''));reader.readAsDataURL(file);});
+  }
+  function showCompactRoutePreview(dataUrl, fileName='排车截图') {
+    const area = $('routeUploadArea'); if (!area || !dataUrl) return;
+    let card = $('ff14-route-preview-card');
+    if (!card) {
+      card = document.createElement('div'); card.id='ff14-route-preview-card';
+      card.innerHTML = `<img alt="排车截图预览"><div class="ff14-preview-actions"><span class="ff14-preview-file"></span><span style="display:flex;gap:6px"><button class="btn btn-outline ff14-preview-open" type="button" style="padding:5px 8px;font-size:11px">放大查看 / 缩放</button><button class="btn btn-outline ff14-preview-hide" type="button" style="padding:5px 8px;font-size:11px">收起预览</button></span></div>`;
+      const image=card.querySelector('img');
+      image.addEventListener('click',event=>{event.stopPropagation();openImageData(window.__ff14OriginalRouteImageData||image.src);});
+      card.querySelector('.ff14-preview-open').addEventListener('click',event=>{event.stopPropagation();openImageData(window.__ff14OriginalRouteImageData||image.src);});
+      card.querySelector('.ff14-preview-hide').addEventListener('click',event=>{event.stopPropagation();card.style.display='none';});
+      card.addEventListener('click',event=>event.stopPropagation());
+      area.appendChild(card);
+    }
+    card.style.display='flex';card.querySelector('img').src=dataUrl;card.querySelector('.ff14-preview-file').textContent=`${fileName} · 点击图片可放大查看`;
+  }
+  function captureRouteFile(file) {
+    if(!file || !String(file.type||'').startsWith('image/')) return;
+    fileToDataURL(file).then(data=>{window.__ff14OriginalRouteImageData=data;showCompactRoutePreview(data,file.name||'粘贴的排车截图');}).catch(error=>console.warn('[FF14 UX v2] preview error',error));
+  }
+  function initRouteImagePreview() {
+    const input=$('routeFileInput');if(input&&!input.dataset.ff14V2Preview){input.dataset.ff14V2Preview='1';input.addEventListener('change',()=>{const file=input.files&&input.files[0];if(file)captureRouteFile(file);});}
+    const page=$('focusRoutePage');if(page&&!page.dataset.ff14V2Preview){page.dataset.ff14V2Preview='1';page.addEventListener('paste',event=>{const items=event.clipboardData&&event.clipboardData.items;if(!items)return;for(const item of items){if(item.kind==='file'&&item.type&&item.type.startsWith('image/')){captureRouteFile(item.getAsFile());break;}}});}
+  }
+
+  // ---------- Floating toolbox: move the original menu, keep all its handlers ----------
+  function initFloatingToolbox() {
+    if ($('ff14-floating-toolbox-v2')) return;
+    const menu=document.querySelector('.toolbox-wrapper .toolbox-menu');
+    const wrapper=document.querySelector('.toolbox-wrapper');
+    const topButton=wrapper&&wrapper.querySelector('button');
+    if(!menu||!wrapper||!topButton)return;
+    const panel=document.createElement('section');panel.id='ff14-floating-toolbox-v2';panel.setAttribute('aria-label','可拖动工具箱悬浮窗');
+    panel.innerHTML=`<header class="ff14-toolbox-head"><strong>🛠️ 工具箱 · 可拖动</strong><span style="display:flex;gap:5px"><button type="button" data-act="reset" title="恢复默认位置">⌖</button><button type="button" data-act="close" title="收起">×</button></span></header><div class="ff14-toolbox-body"></div>`;
+    panel.querySelector('.ff14-toolbox-body').appendChild(menu);document.body.appendChild(panel);
+    const launcher=document.createElement('button');launcher.type='button';launcher.id='ff14-toolbox-launcher-v2';launcher.className='ff14-toolbox-launcher';launcher.textContent='🛠️ 工具箱';launcher.title='打开可拖动的工具箱悬浮窗';document.body.appendChild(launcher);
+    const existingSettings=$('ff14-ux-floating-entry');if(existingSettings){existingSettings.style.right='144px';existingSettings.style.bottom='16px';existingSettings.style.zIndex='48000';existingSettings.title='直接打开词库与黑话项目库';}
+    menu.style.display='flex';
+    function loadPosition(){try{const p=JSON.parse(localStorage.getItem(TOOLBOX_POS_KEY)||'null');if(p&&Number.isFinite(p.left)&&Number.isFinite(p.top)){panel.style.left=`${clamp(p.left,0,Math.max(0,innerWidth-panel.offsetWidth))}px`;panel.style.top=`${clamp(p.top,0,Math.max(0,innerHeight-80))}px`;panel.style.right='auto';panel.style.bottom='auto';}}catch(_){}}
+    function savePosition(){const rect=panel.getBoundingClientRect();try{localStorage.setItem(TOOLBOX_POS_KEY,JSON.stringify({left:Math.round(rect.left),top:Math.round(rect.top)}));}catch(_){}}
+    function toggle(){panel.classList.toggle('open');if(panel.classList.contains('open'))loadPosition();}
+    launcher.addEventListener('click',toggle);
+    topButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();toggle();});
+    panel.querySelector('[data-act="close"]').addEventListener('click',()=>panel.classList.remove('open'));
+    panel.querySelector('[data-act="reset"]').addEventListener('click',()=>{panel.style.left='auto';panel.style.top='auto';panel.style.right='16px';panel.style.bottom='68px';try{localStorage.removeItem(TOOLBOX_POS_KEY)}catch(_){};safeToast('工具箱已恢复右下角默认位置');});
+    const head=panel.querySelector('.ff14-toolbox-head');let dragging=false,startX=0,startY=0,baseLeft=0,baseTop=0;
+    head.addEventListener('pointerdown',event=>{if(event.target.closest('button'))return;dragging=true;const rect=panel.getBoundingClientRect();baseLeft=rect.left;baseTop=rect.top;startX=event.clientX;startY=event.clientY;panel.style.left=`${rect.left}px`;panel.style.top=`${rect.top}px`;panel.style.right='auto';panel.style.bottom='auto';head.setPointerCapture?.(event.pointerId);event.preventDefault();});
+    head.addEventListener('pointermove',event=>{if(!dragging)return;const left=clamp(baseLeft+event.clientX-startX,0,Math.max(0,innerWidth-panel.offsetWidth));const top=clamp(baseTop+event.clientY-startY,0,Math.max(0,innerHeight-60));panel.style.left=`${left}px`;panel.style.top=`${top}px`;});
+    const endDrag=()=>{if(!dragging)return;dragging=false;savePosition();};head.addEventListener('pointerup',endDrag);head.addEventListener('pointercancel',endDrag);
+    window.addEventListener('resize',()=>{if(!panel.classList.contains('open'))return;const rect=panel.getBoundingClientRect();panel.style.left=`${clamp(rect.left,0,Math.max(0,innerWidth-panel.offsetWidth))}px`;panel.style.top=`${clamp(rect.top,0,Math.max(0,innerHeight-60))}px`;savePosition();});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&panel.classList.contains('open'))panel.classList.remove('open');});
+    // Keep the original drop-down controls, only change where their existing DOM is displayed.
+    wrapper.addEventListener('mouseenter',()=>{});
+  }
+
+  // ---------- Local event history: shipment and failed attempts ----------
+  let monsterEvents=[];
+  function loadMonsterEvents(){try{const value=JSON.parse(localStorage.getItem(EVENT_KEY)||'[]');monsterEvents=Array.isArray(value)?value.filter(e=>e&&['ship','fail'].includes(e.type)&&e.name&&Number(e.timeMs)>0):[];}catch(_){monsterEvents=[];}}
+  function estimateForEvent(name){try{const monster=(Array.isArray(S_MONSTERS)?S_MONSTERS:[]).find(item=>item.name===name);if(window.__predictor&&monster){const stats=window.__predictor.expectedLivingMinutes(name,monster.version||'6.0');return round3(stats.expectedLivingMin||0);}}catch(_){}return 0;}
+  function eventExists(event){return monsterEvents.some(old=>old.type===event.type&&old.name===event.name&&old.server===event.server&&Math.abs(Number(old.timeMs)-Number(event.timeMs))<=1800);}
+  function persistEvents(){try{monsterEvents.sort((a,b)=>b.timeMs-a.timeMs);if(monsterEvents.length>5000)monsterEvents.length=5000;localStorage.setItem(EVENT_KEY,JSON.stringify(monsterEvents));}catch(error){console.warn('[FF14 UX v2] event history storage error',error);}}
+  function addMonsterEvent(input){
+    if(!input||!['ship','fail'].includes(input.type)||!input.name)return null;
+    const timeMs=parseTime(input.timeMs)||Date.now();const gateTimeMs=parseTime(input.gateTimeMs)||0;const forceTimeMs=parseTime(input.forceTimeMs)||0;
+    const elapsedMin=gateTimeMs&&timeMs>=gateTimeMs?round3((timeMs-gateTimeMs)/60000):Number.isFinite(Number(input.elapsedMin))?round3(input.elapsedMin):null;
+    const expected=estimateForEvent(input.name);const progressPct=elapsedMin!==null&&expected>0?round3(elapsedMin/expected*100):(Number.isFinite(Number(input.progressPct))?round3(input.progressPct):null);
+    const event={type:input.type,name:String(input.name),server:String(input.server||'未知'),area:String(input.area||''),timeMs,gateTimeMs:gateTimeMs||null,forceTimeMs:forceTimeMs||null,elapsedMin,progressPct,failCount:Number(input.failCount)||0,source:String(input.source||(input.type==='ship'?'本地出货记录':'本地寄了记录')),version:String(input.version||''),createdAt:Date.now()};
+    if(eventExists(event))return null;
+    monsterEvents.unshift(event);persistEvents();return event;
+  }
+  function hydrateOldLocalHistory(){
+    try{
+      if(Array.isArray(allKillRecords))allKillRecords.forEach(record=>{
+        if(!record||!record.name)return;
+        addMonsterEvent({type:'ship',name:record.name,server:record.server,area:record.area,timeMs:record.killTimeMs||parseTime(record.time),gateTimeMs:record.triggerTimeMs||0,progressPct:record.livingMin&&estimateForEvent(record.name)>0?Number(record.livingMin)/estimateForEvent(record.name)*100:null,source:'旧版出货记录迁入'});
+      });
+    }catch(_){}
+    try{
+      if(Array.isArray(recentRecords))recentRecords.forEach(record=>{
+        if(!record||!record.name)return;
+        if(record.shippedTimeMs)addMonsterEvent({type:'ship',name:record.name,server:record.server,area:record.area,timeMs:record.shippedTimeMs,gateTimeMs:record.gateTimeMs,forceTimeMs:record.forceTimeMs,source:'旧版当前记录迁入'});
+        if(record.failedTimeMs)addMonsterEvent({type:'fail',name:record.name,server:record.server,area:record.area,timeMs:record.failedTimeMs,gateTimeMs:record.gateTimeMs,forceTimeMs:record.forceTimeMs,failCount:record.failCount,source:record.isAutoFailed?'旧版自动超时记录迁入':'旧版寄了记录迁入'});
+      });
+    }catch(_){}
+    persistEvents();
+  }
+  function eventStats(name,server=null){const list=monsterEvents.filter(event=>event.name===name&&(!server||event.server===server));return {ship:list.filter(e=>e.type==='ship').length,fail:list.filter(e=>e.type==='fail').length,total:list.length,list};}
+  function median(values){const list=values.filter(value=>Number.isFinite(value)&&value>0).sort((a,b)=>a-b);if(!list.length)return 0;const middle=Math.floor(list.length/2);return round3(list.length%2?list[middle]:(list[middle-1]+list[middle])/2);}
+  function inferRetryDelayMinutes(name,server,expectedLivingMin,currentFailCount=0){
+    const relevant=monsterEvents.filter(event=>event.name===name&&(!server||event.server===server)).sort((a,b)=>a.timeMs-b.timeMs);
+    const afterFail=[];
+    for(const ship of relevant.filter(event=>event.type==='ship'&&event.gateTimeMs)){
+      const preceding=relevant.filter(event=>event.type==='fail'&&event.gateTimeMs&&event.timeMs<ship.timeMs&&Math.abs(event.gateTimeMs-ship.gateTimeMs)<=10*60000);
+      if(!preceding.length)continue;
+      const lastFail=preceding[preceding.length-1];const gap=(ship.timeMs-lastFail.timeMs)/60000;if(gap>=1&&gap<=360)afterFail.push(gap);
+    }
+    const learned=median(afterFail);if(learned)return learned;
+    const failIntervals=[];const fails=relevant.filter(e=>e.type==='fail');
+    for(let i=1;i<fails.length;i++){const gap=(fails[i].timeMs-fails[i-1].timeMs)/60000;if(gap>=10&&gap<=360)failIntervals.push(gap);}
+    const interval=median(failIntervals);if(interval)return interval;
+    return round3(clamp((Number(expectedLivingMin)||180)*.08+Math.max(0,currentFailCount-1)*5,10,180));
+  }
+  function syncRecentEvents(){
+    try{if(!Array.isArray(recentRecords))return;recentRecords.forEach(record=>{
+      if(!record||!record.name)return;
+      if(record.shipped&&record.shippedTimeMs)addMonsterEvent({type:'ship',name:record.name,server:record.server,area:record.area,timeMs:record.shippedTimeMs,gateTimeMs:record.gateTimeMs,forceTimeMs:record.forceTimeMs,source:'卡片本次出货'});
+      if(record.failedTimeMs&&record.failed)addMonsterEvent({type:'fail',name:record.name,server:record.server,area:record.area,timeMs:record.failedTimeMs,gateTimeMs:record.gateTimeMs,forceTimeMs:record.forceTimeMs,failCount:record.failCount,source:record.isAutoFailed?'自动超时寄了':'卡片寄了'});
+    });}catch(_){}
+  }
+  function wrapHistoryFunctions(){
+    if(typeof window.addAllKillRecord==='function'&&!window.addAllKillRecord.__ff14V2Wrapped){
+      const original=window.addAllKillRecord;
+      const wrapper=function(server,name,area,progress,extra,...rest){
+        const result=original.call(this,server,name,area,progress,extra,...rest);
+        try{const rec=result||{};addMonsterEvent({type:'ship',name:rec.name||name,server:rec.server||server,area:rec.area||area,timeMs:rec.killTimeMs||parseTime(rec.time)||Date.now(),gateTimeMs:rec.triggerTimeMs||(extra&&extra.triggerTimeMs),forceTimeMs:rec.forceTimeMs,elapsedMin:rec.livingMin,source:String(progress||'出货记录'),version:rec.version});}catch(error){console.warn('[FF14 UX v2] shipment history error',error);}
+        return result;
+      };wrapper.__ff14V2Wrapped=true;wrapper.__original=original;window.addAllKillRecord=wrapper;
+    }
+    if(typeof window.reportFail==='function'&&!window.reportFail.__ff14V2Wrapped){
+      const original=window.reportFail;
+      const wrapper=function(idx,...args){
+        const record=(typeof recentRecords!=='undefined'&&recentRecords[idx])?recentRecords[idx]:null;
+        const beforeTime=record&&record.failedTimeMs;const beforeCount=Number(record&&record.failCount)||0;
+        const result=original.apply(this,[idx,...args]);
+        if(record){const count=Number(record.failCount)||0;if(record.failedTimeMs&&(record.failedTimeMs!==beforeTime||count>beforeCount))addMonsterEvent({type:'fail',name:record.name,server:record.server,area:record.area,timeMs:record.failedTimeMs,gateTimeMs:record.gateTimeMs,forceTimeMs:record.forceTimeMs,failCount:count,source:record.isAutoFailed?'自动超时寄了':'手动寄了'});}
+        return result;
+      };wrapper.__ff14V2Wrapped=true;wrapper.__original=original;window.reportFail=wrapper;
+    }
+  }
+
+  // ---------- Accurate predictor display and failure-aware forecast ----------
+  function wrapPredictor(){
+    const predictor=window.__predictor;if(!predictor||predictor.__ff14V2Wrapped)return;
+    predictor.__ff14V2Wrapped=true;
+    const baseExpected=typeof predictor.expectedLivingMinutes==='function'?predictor.expectedLivingMinutes.bind(predictor):null;
+    if(baseExpected){predictor.expectedLivingMinutes=function(name,version){const stats=baseExpected(name,version);return {...stats,expectedLivingMin:round3(stats.expectedLivingMin),stddev:round3(stats.stddev),median:round3(stats.median),mean:round3(stats.mean),prior:round3(stats.prior),confidence:round3(stats.confidence)};};}
+    const basePredict=typeof predictor.predict==='function'?predictor.predict.bind(predictor):null;
+    if(basePredict)predictor.predict=function(ctx){
+      const output=basePredict(ctx||{});if(!output)return output;
+      const now=Date.now();const name=ctx&&ctx.name;const gate=parseTime(ctx&&ctx.gateTimeMs);const force=parseTime(ctx&&ctx.forceTimeMs);
+      let expected=round3(output.stats&&output.stats.expectedLivingMin||0);
+      if(name){const stats=eventStats(name);output.stats.failureCount=stats.fail;output.stats.shipmentCount=stats.ship;output.stats.failureRate=stats.total?round3(stats.fail/stats.total*100):0;output.stats.retryDelayMin=inferRetryDelayMinutes(name,null,expected,stats.fail);}
+      let target=Number(output.predictedKillMs)||now;
+      if(name&&gate&&ctx&&ctx.isGreen&&!Number.isFinite(Number(ctx.nextPredictedKillMs))){
+        let current=null;
+        try{current=(typeof recentRecords!=='undefined'?recentRecords:[]).filter(record=>record&&record.name===name&&record.isGreen&&record.failed&&!record.shipped&&record.failedTimeMs&&record.gateTimeMs&&Math.abs(Number(record.gateTimeMs)-gate)<60000).sort((a,b)=>Math.abs(a.gateTimeMs-gate)-Math.abs(b.gateTimeMs-gate))[0]||null;}catch(_){}
+        if(current){
+          const delay=inferRetryDelayMinutes(name,current.server,expected,current.failCount||1);
+          const failureFloor=Number(current.failedTimeMs)+delay*60000;
+          target=Math.max(target,failureFloor);
+          if(force)target=Math.min(target,force);
+          if(target!==Number(output.predictedKillMs)){
+            output.predictedKillMs=target;output.predictedKillTime=new Date(target);output.remainingMs=Math.max(0,target-now);output.isOverdue=now>target;
+            output.progressPct=target>gate?round3(clamp((now-gate)/(target-gate)*100,0,200)):200;
+            output.elapsedLivingMin=round3(Math.max(0,(now-gate)/60000));output.isTail=output.progressPct>=150;
+            output.stats.retryDelayMin=round3(delay);output.stats.failureAdjusted=true;
+          }
+        }
+      }
+      output.progressPct=round3(output.progressPct);output.elapsedLivingMin=round3(output.elapsedLivingMin);output.remainingMs=Math.max(0,Math.round(Number(output.remainingMs)||0));
+      output.stats=output.stats||{};for(const key of ['expectedLivingMin','stddev','median','mean','prior','confidence','retryDelayMin','failureRate'])if(Number.isFinite(Number(output.stats[key])))output.stats[key]=round3(output.stats[key]);
+      return output;
+    };
+  }
+
+  // ---------- Clickable history inside each monster detail card ----------
+  let historyModal=null;let currentHistoryFilter={name:'',server:null,type:'all'};
+  function ensureHistoryModal(){
+    if(historyModal)return historyModal;
+    historyModal=document.createElement('div');historyModal.id='ff14-monster-history-modal';historyModal.innerHTML=`<section class="ff14-history-panel" role="dialog" aria-modal="true"><header class="ff14-history-header"><div><div class="ff14-history-title"></div><div class="ff14-history-subtitle"></div></div><button type="button" data-history-close class="btn btn-outline" style="padding:7px 10px">关闭 ×</button></header><div class="ff14-history-controls"><button type="button" data-type="all">全部记录</button><button type="button" data-type="ship">🎉 出货历史</button><button type="button" data-type="fail">💀 寄了历史</button><button type="button" data-server="toggle">切换服务器范围</button></div><div class="ff14-history-list"></div></section>`;
+    historyModal.addEventListener('click',event=>{if(event.target===historyModal)historyModal.style.display='none';});historyModal.querySelector('[data-history-close]').addEventListener('click',()=>historyModal.style.display='none');
+    historyModal.querySelectorAll('[data-type]').forEach(button=>button.addEventListener('click',()=>{currentHistoryFilter.type=button.dataset.type;renderHistoryModal();}));
+    historyModal.querySelector('[data-server="toggle"]').addEventListener('click',()=>{currentHistoryFilter.server=currentHistoryFilter.server?null:(currentHistoryFilter.__cardServer||null);renderHistoryModal();});
+    document.body.appendChild(historyModal);return historyModal;
+  }
+  function openMonsterHistory(name,server=null,type='all'){
+    syncRecentEvents();currentHistoryFilter={name:String(name||''),server:server||null,type:type||'all',__cardServer:server||null};
+    const modal=ensureHistoryModal();renderHistoryModal();modal.style.display='flex';
+  }
+  function renderHistoryModal(){
+    const modal=ensureHistoryModal();const title=modal.querySelector('.ff14-history-title');const subtitle=modal.querySelector('.ff14-history-subtitle');const listEl=modal.querySelector('.ff14-history-list');
+    const stats=eventStats(currentHistoryFilter.name,currentHistoryFilter.server);const visible=stats.list.filter(event=>currentHistoryFilter.type==='all'||event.type===currentHistoryFilter.type).sort((a,b)=>b.timeMs-a.timeMs);
+    title.textContent=`${currentHistoryFilter.name||'S怪'} · ${currentHistoryFilter.type==='ship'?'出货历史':currentHistoryFilter.type==='fail'?'寄了历史':'本地历史记录'}`;
+    subtitle.textContent=`${currentHistoryFilter.server?`服务器：${currentHistoryFilter.server} · `:'所有服务器 · '}${stats.ship} 次出货 · ${stats.fail} 次寄了 · 仅统计当前浏览器保存的记录`;
+    modal.querySelectorAll('[data-type]').forEach(button=>button.classList.toggle('active',button.dataset.type===currentHistoryFilter.type));
+    const serverButton=modal.querySelector('[data-server="toggle"]');serverButton.textContent=currentHistoryFilter.server?'显示所有服务器':'仅看当前服务器';
+    listEl.replaceChildren();
+    if(!visible.length){const empty=document.createElement('div');empty.className='ff14-history-empty';empty.textContent='暂无对应记录。之后通过本页面记录的出货和寄了操作会自动保存到这里。旧版历史中缺失的进闸时间不会被猜测补齐。';listEl.appendChild(empty);return;}
+    visible.slice(0,1000).forEach(event=>{
+      const details=document.createElement('details');details.className='ff14-history-event';
+      const summary=document.createElement('summary');
+      const badge=document.createElement('span');badge.className=`ff14-history-type ${event.type}`;badge.textContent=event.type==='ship'?'🎉 出货':'💀 寄了';
+      const time=document.createElement('strong');time.textContent=fmtDateTime(event.timeMs);time.style.fontFamily='monospace';time.style.fontSize='12px';
+      const server=document.createElement('span');server.textContent=`[${event.server||'未知'}] ${event.area||''}`;server.style.fontSize='11px';server.style.color='var(--text-muted)';
+      summary.append(badge,time,server);details.appendChild(summary);
+      const content=document.createElement('div');content.className='ff14-history-event-detail';
+      const items=[['记录类型',event.type==='ship'?'出货':'寄了'],['记录时间',fmtDateTime(event.timeMs)],['服务器 / 地区',`${event.server||'未知'} / ${event.area||'未记录'}`],['进闸锚点',event.gateTimeMs?fmtDateTime(event.gateTimeMs):'旧记录未保存，无法准确还原'],['强制时间',event.forceTimeMs?fmtDateTime(event.forceTimeMs):'旧记录未保存'],['当时存活 / 进闸后时长',event.elapsedMin!==null&&event.elapsedMin!==undefined?`${round3(event.elapsedMin).toFixed(3)} 分钟（${(round3(event.elapsedMin)/60).toFixed(3)} 小时）`:'暂无可计算数据'],['当时预测进度',event.progressPct!==null&&event.progressPct!==undefined?`${round3(event.progressPct).toFixed(3)}%`:'旧记录缺少样本，未补猜'],['失败次数快照',event.failCount?`${event.failCount} 次`:'未记录'],['来源',event.source||'本地事件'],['版本',event.version||'未保存']];
+      items.forEach(([label,value])=>{const row=document.createElement('div');row.innerHTML=`<strong>${escapeHTML(label)}：</strong>${escapeHTML(value)}`;content.appendChild(row);});details.appendChild(content);listEl.appendChild(details);
+    });
+  }
+  window.showMonsterLocalHistory=openMonsterHistory;
+  function enhanceDetailHistory(){
+    if(typeof window.renderRecentDetailUI!=='function'||window.renderRecentDetailUI.__ff14V2Wrapped)return;
+    const original=window.renderRecentDetailUI;
+    const wrapped=function(record,...args){const result=original.call(this,record,...args);try{
+      const body=$('recentDetailBody');if(!body||!record)return result;
+      body.querySelectorAll('.detail-row').forEach(row=>{const label=row.querySelector('.detail-label')?.textContent?.trim();if(!['本次出货时间','本次寄了时间','上一次出货时间'].includes(label))return;row.classList.add('ff14-clickable-history');row.tabIndex=0;row.setAttribute('role','button');row.title='点击查看该 S怪的本地详细历史记录';const type=label==='本次寄了时间'?'fail':'ship';const open=()=>openMonsterHistory(record.name,record.server,type);row.addEventListener('click',open);row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});});
+      let section=body.querySelector('#ff14-detail-history-section');if(section)section.remove();section=document.createElement('section');section.id='ff14-detail-history-section';section.style.cssText='margin-top:18px;padding-top:12px;border-top:1px solid var(--border)';
+      const stats=eventStats(record.name);const title=document.createElement('div');title.className='detail-section-title';title.textContent=`📜 本地历史 · ${stats.ship} 次出货 / ${stats.fail} 次寄了`;section.appendChild(title);
+      const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px';
+      [['🎉 查看出货历史','ship'],['💀 查看寄了历史','fail'],['📚 全部历史','all']].forEach(([label,type])=>{const button=document.createElement('button');button.className='btn btn-outline';button.type='button';button.textContent=label;button.addEventListener('click',()=>openMonsterHistory(record.name,null,type));actions.appendChild(button);});section.appendChild(actions);
+      const recent=stats.list.sort((a,b)=>b.timeMs-a.timeMs).slice(0,5);
+      if(!recent.length){const empty=document.createElement('div');empty.style.cssText='font-size:12px;color:var(--text-muted)';empty.textContent='还没有保存过这只 S怪的出货/寄了记录；之后的操作会在本地自动记录。';section.appendChild(empty);}
+      else recent.forEach(event=>{const line=document.createElement('button');line.type='button';line.className='btn btn-outline';line.style.cssText='width:100%;text-align:left;margin:3px 0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap';const kind=document.createElement('span');kind.style.color=event.type==='ship'?'var(--accent)':'var(--red)';kind.textContent=event.type==='ship'?'🎉 出货':'💀 寄了';const time=document.createElement('span');time.textContent=fmtDateTime(event.timeMs);time.style.fontFamily='monospace';line.append(kind,time);line.addEventListener('click',()=>openMonsterHistory(record.name,record.server,event.type));section.appendChild(line);});
+      body.appendChild(section);
+    }catch(error){console.warn('[FF14 UX v2] detail history error',error);}return result;};wrapped.__ff14V2Wrapped=true;window.renderRecentDetailUI=wrapped;
+  }
+
+  // ---------- Live elapsed time and 0.001% display ----------
+  function updatePreciseManualInput(){
+    const hours=$('mHour'),minutes=$('mMin'),percent=$('mPercent');if(!hours||!minutes||!percent)return;
+    const h=Math.max(0,Number(hours.value)||0),m=Math.max(0,Number(minutes.value)||0);const isGreen=document.querySelector('input[name="mStatus"]:checked')?.value==='green';
+    const total=(isGreen?(getLtHours()):(getCdHours()))*60;const passed=h*60+m;const val=isGreen?passed/total*100:Math.max(0,(total-passed)/total*100);
+    percent.step='0.001';percent.value=round3(clamp(val,0,100)).toFixed(3);percent.title='内部计算保留到小数点后三位；CD 状态显示剩余冷却进度。';
+    const label=percent.closest('.input-group')?.querySelector('label');if(label&&!label.dataset.ff14V2){label.dataset.ff14V2='1';label.textContent='综合进度 (%) · 精确到 0.001%';}
+  }
+  function preciseRecentProgress(record,now){
+    const total=(record.isGreen?(getLtHours()):(getCdHours()))*3600000;
+    let elapsed=0;
+    if(record.isGreen){elapsed=record.gateTimeMs?Math.max(0,now-Number(record.gateTimeMs)):Math.max(0,(Number(record.h)||0)*3600000+(Number(record.m)||0)*60000);}
+    else if(record.gateTimeMs){elapsed=clamp(total-(Number(record.gateTimeMs)-now),0,total);}else elapsed=Math.max(0,(Number(record.h)||0)*3600000+(Number(record.m)||0)*60000);
+    if(record.forceTimeMs&&now>=Number(record.forceTimeMs))elapsed=total;
+    return {elapsedMs:elapsed,totalMs:total,pct:round3(clamp(elapsed/Math.max(1,total)*100,0,100))};
+  }
+  function updatePrecisionUI(){
+    const now=Date.now();
+    document.querySelectorAll('.calc-row').forEach(row=>{
+      const data=row.__ff14PreciseData;if(!data)return;
+      const elapsedMs=Math.max(0,now-data.createdAt);const passed=(data.h*60+data.m)+elapsedMs/60000;const raw=data.isGreen?passed/data.total*100:(data.total-passed)/data.total*100;const pct=round3(clamp(raw,0,100));const node=row.querySelector('.pct-text');if(node){node.textContent=`${pct.toFixed(3)}%`;node.title=`按 ${data.total.toFixed(3)} 分钟周期计算；内部精度 0.001%。`;}const timer=row.querySelector('.time-text');if(timer&&data.liveTimer){timer.textContent=`${Math.floor(passed/60)} : ${Math.floor(passed%60)}`;}
+    });
+    const items=document.querySelectorAll('.recent-item');
+    items.forEach(item=>{
+      const attr=item.getAttribute('onclick')||'';const match=attr.match(/openRecentDetail\((\d+)\)/);if(!match)return;const idx=Number(match[1]);const record=(typeof recentRecords!=='undefined')?recentRecords[idx]:null;if(!record)return;
+      const values=preciseRecentProgress(record,now);const blocks=item.querySelectorAll('.recent-progress-block');const first=blocks[0];if(first){const text=first.querySelector('.recent-progress-text');if(text){text.textContent=`${values.pct.toFixed(3)}%`;text.title=`${round3(values.elapsedMs/60000).toFixed(3)} 分钟`; }const fill=first.querySelector('.recent-progress-fill');if(fill)fill.style.width=`${values.pct}%`;}
+      let pred=null;try{pred=typeof window.getFF14RecordPrediction==='function'?window.getFF14RecordPrediction(record):window.__predictor?.predict({name:record.name,version:(S_MONSTERS.find(m=>m.name===record.name)||{}).version||'6.0',gateTimeMs:record.gateTimeMs,forceTimeMs:record.forceTimeMs,isGreen:record.isGreen});}catch(_){}
+      if(blocks[1]&&pred){const spanList=blocks[1].querySelectorAll('span');if(spanList.length>1)spanList[spanList.length-1].textContent=`${round3(pred.progressPct).toFixed(3)}%${pred.isTail?' ⚠️':''}`;const fill=blocks[1].querySelector('.recent-progress-fill');if(fill)fill.style.width=`${clamp(pred.progressPct,0,100)}%`;}
+      let statline=item.querySelector('.ff14-live-statline');if(!statline){statline=document.createElement('div');statline.className='ff14-live-statline';const times=item.querySelector('.recent-item-times');if(times)times.insertAdjacentElement('afterend',statline);else item.querySelector('.recent-item-info')?.appendChild(statline);}
+      const stats=eventStats(record.name,record.server);const elapsedText=record.isGreen?`存活时长 ${fmtElapsed(values.elapsedMs)}`:`CD 已运行 ${fmtElapsed(values.elapsedMs)}`;const expected=pred&&pred.stats?round3(pred.stats.expectedLivingMin):0;const estimateText=pred?`预计进度 ${round3(pred.progressPct).toFixed(3)}% · 剩余 ${fmtElapsed(pred.remainingMs)}`:'暂无可用预测';const confidence=pred&&pred.stats?`${Math.round(clamp(pred.stats.confidence,0,1)*100)}%`:'—';
+      statline.textContent=`${elapsedText} · 周期进度 ${values.pct.toFixed(3)}% · ${estimateText} · 历史出货 ${stats.ship} / 寄了 ${stats.fail} · 样本 ${pred&&pred.stats?pred.stats.sampleCount:0} · 预测置信度 ${confidence}${pred&&pred.stats&&pred.stats.failureAdjusted?` · 按历史失败间隔延后 ${round3(pred.stats.retryDelayMin).toFixed(3)} 分钟`:''}`;
+      statline.title='时长与百分比内部计算精确到小数点后三位；显示的日时分秒用于快速阅读。';
+      const title=item.querySelector('.recent-item-title');if(title){item.title='点击卡片查看该 S怪的出货历史、寄了历史、存活时长与预测详情';}
+      const statusSpans=title?title.querySelectorAll('span'):[];if(statusSpans.length){const last=statusSpans[statusSpans.length-1];if(last.textContent.includes('存活')||last.textContent.includes('CD中')||last.textContent.includes('强制')){last.textContent=record.forceTimeMs&&now>=Number(record.forceTimeMs)?'💀 已强制':(record.isGreen?'🟢 存活':'🔴 CD中');}}
+    });
+  }
+  function wrapRenderAndRows(){
+    if(typeof window.renderRecentList==='function'&&!window.renderRecentList.__ff14V2Wrapped){const original=window.renderRecentList;const wrapped=function(...args){const result=original.apply(this,args);setTimeout(updatePrecisionUI,0);return result;};wrapped.__ff14V2Wrapped=true;window.renderRecentList=wrapped;}
+    if(typeof window.createResultRow==='function'&&!window.createResultRow.__ff14V2Wrapped){const original=window.createResultRow;const wrapped=function(tbody,server,name,area,h,m,isGreen,percent,trigger,...rest){const result=original.call(this,tbody,server,name,area,h,m,isGreen,percent,trigger,...rest);const row=tbody&&tbody.lastElementChild;if(row){const total=(isGreen?(getLtHours()):(getCdHours()))*60;row.__ff14PreciseData={createdAt:Date.now(),h:Number(h)||0,m:Number(m)||0,isGreen:!!isGreen,total,liveTimer:false};const pct=row.querySelector('.pct-text');if(pct)pct.textContent=`${round3(percent).toFixed(3)}%`;}return result;};wrapped.__ff14V2Wrapped=true;window.createResultRow=wrapped;}
+    const percent=$('mPercent');if(percent&&!percent.dataset.ff14V2Step){percent.dataset.ff14V2Step='1';percent.step='0.001';percent.addEventListener('change',updatePreciseManualInput);}
+    if(typeof window.autoCorrect==='function'&&!window.autoCorrect.__ff14V2Wrapped){const original=window.autoCorrect;const wrapped=function(...args){const result=original.apply(this,args);updatePreciseManualInput();try{if(typeof window.calcManual==='function')window.calcManual();}catch(_){}return result;};wrapped.__ff14V2Wrapped=true;window.autoCorrect=wrapped;}
+  }
+
+  // ---------- Glass strength control appended to existing background panel ----------
+  function enhanceBackgroundPanel(){
+    if(typeof window.openBackgroundSettings!=='function'||window.openBackgroundSettings.__ff14V2Wrapped)return;
+    const original=window.openBackgroundSettings;
+    const wrapped=function(...args){const result=original.apply(this,args);setTimeout(()=>{
+      const body=$('ff14BackgroundSettingsModal')?.querySelector('.ff14-ux-modal-body');if(!body||$('ff14-bg-glass-strength'))return;
+      const box=document.createElement('div');box.className='ff14-ux-field';box.style.cssText='margin-top:16px;padding:13px;border:1px solid var(--border);border-radius:11px;background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(var(--panel-rgb,26,26,46),.38))';box.innerHTML=`<label for="ff14-bg-glass-strength">液态玻璃强度（反光、透明度与模糊）</label><div class="ff14-ux-range-row"><input id="ff14-bg-glass-strength" type="range" min="0" max="100" step="1"><output id="ff14-bg-glass-strength-val" class="ff14-ux-range-value"></output></div><div class="ff14-ux-note" style="margin-bottom:0">强度越高，玻璃反光和背景模糊越明显；适用于浅绿液态玻璃主题及已开启磨砂面板的背景设置。</div>`;
+      const grid=body.querySelector('.ff14-ux-grid');if(grid)grid.insertAdjacentElement('afterend',box);else body.prepend(box);
+      const slider=$('ff14-bg-glass-strength'),output=$('ff14-bg-glass-strength-val');slider.value=String(clamp(localStorage.getItem(GLASS_STRENGTH_KEY)||74,0,100));output.textContent=`${slider.value}%`;applyGlassStrength(slider.value);
+      slider.addEventListener('input',()=>{output.textContent=`${slider.value}%`;applyGlassStrength(slider.value);});
+      const save=$('ff14-bg-save');if(save&&!save.dataset.ff14V2Glass){save.dataset.ff14V2Glass='1';save.addEventListener('click',()=>{try{localStorage.setItem(GLASS_STRENGTH_KEY,slider.value);}catch(_){}applyGlassStrength(slider.value);});}
+      const cancel=$('ff14-bg-cancel');if(cancel&&!cancel.dataset.ff14V2Glass){cancel.dataset.ff14V2Glass='1';cancel.addEventListener('click',()=>applyGlassStrength(localStorage.getItem(GLASS_STRENGTH_KEY)||74));}
+      const reset=$('ff14-bg-reset');if(reset&&!reset.dataset.ff14V2Glass){reset.dataset.ff14V2Glass='1';reset.addEventListener('click',()=>{slider.value='74';output.textContent='74%';applyGlassStrength(74);});}
+    },0);return result;};wrapped.__ff14V2Wrapped=true;window.openBackgroundSettings=wrapped;
+  }
+
+  // ---------- TXT / CSV local slang import using the existing form validation ----------
+  function typeFromText(value){const s=String(value||'').trim().toLowerCase();if(/^(monster|s怪|怪物|s怪黑话|怪物黑话)$/.test(s))return'monster';if(/^(server|服务器|服|服务器黑话)$/.test(s))return'server';if(/^(trigger|触发者|触发者黑话|角色|玩家)$/.test(s))return'trigger';return null;}
+  function parseAliasText(text,defaultType){
+    const rows=[];const source=String(text||'').replace(/^\uFEFF/,'');
+    for(const rawLine of source.split(/\r?\n/)){
+      const line=rawLine.trim();if(!line||line.startsWith('#')||line.startsWith('//'))continue;
+      if(/^(类型|type|黑话,?正式目标|alias,?target)$/i.test(line.replace(/\s/g,'')))continue;
+      let type=defaultType,alias='',target='';
+      let cells=line.split(/[\t,，|；;]+/).map(part=>part.trim()).filter(Boolean);
+      if(cells.length>=3&&typeFromText(cells[0])){type=typeFromText(cells[0]);alias=cells[1];target=cells.slice(2).join(',').trim();}
+      else {
+        const match=line.match(/^(.+?)\s*(?:=>|->|＝|=|：|:)\s*(.+)$/);
+        if(match){alias=match[1].trim();target=match[2].trim();}
+        else if(cells.length>=2){alias=cells[0];target=cells.slice(1).join(',').trim();}
+      }
+      if(alias&&target&&type)rows.push({type,alias,target});
+    }
+    return rows;
+  }
+  function initLocalAliasImport(){
+    const fileInput=$('ff14-alias-import-file');if(!fileInput||fileInput.dataset.ff14V2Import)return;
+    fileInput.dataset.ff14V2Import='1';fileInput.accept='.json,.txt,.csv,application/json,text/plain,text/csv';
+    const importButton=$('ff14-alias-import');if(importButton)importButton.textContent='导入 JSON / TXT / CSV';
+    const hint=$('ff14-alias-hint');if(hint&&!hint.dataset.ff14V2Formats){hint.dataset.ff14V2Formats='1';hint.textContent+=' 本地文本导入格式：每行“黑话=正式目标”，默认使用当前绑定类型；也支持“类型,黑话,正式目标”或“黑话,正式目标”。TXT/CSV 可直接选择本地文件。';}
+    document.addEventListener('change',async event=>{
+      const input=event.target;if(!input||input.id!=='ff14-alias-import-file')return;const file=input.files&&input.files[0];if(!file)return;
+      if(/\.json$/i.test(file.name)||file.type==='application/json')return;
+      event.stopImmediatePropagation();event.preventDefault();
+      try{
+        const text=await file.text();const typeSelect=$('ff14-alias-type'),aliasInput=$('ff14-alias-word'),targetInput=$('ff14-alias-target'),addButton=$('ff14-alias-add');
+        if(!typeSelect||!aliasInput||!targetInput||!addButton)throw new Error('词库表单尚未初始化，请重新打开词库项目库后导入');
+        const rows=parseAliasText(text,typeSelect.value);if(!rows.length)throw new Error('未读到有效绑定。请使用“黑话=正式目标”或“类型,黑话,正式目标”格式。');
+        const limited=rows.slice(0,500);let before=0;try{before=JSON.parse(localStorage.getItem('ff14_alias_project_library_v1')||'[]').length;}catch(_){}
+        window.__ff14AliasImporting=true;let attempted=0;
+        for(const row of limited){typeSelect.value=row.type;typeSelect.dispatchEvent(new Event('change',{bubbles:true}));aliasInput.value=row.alias;targetInput.value=row.target;addButton.click();attempted++;}
+        window.__ff14AliasImporting=false;let after=0;try{after=JSON.parse(localStorage.getItem('ff14_alias_project_library_v1')||'[]').length;}catch(_){}
+        safeToast(`本地词库导入完成：新增 ${Math.max(0,after-before)} 条，解析 ${limited.length} 条${rows.length>500?'（其余条目未导入，单次上限 500）':''}。无效目标、重复或冲突别名会按原有规则跳过。`);
+        if(typeof window.openAliasProjectLibrary==='function')window.openAliasProjectLibrary();
+      }catch(error){alert(`本地黑话导入失败：${error.message||error}`);}finally{window.__ff14AliasImporting=false;input.value='';}
+    },true);
+  }
+  // While importing, suppress per-row toasts from the original addAlias validation; report one summary after the batch.
+  const originalToast=window.showToast;
+  if(typeof originalToast==='function'&&!window.showToast.__ff14V2Toast){const wrapped=function(message,...args){if(window.__ff14AliasImporting)return;return originalToast.call(this,message,...args);};wrapped.__ff14V2Toast=true;window.showToast=wrapped;}
+  const originalOpenAlias=window.openAliasProjectLibrary;
+  if(typeof originalOpenAlias==='function'&&!originalOpenAlias.__ff14V2Wrapped){const wrapped=function(...args){const result=originalOpenAlias.apply(this,args);setTimeout(initLocalAliasImport,0);return result;};wrapped.__ff14V2Wrapped=true;window.openAliasProjectLibrary=wrapped;}
+
+  // ---------- In-page changelog: include these precise changes ----------
+  const V2_CHANGELOG=[
+    '图片查看器升级：排车截图以紧凑预览显示，可适应窗口、原始大小、滚轮缩放、拖动查看，并优先展示玩家选择的原始图。',
+    '工具箱悬浮窗：将原有工具箱 DOM 连同已有按钮和事件移动到可拖动窗口，位置保存在当前浏览器；顶部工具箱按钮仍可开关。',
+    '新增浅绿液态玻璃主题：多层高光、半透明材质、饱和度和模糊层次；可在背景设置中调节玻璃强度。',
+    '黑话本地导入：除原 JSON 项目库外，新增 TXT / CSV 导入，支持“黑话=正式目标”和“类型,黑话,正式目标”；仍走原绑定校验。',
+    'S怪本地事件档案：出货、寄了记录按怪物与服务器保存，点击卡片及“本次出货时间 / 本次寄了时间”可查看详细历史。',
+    '预测与统计精度：底层预计存活分钟、预测进度、失败间隔、实时周期进度统一保留 0.001 精度；历史“失败后出货间隔”会影响当前未出货记录的预测，但不会突破强制时间。',
+    '旧版本地出货记录会迁入事件档案；旧记录缺少的进闸锚点不会伪造，界面会明确标为无法准确还原。'
+  ];
+  function appendV2Changelog(){
+    const list=$('updateContentList');if(!list)return;
+    V2_CHANGELOG.forEach((text,index)=>{if(list.querySelector(`[${CHANGELOG_V2_FLAG}="${index}"]`))return;const li=document.createElement('li');li.setAttribute(CHANGELOG_V2_FLAG,String(index));const strong=document.createElement('strong');strong.textContent=['图片查看器','可拖动工具箱','浅绿液态玻璃','本地黑话导入','S怪历史档案','三位小数预测算法','本地记录迁移'][index]+'：';li.append(strong,document.createTextNode(text));list.appendChild(li);});
+    const title=document.querySelector('#updatePreviewModal .update-title');if(title)title.textContent='✨ 版本更新说明 · 2026.10.27 · 增强补丁 2';
+  }
+  const originalShowChangelog=window.showUXChangeLog;
+  if(typeof originalShowChangelog==='function'){window.showUXChangeLog=function(...args){const result=originalShowChangelog.apply(this,args);appendV2Changelog();return result;};}
+
+  function initializeV2(){
+    injectV2Styles();ensureMintThemeButton();initImageViewer();initRouteImagePreview();enhanceBackgroundPanel();wrapHistoryFunctions();wrapPredictor();wrapRenderAndRows();enhanceDetailHistory();
+    loadMonsterEvents();hydrateOldLocalHistory();syncRecentEvents();
+    initFloatingToolbox();
+    appendV2Changelog();
+    updatePreciseManualInput();updatePrecisionUI();
+    if(typeof window.renderRecentList==='function'){try{window.renderRecentList();}catch(_){}}
+    // If a previous saved theme is mint, restore it after the original initialiser runs.
+    try{if(localStorage.getItem('ff14_theme')==='mint')window.changeTheme('mint');}catch(_){}
+  }
+  function delayedInitialize(tries=0){
+    try{initializeV2();}catch(error){console.error('[FF14 UX v2] initialization error',error);if(tries<5)setTimeout(()=>delayedInitialize(tries+1),250);return;}
+    // Keep live elapsed timers updated without replacing original timer loops.
+    if(!window.__ff14UXV2Interval){window.__ff14UXV2Interval=setInterval(()=>{try{syncRecentEvents();wrapPredictor();wrapHistoryFunctions();wrapRenderAndRows();updatePrecisionUI();appendV2Changelog();}catch(error){console.warn('[FF14 UX v2] live update error',error);}},1000);}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>delayedInitialize(),260),{once:true});
+  else setTimeout(()=>delayedInitialize(),260);
+})();
+
+</script>
+
+
+<!-- ===== 增量修复：目标选择 / S怪名称二级下拉菜单层级 ===== -->
+<style id="ff14-dropdown-priority-fix">
+  /* backdrop-filter 会创建新的 stacking context。打开目标下拉框时，提升其整块父 section，
+     不能只提升下拉面板自身的 z-index，否则仍可能被后续 input-section 压在下面。 */
+  #manualCard .input-section.ff14-dropdown-layer-active {
+    position: relative !important;
+    z-index: 2147483000 !important;
+    overflow: visible !important;
+    isolation: isolate;
+  }
+  #manualCard .input-section.ff14-dropdown-layer-active .input-grid,
+  #manualCard .input-section.ff14-dropdown-layer-active .input-group,
+  #manualCard .input-section.ff14-dropdown-layer-active .row-flex {
+    overflow: visible !important;
+  }
+  #mServerWrapper.ff14-dropdown-wrapper-active,
+  #mMonsterWrapper.ff14-dropdown-wrapper-active {
+    position: relative !important;
+    z-index: 2147483000 !important;
+  }
+  #mServerWrapper .custom-dropdown-panel,
+  #mMonsterWrapper .custom-dropdown-panel {
+    z-index: 2147483647 !important;
+    isolation: isolate;
+    max-height: min(400px, 65vh) !important;
+    overscroll-behavior: contain;
+  }
+  #mServerWrapper .dropdown-region-group,
+  #mMonsterWrapper .dropdown-region-group {
+    position: relative;
+    z-index: 1;
+  }
+  #mServerWrapper .dropdown-item,
+  #mMonsterWrapper .dropdown-item {
+    position: relative;
+    z-index: 1;
+  }
+  #mServerWrapper .dropdown-item:hover,
+  #mMonsterWrapper .dropdown-item:hover {
+    z-index: 2;
+  }
+</style>
+<script id="ff14-dropdown-priority-fix-script">
+(function () {
+  'use strict';
+  if (window.__ff14DropdownPriorityFixInstalled) return;
+  window.__ff14DropdownPriorityFixInstalled = true;
+
+  const panelIds = ['serverDropdownPanel', 'monsterDropdownPanel'];
+  const wrapperIds = ['mServerWrapper', 'mMonsterWrapper'];
+  function syncDropdownLayerPriority() {
+    const opened = panelIds.some(function (id) {
+      const panel = document.getElementById(id);
+      if (!panel) return false;
+      // Use computed style as well as inline style so later CSS/legacy toggles stay compatible.
+      return window.getComputedStyle(panel).display !== 'none';
+    });
+    const targetSection = document.querySelector('#manualCard .input-section:has(#mServerWrapper)');
+    if (targetSection) targetSection.classList.toggle('ff14-dropdown-layer-active', opened);
+    wrapperIds.forEach(function (id) {
+      const wrapper = document.getElementById(id);
+      if (wrapper) wrapper.classList.toggle('ff14-dropdown-wrapper-active', opened && panelIds.some(function (panelId) {
+        const panel = document.getElementById(panelId);
+        return panel && wrapper.contains(panel) && window.getComputedStyle(panel).display !== 'none';
+      }));
+    });
+  }
+
+  function installDropdownPriorityFix() {
+    const panels = panelIds.map(id => document.getElementById(id)).filter(Boolean);
+    if (!panels.length) return false;
+    panels.forEach(function (panel) {
+      if (panel.dataset.ff14PriorityObserved === '1') return;
+      panel.dataset.ff14PriorityObserved = '1';
+      new MutationObserver(syncDropdownLayerPriority).observe(panel, { attributes: true, attributeFilter: ['style', 'class'] });
+    });
+    // Recheck after legacy click handlers run; no original event handler is replaced.
+    ['mServer', 'mMonsterInput'].forEach(function (id) {
+      const input = document.getElementById(id);
+      if (input && input.dataset.ff14PriorityClick !== '1') {
+        input.dataset.ff14PriorityClick = '1';
+        input.addEventListener('click', function () { setTimeout(syncDropdownLayerPriority, 0); }, false);
+        input.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') setTimeout(syncDropdownLayerPriority, 0);
+        }, false);
+      }
+    });
+    if (!document.documentElement.dataset.ff14PriorityOutsideClick) {
+      document.documentElement.dataset.ff14PriorityOutsideClick = '1';
+      document.addEventListener('click', function () { setTimeout(syncDropdownLayerPriority, 0); }, true);
+    }
+    syncDropdownLayerPriority();
+    return true;
+  }
+
+  function retryInstall(remaining) {
+    if (installDropdownPriorityFix() || remaining <= 0) return;
+    setTimeout(function () { retryInstall(remaining - 1); }, 250);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { retryInstall(12); }, { once: true });
+  } else {
+    retryInstall(12);
+  }
+})();
+</script>
+<!-- ===== 二级菜单层级修复结束 ===== -->
+
+
+
+<!-- ===== 增量增强 v3：更多液态玻璃背景主题 ===== -->
+<style id="ff14-liquid-glass-expansion-v3">
+  :root {
+    --ff14-glass-alpha: .74;
+    --ff14-glass-blur: 24px;
+    --ff14-glass-edge: rgba(255,255,255,.70);
+    --ff14-glass-shadow: rgba(40,95,125,.14);
+    --ff14-glass-tint-rgb: 190,235,245;
+  }
+  /* 将原有主题快捷区升级为玻璃胶囊，旧按钮仍然保留 */
+  .theme-switcher {
+    z-index: 40000 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 24px);
+    padding: 7px 9px;
+    border: 1px solid rgba(255,255,255,.56);
+    border-radius: 999px;
+    background: linear-gradient(135deg,rgba(255,255,255,.50),rgba(255,255,255,.12));
+    box-shadow: 0 10px 30px rgba(35,74,95,.12), inset 0 1px 0 rgba(255,255,255,.78);
+    backdrop-filter: blur(22px) saturate(175%);
+    -webkit-backdrop-filter: blur(22px) saturate(175%);
+  }
+  .theme-switcher .theme-btn { flex: 0 0 24px; }
+  .theme-switcher .theme-btn.glass-more {
+    width: 28px; height: 28px; flex-basis: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(255,255,255,.86);
+    background: conic-gradient(from 30deg,#8cebd4,#9ccaff,#e2b9ff,#ffc4d7,#ffe4aa,#8cebd4);
+    color: #28435a; font-size: 15px; font-weight: 900; line-height: 1;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,.95),0 4px 12px rgba(50,100,130,.18);
+    cursor: pointer;
+  }
+  .theme-switcher .theme-btn.glass-more::after { content: '✧'; }
+  .theme-switcher .theme-btn.glass-more:hover { transform: rotate(18deg) scale(1.08); }
+
+  #ff14-liquid-glass-picker {
+    display: none;
+    position: absolute;
+    top: 65px; right: 18px;
+    z-index: 40001;
+    width: min(410px, calc(100vw - 24px));
+    padding: 15px;
+    border: 1px solid rgba(255,255,255,.68);
+    border-radius: 20px;
+    color: var(--text);
+    background: linear-gradient(145deg,rgba(255,255,255,.76),rgba(220,240,255,.42));
+    box-shadow: 0 24px 65px rgba(26,65,94,.22), inset 0 1px 0 rgba(255,255,255,.95);
+    backdrop-filter: blur(32px) saturate(180%);
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+  }
+  #ff14-liquid-glass-picker.open { display: block; animation: ff14GlassPickerIn .2s ease-out both; }
+  @keyframes ff14GlassPickerIn { from { opacity: 0; transform: translateY(-7px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  #ff14-liquid-glass-picker .ff14-glass-picker-title { font-size: 14px; font-weight: 900; letter-spacing: .3px; margin: 0 0 4px; color: #28465a; }
+  #ff14-liquid-glass-picker .ff14-glass-picker-subtitle { font-size: 11px; line-height: 1.55; color: #4b6878; margin: 0 0 12px; }
+  #ff14-liquid-glass-picker .ff14-glass-preset-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+  .ff14-liquid-preset {
+    --preset-a: #e3fff1; --preset-b: #a8ecd2; --preset-c: #ffffff; --preset-ink: #214f42;
+    position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;
+    gap: 4px; min-width: 0; min-height: 84px; padding: 11px 12px 10px;
+    overflow: hidden; border: 1px solid rgba(255,255,255,.85); border-radius: 13px;
+    color: var(--preset-ink); text-align: left; cursor: pointer;
+    background: radial-gradient(ellipse at 10% 0%,rgba(255,255,255,.98),transparent 42%),linear-gradient(135deg,var(--preset-a),var(--preset-b) 62%,var(--preset-c));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.92),0 6px 15px rgba(45,95,122,.09);
+    transition: transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+  }
+  .ff14-liquid-preset::before { content: ''; position: absolute; top: -48%; left: -18%; width: 76%; height: 95%; border-radius: 50%; background: rgba(255,255,255,.35); filter: blur(12px); pointer-events: none; transform: rotate(-18deg); }
+  .ff14-liquid-preset::after { content: ''; position: absolute; right: -12px; top: -18px; width: 70px; height: 70px; border: 1px solid rgba(255,255,255,.44); border-radius: 50%; box-shadow: 0 0 0 8px rgba(255,255,255,.08),0 0 0 17px rgba(255,255,255,.05); pointer-events: none; }
+  .ff14-liquid-preset:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.98),0 11px 22px rgba(45,95,122,.16); }
+  .ff14-liquid-preset.active { border-color: rgba(35,106,125,.85); box-shadow: inset 0 0 0 2px rgba(255,255,255,.86),0 0 0 2px rgba(57,152,168,.30),0 10px 24px rgba(45,95,122,.18); }
+  .ff14-liquid-preset strong,.ff14-liquid-preset small { position: relative; z-index: 1; }
+  .ff14-liquid-preset strong { font-size: 12px; font-weight: 900; }
+  .ff14-liquid-preset small { font-size: 10px; opacity: .82; line-height: 1.35; }
+  .ff14-liquid-preset[data-liquid-theme="ocean"] { --preset-a:#e2ffff;--preset-b:#8cdeeb;--preset-c:#c0eeff;--preset-ink:#194d5c; }
+  .ff14-liquid-preset[data-liquid-theme="aurora"] { --preset-a:#e9f5ff;--preset-b:#c9c7ff;--preset-c:#bbf8e9;--preset-ink:#3c4d79; }
+  .ff14-liquid-preset[data-liquid-theme="sakura"] { --preset-a:#fff1f7;--preset-b:#ffc0d8;--preset-c:#e6ceff;--preset-ink:#75405e; }
+  .ff14-liquid-preset[data-liquid-theme="sunset"] { --preset-a:#fff5de;--preset-b:#ffcaa8;--preset-c:#ffbad0;--preset-ink:#7b4b36; }
+  .ff14-liquid-preset[data-liquid-theme="lavender"] { --preset-a:#f7f0ff;--preset-b:#d4c5ff;--preset-c:#c9e5ff;--preset-ink:#504276; }
+  .ff14-liquid-preset[data-liquid-theme="midnight"] { --preset-a:#19334e;--preset-b:#3c477d;--preset-c:#306f78;--preset-ink:#f1f8ff;border-color:rgba(255,255,255,.28); }
+  .ff14-liquid-preset[data-liquid-theme="mint"] { --preset-a:#effff5;--preset-b:#a2ebc4;--preset-c:#ddfff0;--preset-ink:#24523e; }
+
+  /* New palettes: the original dark/light/pink/sky/mint themes are untouched */
+  html[data-theme="ocean"] { --bg:#e0faff;--panel:#effdff;--panel-rgb:238,252,255;--panel-light:#d9f5fa;--accent:#087f8c;--text:#173e49;--text-muted:#507984;--red:#d94b6a;--gold:#b87829;--blue:#187cb1;--border:rgba(53,151,173,.25);--purple:#8466bf;--input-bg:rgba(255,255,255,.54);--input-border:rgba(42,139,160,.35);--ff14-glass-tint-rgb:145,222,235;--ff14-glass-edge:rgba(255,255,255,.82);--ff14-glass-shadow:rgba(16,111,139,.16); }
+  html[data-theme="aurora"] { --bg:#e7f2ff;--panel:#f7f8ff;--panel-rgb:245,246,255;--panel-light:#e8eaff;--accent:#6554b9;--text:#2f365f;--text-muted:#68739a;--red:#d9476d;--gold:#a96d21;--blue:#367cc2;--border:rgba(111,112,202,.24);--purple:#8d63c7;--input-bg:rgba(255,255,255,.55);--input-border:rgba(115,112,199,.34);--ff14-glass-tint-rgb:196,198,255;--ff14-glass-edge:rgba(255,255,255,.86);--ff14-glass-shadow:rgba(91,87,166,.16); }
+  html[data-theme="sakura"] { --bg:#fff0f6;--panel:#fff7fb;--panel-rgb:255,246,251;--panel-light:#ffe6f0;--accent:#b74680;--text:#582d47;--text-muted:#946a83;--red:#d93c58;--gold:#b66e25;--blue:#327fb1;--border:rgba(208,109,160,.24);--purple:#9761bd;--input-bg:rgba(255,255,255,.58);--input-border:rgba(195,102,151,.32);--ff14-glass-tint-rgb:255,190,220;--ff14-glass-edge:rgba(255,255,255,.86);--ff14-glass-shadow:rgba(174,74,126,.15); }
+  html[data-theme="sunset"] { --bg:#fff2e8;--panel:#fff9f2;--panel-rgb:255,248,239;--panel-light:#ffeadc;--accent:#b86133;--text:#5c382c;--text-muted:#987361;--red:#d84c5e;--gold:#ab741d;--blue:#357fac;--border:rgba(214,131,88,.25);--purple:#9565ae;--input-bg:rgba(255,255,255,.59);--input-border:rgba(195,121,79,.34);--ff14-glass-tint-rgb:255,202,164;--ff14-glass-edge:rgba(255,255,255,.88);--ff14-glass-shadow:rgba(166,89,49,.15); }
+  html[data-theme="lavender"] { --bg:#f1eaff;--panel:#faf7ff;--panel-rgb:249,246,255;--panel-light:#ebe2ff;--accent:#7653b2;--text:#3e315d;--text-muted:#786991;--red:#d94e73;--gold:#a97024;--blue:#377bb7;--border:rgba(141,113,197,.26);--purple:#8a5bc0;--input-bg:rgba(255,255,255,.57);--input-border:rgba(130,103,183,.34);--ff14-glass-tint-rgb:211,194,255;--ff14-glass-edge:rgba(255,255,255,.88);--ff14-glass-shadow:rgba(108,77,166,.16); }
+  html[data-theme="midnight"] { --bg:#091321;--panel:#142337;--panel-rgb:20,35,55;--panel-light:#1d3048;--accent:#72e3d1;--text:#e3f2ff;--text-muted:#a4bed2;--red:#ff718a;--gold:#ffc875;--blue:#7ecbff;--border:rgba(122,190,224,.24);--purple:#c4a0ff;--input-bg:rgba(7,17,32,.58);--input-border:rgba(126,196,226,.30);--ff14-glass-tint-rgb:71,123,168;--ff14-glass-edge:rgba(185,230,255,.42);--ff14-glass-shadow:rgba(0,0,0,.30); }
+
+  html[data-theme="ocean"] body { background:radial-gradient(ellipse at 9% 5%,rgba(255,255,255,.98),transparent 31%),radial-gradient(ellipse at 88% 15%,rgba(103,221,229,.53),transparent 33%),radial-gradient(ellipse at 58% 88%,rgba(129,208,255,.44),transparent 37%),linear-gradient(145deg,#e9ffff 0%,#d1f4f7 43%,#eaf5ff 100%);background-attachment:fixed; }
+  html[data-theme="aurora"] body { background:radial-gradient(ellipse at 7% 9%,rgba(255,255,255,.98),transparent 30%),radial-gradient(ellipse at 90% 10%,rgba(185,185,255,.64),transparent 35%),radial-gradient(ellipse at 62% 78%,rgba(120,240,212,.34),transparent 37%),linear-gradient(135deg,#eef7ff 0%,#dfe5ff 48%,#e7fff8 100%);background-attachment:fixed; }
+  html[data-theme="sakura"] body { background:radial-gradient(ellipse at 11% 0%,rgba(255,255,255,.99),transparent 32%),radial-gradient(ellipse at 91% 15%,rgba(255,154,201,.49),transparent 33%),radial-gradient(ellipse at 57% 92%,rgba(218,186,255,.40),transparent 38%),linear-gradient(145deg,#fff4f8 0%,#ffe0ed 48%,#f8efff 100%);background-attachment:fixed; }
+  html[data-theme="sunset"] body { background:radial-gradient(ellipse at 8% 5%,rgba(255,255,255,.98),transparent 31%),radial-gradient(ellipse at 89% 16%,rgba(255,170,116,.49),transparent 34%),radial-gradient(ellipse at 61% 91%,rgba(255,186,210,.46),transparent 38%),linear-gradient(145deg,#fff9e9 0%,#ffe5d1 48%,#ffedf0 100%);background-attachment:fixed; }
+  html[data-theme="lavender"] body { background:radial-gradient(ellipse at 10% 3%,rgba(255,255,255,.99),transparent 32%),radial-gradient(ellipse at 91% 15%,rgba(190,157,255,.55),transparent 34%),radial-gradient(ellipse at 52% 91%,rgba(148,208,255,.42),transparent 37%),linear-gradient(145deg,#fbf5ff 0%,#e9deff 50%,#e9f5ff 100%);background-attachment:fixed; }
+  html[data-theme="midnight"] body { background:radial-gradient(ellipse at 10% 1%,rgba(72,171,192,.24),transparent 33%),radial-gradient(ellipse at 90% 12%,rgba(114,93,209,.31),transparent 35%),radial-gradient(ellipse at 60% 93%,rgba(49,135,165,.22),transparent 40%),linear-gradient(145deg,#091321 0%,#101d35 46%,#101c2a 100%);background-attachment:fixed; }
+  html.ff14-liquid-glass-theme .manual-card,
+  html.ff14-liquid-glass-theme .input-section,
+  html.ff14-liquid-glass-theme .server-card,
+  html.ff14-liquid-glass-theme .focus-col-left,
+  html.ff14-liquid-glass-theme .focus-col-right,
+  html.ff14-liquid-glass-theme .modal-content,
+  html.ff14-liquid-glass-theme .ff14-ux-modal,
+  html.ff14-liquid-glass-theme .toolbox-menu,
+  html.ff14-liquid-glass-theme .floating-window,
+  html.ff14-liquid-glass-theme .announcement-box,
+  html.ff14-liquid-glass-theme .route-monitor-box,
+  html.ff14-liquid-glass-theme .advanced-route-panel,
+  html.ff14-liquid-glass-theme #ff14-floating-toolbox-v2,
+  html.ff14-liquid-glass-theme #ff14-monster-history-modal {
+    background-image:linear-gradient(137deg,rgba(255,255,255,.74) 0%,rgba(255,255,255,.28) 18%,rgba(var(--ff14-glass-tint-rgb),.20) 47%,rgba(255,255,255,.10) 73%,rgba(var(--ff14-glass-tint-rgb),.25) 100%)!important;
+    background-color:rgba(var(--panel-rgb,255,255,255),var(--ff14-glass-alpha,.74))!important;
+    background-blend-mode:screen,normal;
+    border:1px solid var(--ff14-glass-edge,rgba(255,255,255,.78))!important;
+    box-shadow:0 18px 48px var(--ff14-glass-shadow,rgba(45,95,122,.14)),inset 0 1px 0 rgba(255,255,255,.90),inset 0 -1px 0 rgba(var(--ff14-glass-tint-rgb),.16)!important;
+    backdrop-filter:blur(var(--ff14-glass-blur,24px)) saturate(178%) brightness(1.035)!important;
+    -webkit-backdrop-filter:blur(var(--ff14-glass-blur,24px)) saturate(178%) brightness(1.035)!important;
+  }
+  html[data-theme="midnight"].ff14-liquid-glass-theme .manual-card,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .input-section,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .server-card,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .focus-col-left,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .focus-col-right,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .modal-content,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .ff14-ux-modal,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .toolbox-menu,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .floating-window,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .announcement-box,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .route-monitor-box,
+  html[data-theme="midnight"].ff14-liquid-glass-theme .advanced-route-panel,
+  html[data-theme="midnight"].ff14-liquid-glass-theme #ff14-floating-toolbox-v2,
+  html[data-theme="midnight"].ff14-liquid-glass-theme #ff14-monster-history-modal {
+    background-image:linear-gradient(137deg,rgba(197,240,255,.15),rgba(118,129,255,.08) 38%,rgba(61,211,199,.09) 69%,rgba(255,255,255,.04))!important;
+    background-color:rgba(12,28,46,var(--ff14-glass-alpha,.74))!important;
+    box-shadow:0 20px 55px rgba(0,0,0,.32),inset 0 1px 0 rgba(210,242,255,.24),inset 0 -1px 0 rgba(70,202,223,.10)!important;
+  }
+  html.ff14-liquid-glass-theme input,
+  html.ff14-liquid-glass-theme select,
+  html.ff14-liquid-glass-theme textarea { backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
+  html.ff14-liquid-glass-theme .theme-btn.active { outline:2px solid rgba(255,255,255,.85);outline-offset:2px; }
+  html[data-theme="ocean"] .theme-btn.ocean { background:linear-gradient(135deg,#dffcff,#46bfd2 52%,#c8f6ff); }
+  html[data-theme="aurora"] .theme-btn.aurora { background:linear-gradient(135deg,#a8e9ff,#bcaeff 52%,#b9ffe2); }
+  html[data-theme="sakura"] .theme-btn.sakura { background:linear-gradient(135deg,#fff0f7,#ff8fbc 52%,#e2c6ff); }
+  html[data-theme="sunset"] .theme-btn.sunset { background:linear-gradient(135deg,#fff0c9,#ffad7e 52%,#ffbdd3); }
+  html[data-theme="lavender"] .theme-btn.lavender { background:linear-gradient(135deg,#f8edff,#b8a0ff 52%,#b7e8ff); }
+  html[data-theme="midnight"] .theme-btn.midnight { background:linear-gradient(135deg,#091827,#426e9b 52%,#61d3c7); }
+  html[data-theme="ocean"] #focusRoutePage { background:linear-gradient(135deg,rgba(230,255,255,.76),rgba(169,230,243,.62))!important;backdrop-filter:blur(24px) saturate(165%); }
+  html[data-theme="aurora"] #focusRoutePage { background:linear-gradient(135deg,rgba(239,247,255,.76),rgba(199,196,255,.62))!important;backdrop-filter:blur(24px) saturate(165%); }
+  html[data-theme="sakura"] #focusRoutePage { background:linear-gradient(135deg,rgba(255,244,249,.78),rgba(255,198,222,.62))!important;backdrop-filter:blur(24px) saturate(165%); }
+  html[data-theme="sunset"] #focusRoutePage { background:linear-gradient(135deg,rgba(255,249,234,.78),rgba(255,198,161,.62))!important;backdrop-filter:blur(24px) saturate(165%); }
+  html[data-theme="lavender"] #focusRoutePage { background:linear-gradient(135deg,rgba(250,245,255,.78),rgba(204,188,255,.62))!important;backdrop-filter:blur(24px) saturate(165%); }
+  html[data-theme="midnight"] #focusRoutePage { background:linear-gradient(135deg,rgba(8,20,36,.90),rgba(40,51,91,.83))!important;backdrop-filter:blur(26px) saturate(165%); }
+  #ff14-liquid-presets-in-bg-modal { margin:14px 0 16px;padding:14px;border:1px solid rgba(255,255,255,.62);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.44),rgba(255,255,255,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 8px 22px rgba(38,96,126,.08);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%); }
+  #ff14-liquid-presets-in-bg-modal .ff14-glass-bg-heading { font-size:13px;font-weight:900;margin:0 0 4px;color:var(--accent); }
+  #ff14-liquid-presets-in-bg-modal .ff14-glass-bg-note { font-size:11px;line-height:1.6;color:var(--text-muted);margin:0 0 10px; }
+  #ff14-liquid-presets-in-bg-modal .ff14-glass-preset-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #ff14-liquid-presets-in-bg-modal .ff14-liquid-preset { min-height:66px; }
+  @media(max-width:650px) {
+    .theme-switcher { top:7px!important;right:7px!important;gap:5px;padding:5px 7px;max-width:calc(100vw - 14px); }
+    .theme-switcher .theme-btn { width:20px;height:20px;flex-basis:20px; }
+    .theme-switcher .theme-btn.glass-more { width:24px;height:24px;flex-basis:24px; }
+    #ff14-liquid-glass-picker { top:58px;right:7px; }
+    #ff14-liquid-glass-picker .ff14-glass-preset-grid { gap:7px; }
+    .ff14-liquid-preset { min-height:76px;padding:9px; }
+  }
+  @media(prefers-reduced-motion:reduce) { #ff14-liquid-glass-picker.open .ff14-liquid-preset { animation:none!important;transition:none!important; } }
+</style>
+<script id="ff14-liquid-glass-expansion-v3-script">
+(function(){
+  'use strict';
+  if(window.__ff14LiquidGlassExpansionV3Loaded)return;
+  window.__ff14LiquidGlassExpansionV3Loaded=true;
+  const liquidThemes=['mint','ocean','aurora','sakura','sunset','lavender','midnight'];
+  const presets=[
+    {id:'mint',name:'薄荷气泡',desc:'浅绿 · 清新透亮'},
+    {id:'ocean',name:'海盐蓝璃',desc:'青蓝 · 清凉水波'},
+    {id:'aurora',name:'极光幻彩',desc:'蓝紫绿 · 梦幻渐变'},
+    {id:'sakura',name:'樱花柔雾',desc:'粉白 · 温柔柔光'},
+    {id:'sunset',name:'落日香槟',desc:'蜜桃橙 · 暖色反光'},
+    {id:'lavender',name:'薰衣草晶',desc:'浅紫 · 细腻晶透'},
+    {id:'midnight',name:'深海夜璃',desc:'深蓝 · 冷光玻璃'}
+  ];
+  const $=id=>document.getElementById(id);
+  function safeTheme(){return document.documentElement.getAttribute('data-theme')||'dark';}
+  function updateActiveTiles(){
+    const current=safeTheme();
+    document.querySelectorAll('[data-liquid-theme]').forEach(button=>button.classList.toggle('active',button.getAttribute('data-liquid-theme')===current));
+  }
+  function makePresetButtons(){
+    return presets.map(p=>`<button type="button" class="ff14-liquid-preset${p.id==='mint'?' theme-btn mint':' theme-btn '+p.id}" data-liquid-theme="${p.id}" aria-label="应用${p.name}" title="应用${p.name}"><strong>${p.name}</strong><small>${p.desc}</small></button>`).join('');
+  }
+  function installPicker(){
+    const switcher=document.querySelector('.theme-switcher');if(!switcher)return false;
+    if(!switcher.querySelector('.glass-more')){
+      const toggle=document.createElement('div');toggle.className='theme-btn glass-more';toggle.setAttribute('role','button');toggle.setAttribute('tabindex','0');toggle.setAttribute('aria-label','更多液态玻璃背景');toggle.title='更多液态玻璃背景';
+      toggle.addEventListener('click',event=>{event.stopPropagation();const panel=$('ff14-liquid-glass-picker');if(panel)panel.classList.toggle('open');});
+      toggle.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle.click();}});
+      switcher.appendChild(toggle);
+    }
+    if(!$('ff14-liquid-glass-picker')){
+      const panel=document.createElement('section');panel.id='ff14-liquid-glass-picker';panel.setAttribute('aria-label','液态玻璃主题选择');
+      panel.innerHTML=`<div class="ff14-glass-picker-title">✧ 液态玻璃背景工坊</div><p class="ff14-glass-picker-subtitle">选择一款光泽与色彩。主题会立即应用并记住，下次打开仍会保留；可在背景设置里继续调节玻璃强度。</p><div class="ff14-glass-preset-grid">${makePresetButtons()}</div>`;
+      document.body.appendChild(panel);
+      panel.querySelectorAll('[data-liquid-theme]').forEach(button=>button.addEventListener('click',()=>{
+        const theme=button.getAttribute('data-liquid-theme');if(typeof window.changeTheme==='function')window.changeTheme(theme);
+        panel.classList.remove('open');updateActiveTiles();
+      }));
+    }
+    if(!document.documentElement.dataset.ff14LiquidPickerOutside){
+      document.documentElement.dataset.ff14LiquidPickerOutside='1';
+      document.addEventListener('click',event=>{const panel=$('ff14-liquid-glass-picker');const toggle=document.querySelector('.theme-btn.glass-more');if(panel&&!panel.contains(event.target)&&!toggle?.contains(event.target))panel.classList.remove('open');});
+      document.addEventListener('keydown',event=>{if(event.key==='Escape')$('ff14-liquid-glass-picker')?.classList.remove('open');});
+    }
+    return true;
+  }
+  const priorChangeTheme=window.changeTheme;
+  if(typeof priorChangeTheme==='function'){
+    window.changeTheme=function liquidGlassAwareChangeTheme(theme,...args){
+      let result;
+      try {
+        result=priorChangeTheme.call(this,theme,...args);
+      } catch(error) {
+        // If storage is blocked by the browser, still apply the selected visual theme.
+        if(error && (error.name==='SecurityError' || /localStorage/i.test(String(error.message||'')))) {
+          document.documentElement.setAttribute('data-theme',theme==='dark'?'':theme);
+          try { window.localStorage.setItem('ff14_theme',theme); } catch(_) {}
+        } else { throw error; }
+      } finally {
+        document.documentElement.classList.toggle('ff14-liquid-glass-theme',liquidThemes.includes(theme));
+        if(liquidThemes.includes(theme)) {
+          document.querySelectorAll('.theme-btn').forEach(button=>button.classList.toggle('active',button.classList.contains(theme)));
+        }
+        updateActiveTiles();
+      }
+      return result;
+    };
+  }
+  function addPresetsToBackgroundSettings(){
+    const modal=$('ff14BackgroundSettingsModal');const body=modal?.querySelector('.ff14-ux-modal-body');if(!body||$('ff14-liquid-presets-in-bg-modal'))return;
+    const box=document.createElement('section');box.id='ff14-liquid-presets-in-bg-modal';
+    box.innerHTML=`<div class="ff14-glass-bg-heading">✧ 液态玻璃背景配色</div><p class="ff14-glass-bg-note">这里的预设只切换页面配色与玻璃质感，不会覆盖你上传的背景图片。选择后立即生效并保存。</p><div class="ff14-glass-preset-grid">${makePresetButtons()}</div>`;
+    const preview=body.querySelector('#ff14-bg-preview');if(preview)preview.insertAdjacentElement('afterend',box);else body.prepend(box);
+    box.querySelectorAll('[data-liquid-theme]').forEach(button=>button.addEventListener('click',()=>{
+      const theme=button.getAttribute('data-liquid-theme');if(typeof window.changeTheme==='function')window.changeTheme(theme);updateActiveTiles();
+      try{if(typeof window.showToast==='function')window.showToast(`已应用并保存「${presets.find(p=>p.id===theme)?.name||theme}」液态玻璃主题`);}catch(_){}
+    }));
+    updateActiveTiles();
+  }
+  const priorOpenBackground=window.openBackgroundSettings;
+  if(typeof priorOpenBackground==='function'){
+    window.openBackgroundSettings=function(...args){const result=priorOpenBackground.apply(this,args);setTimeout(addPresetsToBackgroundSettings,50);return result;};
+  }
+  function appendChangelog(){
+    const list=$('updateContentList');if(!list||list.querySelector('[data-ff14-liquid-glass-v3]'))return;
+    const li=document.createElement('li');li.setAttribute('data-ff14-liquid-glass-v3','1');
+    const strong=document.createElement('strong');strong.textContent='多款液态玻璃背景：';
+    li.append(strong,document.createTextNode('新增海盐蓝璃、极光幻彩、樱花柔雾、落日香槟、薰衣草晶与深海夜璃；顶部 ✧ 可打开主题工坊，背景设置中也可切换。所有主题沿用原液态玻璃强度控制，并记住上次选择。'));
+    list.appendChild(li);
+  }
+  const priorChangeLog=window.showUXChangeLog;
+  if(typeof priorChangeLog==='function')window.showUXChangeLog=function(...args){const result=priorChangeLog.apply(this,args);appendChangelog();return result;};
+  function init(){
+    installPicker();
+    addPresetsToBackgroundSettings();
+    appendChangelog();
+    const current=safeTheme();document.documentElement.classList.toggle('ff14-liquid-glass-theme',liquidThemes.includes(current));updateActiveTiles();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,300),{once:true});else setTimeout(init,300);
+  const retry=setInterval(()=>{installPicker();addPresetsToBackgroundSettings();appendChangelog();if(document.querySelector('.theme-switcher')&&$('ff14-liquid-glass-picker'))clearInterval(retry);},500);
+  setTimeout(()=>clearInterval(retry),15000);
+})();
+</script>
+<!-- ===== 更多液态玻璃背景主题结束 ===== -->
+
+
+<!-- ===== 增量修复 v4：液态玻璃主题卡片横向排版 ===== -->
+<style id="ff14-liquid-glass-horizontal-preset-fix">
+  /* 主题预设同时带有旧版 .theme-btn 类；必须覆盖旧按钮的 24px 圆形宽高，
+     否则卡片会被压成窄条，文字就会逐字竖排。 */
+  .ff14-liquid-preset,
+  #ff14-liquid-presets-in-bg-modal .ff14-liquid-preset {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 62px !important;
+    aspect-ratio: auto !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+    white-space: normal !important;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    border-radius: 13px !important;
+    text-align: left !important;
+  }
+  .ff14-liquid-preset strong {
+    display: block !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    max-width: 48% !important;
+    white-space: nowrap !important;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    line-height: 1.35 !important;
+  }
+  .ff14-liquid-preset small {
+    display: block !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: 58% !important;
+    margin-left: auto !important;
+    text-align: right !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    line-height: 1.45 !important;
+  }
+  #ff14-liquid-glass-picker .ff14-glass-preset-grid,
+  #ff14-liquid-presets-in-bg-modal .ff14-glass-preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+  }
+  @media (max-width: 420px) {
+    #ff14-liquid-glass-picker .ff14-glass-preset-grid,
+    #ff14-liquid-presets-in-bg-modal .ff14-glass-preset-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .ff14-liquid-preset,
+    #ff14-liquid-presets-in-bg-modal .ff14-liquid-preset {
+      min-height: 54px !important;
+      padding: 9px 11px !important;
+    }
+    .ff14-liquid-preset strong { max-width: 42% !important; }
+    .ff14-liquid-preset small { max-width: 62% !important; }
+  }
+</style>
+<!-- ===== 液态玻璃主题卡片横向排版修复结束 ===== -->
+
 </body>
 </html>
+
+<!-- FF14 Toolbox Horizontal Layout Enhancement: append-only patch -->
+<style id="ff14-toolbox-horizontal-layout-fix">
+  /* 将悬浮工具箱内原本纵向堆叠的菜单改为横向双列卡片；所有原按钮及事件保持不变。 */
+  #ff14-floating-toolbox-v2 .ff14-toolbox-body { padding: 10px !important; }
+  #ff14-floating-toolbox-v2 .toolbox-menu {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  #ff14-floating-toolbox-v2 .toolbox-menu button {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 9px 10px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 11px !important;
+    background: linear-gradient(145deg, rgba(255,255,255,.28), rgba(255,255,255,.08)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.38), 0 3px 10px rgba(0,0,0,.05) !important;
+    text-align: left !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    overflow-wrap: anywhere !important;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease !important;
+  }
+  #ff14-floating-toolbox-v2 .toolbox-menu button > span {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+  }
+  #ff14-floating-toolbox-v2 .toolbox-menu button .toggle-switch {
+    flex: 0 0 36px !important;
+    margin-left: auto !important;
+  }
+  #ff14-floating-toolbox-v2 .toolbox-menu button:hover {
+    transform: translateY(-1px) !important;
+    border-color: var(--accent) !important;
+    background: linear-gradient(145deg, rgba(255,255,255,.46), rgba(255,255,255,.16)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.58), 0 7px 16px rgba(0,0,0,.09) !important;
+  }
+  /* 较长的选项跨两列，避免标题被过度挤压。 */
+  #ff14-floating-toolbox-v2 .toolbox-menu button[onclick="openReportCooldownModal()"],
+  #ff14-floating-toolbox-v2 .toolbox-menu button[onclick="toggleLayout()"] { grid-column: 1 / -1 !important; }
+  #ff14-floating-toolbox-v2 .toolbox-menu button:focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 2px !important; }
+  @media (max-width: 390px) {
+    #ff14-floating-toolbox-v2 { width: min(340px, calc(100vw - 16px)) !important; }
+    #ff14-floating-toolbox-v2 .ff14-toolbox-body { padding: 8px !important; }
+    #ff14-floating-toolbox-v2 .toolbox-menu { gap: 6px !important; }
+    #ff14-floating-toolbox-v2 .toolbox-menu button { min-height: 44px !important; padding: 8px !important; font-size: 12px !important; }
+  }
+</style>
