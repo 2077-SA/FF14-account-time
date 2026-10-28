@@ -8925,3 +8925,199 @@ window.closeRecentDetail = function closeRecentDetail() {
     #ff14-floating-toolbox-v2 .toolbox-menu button { min-height: 44px !important; padding: 8px !important; font-size: 12px !important; }
   }
 </style>
+
+
+<!-- 悬浮倒计时稳定性补丁：仅稳定显示布局，不修改 ET 与 S 怪计算逻辑 -->
+<style id="ff14-floating-window-stability-patch">
+  /* 固定浮窗宽度：ET 秒数/倒计时格式变化时，不再挤压整张卡片或推移其左边缘。 */
+  .floating-window {
+    box-sizing: border-box !important;
+    width: min(360px, calc(100vw - 24px)) !important;
+    min-width: min(320px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+    transition: none !important;
+    animation: none !important;
+    backface-visibility: hidden;
+    font-variant-numeric: tabular-nums;
+  }
+  .floating-window .fc-header {
+    min-height: 28px;
+    align-items: center;
+  }
+  .floating-window .fc-title {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .floating-window .fc-btns { flex: 0 0 auto; }
+  .floating-window .fc-row {
+    min-width: 0;
+    min-height: 20px;
+    align-items: center;
+  }
+  .floating-window .fc-row > .fc-label {
+    flex: 0 0 92px;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .floating-window .fc-row > .fc-val {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: calc(100% - 98px);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, Consolas, "Courier New", monospace;
+  }
+  .floating-window .fc-countdown {
+    min-height: 64px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .floating-window .fc-timer-val {
+    display: block;
+    width: 100%;
+    min-height: 24px;
+    line-height: 24px;
+    font-size: clamp(14px, 1.2vw, 18px) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .floating-window .fc-timer-desc {
+    display: block;
+    min-height: 18px;
+    line-height: 18px;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+  /* 旧版在接近强制时间时会闪烁；只取消浮窗内闪烁，不改主页告警提示。 */
+  .floating-window .blink-warning,
+  .floating-window .ss-highlight {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  /* 预测区每秒更新进度时保持相同的基础占位，避免内容重新生成后卡片上下跳动。 */
+  .floating-window [id^="fc-est-"] {
+    min-height: 64px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  .floating-window [id^="fc-est-"] .fc-row {
+    min-height: 20px;
+    margin-bottom: 0;
+  }
+  .floating-window [id^="fc-est-"] > div[style*="height:6px"] {
+    height: 6px !important;
+    flex: 0 0 6px;
+  }
+  /* ET 面板用等宽数字及固定行高，秒数变化不触发横向重排。 */
+  .floating-window .et-float-panel {
+    min-height: 66px;
+    box-sizing: border-box;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+  }
+  .floating-window .et-float-panel > div:not(.et-float-target) {
+    display: grid !important;
+    grid-template-columns: 100px minmax(0, 1fr);
+    column-gap: 8px !important;
+    align-items: center;
+    min-height: 21px;
+    line-height: 21px;
+  }
+  .floating-window .et-float-current,
+  .floating-window .et-float-remaining {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+    font-family: ui-monospace, Consolas, "Courier New", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .floating-window .et-float-target {
+    display: block;
+    min-height: 16px;
+    line-height: 16px;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: normal !important;
+  }
+  @media (max-width: 480px) {
+    .floating-window {
+      width: calc(100vw - 20px) !important;
+      min-width: 0 !important;
+      max-width: calc(100vw - 20px) !important;
+    }
+    .floating-window .fc-row > .fc-label { flex-basis: 82px; }
+    .floating-window .fc-row > .fc-val { max-width: calc(100% - 88px); }
+    .floating-window .et-float-panel > div:not(.et-float-target) { grid-template-columns: 88px minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .floating-window, .floating-window * { scroll-behavior: auto !important; }
+    .floating-window .blink-warning, .floating-window .ss-highlight { animation: none !important; }
+  }
+</style>
+<script id="ff14-floating-window-stability-init">
+(() => {
+  'use strict';
+  if (window.__ff14FloatingWindowStabilityPatch) return;
+  window.__ff14FloatingWindowStabilityPatch = true;
+
+  function applyStableFloat(el) {
+    if (!(el instanceof Element) || !el.matches('.floating-window')) return;
+    el.dataset.ff14StableFloat = '1';
+    // 给当前数值设置原值提示；不替换节点，不干预原倒计时计算。
+    const updateTitles = () => {
+      const nodes = el.querySelectorAll('.fc-timer-val, .fc-timer-desc, .et-float-current, .et-float-remaining, .et-float-target');
+      nodes.forEach(node => {
+        const text = (node.textContent || '').trim();
+        if (text && node.title !== text) node.title = text;
+      });
+    };
+    if (!el.__ff14StableFloatObserver && typeof MutationObserver !== 'undefined') {
+      const observer = new MutationObserver(() => updateTitles());
+      observer.observe(el, { subtree: true, childList: true, characterData: true });
+      el.__ff14StableFloatObserver = observer;
+    }
+    updateTitles();
+  }
+
+  function scan(root) {
+    if (!root) return;
+    if (root instanceof Element && root.matches('.floating-window')) applyStableFloat(root);
+    if (root.querySelectorAll) root.querySelectorAll('.floating-window').forEach(applyStableFloat);
+  }
+
+  function init() {
+    scan(document);
+    const root = document.body || document.documentElement;
+    if (root && typeof MutationObserver !== 'undefined' && !window.__ff14FloatingWindowStabilityObserver) {
+      const observer = new MutationObserver(records => records.forEach(record => record.addedNodes.forEach(node => { if (node.nodeType === 1) scan(node); })));
+      observer.observe(root, { childList: true, subtree: true });
+      window.__ff14FloatingWindowStabilityObserver = observer;
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+})();
+</script>
