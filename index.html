@@ -1900,7 +1900,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
         <div class="modal-content" style="max-width: 450px;">
             <button class="btn-close-modal" onclick="document.getElementById('reportCooldownModal').style.display='none'">×</button>
             <div class="modal-title" style="color: var(--gold);">⏱️ 上报冷却设置</div>
-            <div class="modal-desc">设置点击“出货/寄了”后的冷却时间。0 秒表示无冷却。<br>仅特殊邀请码 <b>w6168</b> 或开发者 <b>kfz6168</b> 可修改。</div>
+            <div class="modal-desc">设置点击“出货/寄了”后的冷却时间。0 秒表示无冷却。<br>仅特殊邀请用户或开发者身份可修改。</div>
             <div class="input-group" style="margin-bottom: 15px;">
                 <label>冷却时间 (秒)</label>
                 <input type="number" id="reportCooldownInput" min="0" max="600" value="5">
@@ -2046,7 +2046,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
             <li><strong>全量出货记录与进度条</strong>：新增出货/寄了按钮，支持查询所有S怪的历史击杀记录！</li>
             <li><strong>修复上报冷却 Bug</strong>：移除自动判定死亡锁操作限制，支持开发者/特殊邀请码调整冷却。</li>
             <li><strong>新增磨砂玻璃详情</strong>：点击记录卡片可查看详细的时间节点和上一次出货时间。</li>
-            <li><strong>临时验证机制</strong>：未验证用户输入 y616 可生成 10 秒临时验证码查看详情。</li>
+            <li><strong>临时验证机制</strong>：未验证用户可通过临时验证流程查看部分详情；临时权限仅开放基础功能。</li>
         `;
 
         function checkUpdateModal() {
@@ -3878,7 +3878,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
                 let warnHtml = !isActuallyGreen ? `<div class="manual-warn">💡 已击杀状态请确保已上传击杀截图作为证据。</div>` : '';
                 if (manualBox) {
                     manualBox.innerHTML = `
-                        <div class="res-item" style="flex:1;"><span class="res-label">绝对进闸时间</span><span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span><span class="res-desc">${gateDesc}</span></div>
+                        <div class="res-item" style="flex:1;"><span class="res-label">绝对进闸时间</span><span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span><span class="ff14-gate-weekday" aria-live="off">星期计算中</span><span class="res-desc">${gateDesc}</span></div>
                         <div class="res-item" style="flex:1;"><span class="res-label">预计强制时间</span><span class="res-val" style="color:var(--gold)">${fmtDate(targetForceTime)}</span><span class="res-desc">${forceDesc}</span></div>
                         <div class="res-item" style="flex:1;"><span class="res-label">状态提示</span><span class="res-val countdown-big" style="color:${stateColor}">${stateText}</span></div>
                         <button class="btn-copy-manual" onclick="copyManualResult()">📋 复制手动结果</button>${warnHtml}`;
@@ -4065,7 +4065,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
         }
 
         function generateTempDetailCode() {
-            const code = prompt('查看详细时间节点需要验证。\n临时用户请输入 y616 获取 10 秒临时验证码：\n(注意：该验证仅有效于主页面，无法解锁排车模式)');
+            const code = prompt('查看详细时间节点需要验证。\n普通访客可申请短时临时访问：\n(该验证仅有效于主页面，无法解锁排车模式)');
             if (code === 'y616') {
                 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
                 let newCode = '';
@@ -5282,7 +5282,7 @@ currentManualCalcData = { isGreen: isActuallyGreen, isShanxieya, h, m, targetGat
 const fmtDate = (d) => d ? `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '-';
 const updateDisplay = () => {
 const cNow = new Date(); let displayGate = targetGateTime; if (isDynamicGate) displayGate = cNow; let warnHtml = !isActuallyGreen ? `<div class="manual-warn">已击杀状态请确保已上传击杀截图作为证据。</div>` : '';
-if (manualBox) { manualBox.innerHTML = `<div class="res-item" style="flex:1;"><span class="res-label">绝对进闸时间</span><span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span><span class="res-desc">${gateDesc}</span></div><div class="res-item" style="flex:1;"><span class="res-label">预计强制时间</span><span class="res-val" style="color:var(--gold)">${fmtDate(targetForceTime)}</span><span class="res-desc">${forceDesc}</span></div><div class="res-item" style="flex:1;"><span class="res-label">状态提示</span><span class="res-val countdown-big" style="color:${stateColor}">${stateText}</span></div><button class="btn-copy-manual" onclick="copyManualResult()">复制手动结果</button>${warnHtml}`; }
+if (manualBox) { manualBox.innerHTML = `<div class="res-item" style="flex:1;"><span class="res-label">绝对进闸时间</span><span class="res-val" style="color:var(--accent)">${fmtDate(displayGate)}</span><span class="ff14-gate-weekday" aria-live="off">星期计算中</span><span class="res-desc">${gateDesc}</span></div><div class="res-item" style="flex:1;"><span class="res-label">预计强制时间</span><span class="res-val" style="color:var(--gold)">${fmtDate(targetForceTime)}</span><span class="res-desc">${forceDesc}</span></div><div class="res-item" style="flex:1;"><span class="res-label">状态提示</span><span class="res-val countdown-big" style="color:${stateColor}">${stateText}</span></div><button class="btn-copy-manual" onclick="copyManualResult()">复制手动结果</button>${warnHtml}`; }
 tickTimers(); 
 };
 updateDisplay(); manualTimer = setInterval(updateDisplay, 1000);
@@ -9183,6 +9183,8 @@ window.closeRecentDetail = function closeRecentDetail() {
     text-shadow:0 1px 12px rgba(255,255,255,.24);
   }
   #etCountdownCard #etTargetCountdown { font-size:var(--ff14-et-count-size, 30px) !important; }
+  /* ET auto dark/light digit colors */
+  #etCountdownCard #etCurrentClock, #etCountdownCard #etTargetCountdown { color:var(--ff14-et-digit-color,var(--blue)) !important; }
   #etCountdownCard #etCurrentClock:hover,
   #etCountdownCard #etTargetCountdown:hover { filter:brightness(1.08); }
   #etCountdownCard #etCurrentClock:focus-visible,
@@ -10503,7 +10505,7 @@ window.closeRecentDetail = function closeRecentDetail() {
     const captureTime=hasSnapshot?localTime(t0):'旧记录未保存原始计算快照';
     const inputs=hasSnapshot?`${r.calcInputWasGreen?'存活':'CD'}；已输入 ${Math.floor(elapsedMin/60)} 小时 ${number3(elapsedMin%60)} 分；CD=${number3(cdH)}h，存活窗=${number3(lifeH)}h`:`记录内保存字段 h=${htmlEscape(r.h??'—')}，m=${htmlEscape(r.m??'—')}；原始输入模式未保存`;
     return `<details class="ff14-advanced-algorithm" open><summary>高级算法详情 · 授权用户视图</summary>
-      <div class="ff14-aa-caption">本区仅对已解锁 w6168 主控权限或 kfz6168 开发者权限的当前权限状态显示。时间以浏览器本地时区展示，公式保留三位小数；这是现有计算器模型的透明说明，不代表游戏刷新点的绝对保证。</div>
+      <div class="ff14-aa-caption">本区仅对当前已通过高级权限验证的会话显示。时间以浏览器本地时区展示，公式保留三位小数；这是计算器模型的透明说明，不代表游戏刷新点的绝对保证。</div>
       <div class="ff14-aa-grid">${makeCell('计算快照时间',captureTime)}${makeCell('输入分支',modeText)}${makeCell('输入与参数',inputs)}${makeCell('天气约束',weatherText)}${makeCell('模型基准进闸',localTime(baseGate))}${makeCell('模型基准强制',localTime(baseForce))}${makeCell('列表保存的进闸时间',localTime(r.gateTimeMs))}${makeCell('列表保存的强制时间',localTime(r.forceTimeMs))}${makeCell('距进闸时间',remainingGate>0?formatDurationMs(remainingGate):`已过 ${formatDurationMs(-remainingGate)}`)}${makeCell('距强制时间',remainingForce>0?formatDurationMs(remainingForce):`已过 ${formatDurationMs(-remainingForce)}`)}${makeCell('当前时间阶段',state)}${makeCell('进闸至强制时间轴',`${number3(timelinePct)}%`)}${predCells}</div>
       <div class="ff14-aa-formula">${htmlEscape(formula)}</div>
       <div class="ff14-aa-note">说明：基准算法使用计算快照时间作为锚点；存活输入按“计算时间减已存活时长”估算进闸，CD 输入按“计算时间加剩余 CD”估算进闸，强制时间再加存活窗口。天气前置目标仅在其结束时间晚于基准进闸时覆盖进闸时间。旧记录没有原始输入模式的，明确标注不可还原，不猜测原数据。</div>
@@ -10597,7 +10599,7 @@ window.closeRecentDetail = function closeRecentDetail() {
   function addUpdateNote() {
     const list=$('#updateContentList');if(!list||$('#ff14AdvancedGlassUpdateNote'))return;
     const li=document.createElement('li');li.id='ff14AdvancedGlassUpdateNote';
-    li.innerHTML='<strong>高级计算与全局液态玻璃：</strong>优化进闸/强制时间的本地预计描述；为 w6168 主控与 kfz6168 开发者权限增加计算快照、公式、天气约束、进度及历史预测器统计详情；新增全局纯色液态玻璃工坊，覆盖主界面、输入框、弹窗和专注排车页面。';list.appendChild(li);
+    li.innerHTML='<strong>高级计算与全局液态玻璃：</strong>优化进闸/强制时间的本地预计描述；为已授权的高级身份增加计算快照、公式、天气约束、进度及历史预测器统计详情；新增全局纯色液态玻璃工坊，覆盖主界面、输入框、弹窗和专注排车页面。';list.appendChild(li);
   }
   function init() {
     if(!document.body)return false;
@@ -10607,6 +10609,1062 @@ window.closeRecentDetail = function closeRecentDetail() {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{init();}, {once:true});else init();
   const initObserver=new MutationObserver(()=>{if(!$('#ff14GlassLauncher'))makeWorkshop();wrapThemeSwitcher();wrapCalcManual();wrapRecentDetail();wrapAddRecent();setupEnhancementObservers();addUpdateNote();});
   if(document.body)initObserver.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+<style id="ff14-oct28-regression-fixes-css">
+  /* Background image must remain visible when the global glass canvas is enabled. */
+  /* A custom uploaded background always wins over the solid glass canvas, whichever theme mode is active. */
+  html.ff14-user-bg-active body {
+    background: transparent !important; background-image: none !important;
+  }
+  html.ff14-user-bg-active #focusRoutePage,
+  html.ff14-bg-route-active #focusRoutePage {
+    background: transparent !important; background-image: none !important;
+  }
+  #ff14-runtime-status-bar {
+    width:min(1250px,100%); align-self:stretch; box-sizing:border-box; position:sticky; top:5px; z-index:17000;
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px;
+    margin:0 auto 10px; padding:9px 13px; border:1px solid var(--ff14-glass-edge,rgba(255,255,255,.6));
+    border-radius:14px; color:var(--text); background:linear-gradient(125deg,rgba(255,255,255,.7),rgba(var(--panel-rgb,26,26,46),.72));
+    box-shadow:0 8px 26px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.8);
+    backdrop-filter:blur(var(--ff14-global-glass-blur,16px)) saturate(1.5); -webkit-backdrop-filter:blur(var(--ff14-global-glass-blur,16px)) saturate(1.5);
+    font-size:12px; line-height:1.4;
+  }
+  #ff14-runtime-status-bar .ff14-status-group { display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0; }
+  #ff14-runtime-status-bar .ff14-status-pill { display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:5px 9px;border-radius:999px;border:1px solid var(--border);background:rgba(var(--panel-rgb,26,26,46),.32);font-weight:850; }
+  #ff14-runtime-status-bar .ff14-status-pill strong { color:var(--accent);font-variant-numeric:tabular-nums; }
+  #ff14-runtime-status-bar .ff14-identity-badge { border-color:rgba(0,180,120,.34); }
+  #ff14-runtime-status-bar .ff14-identity-badge[data-role="developer"] { color:#8f55d9;border-color:rgba(143,85,217,.42); }
+  #ff14-runtime-status-bar .ff14-identity-badge[data-role="special"] { color:var(--gold);border-color:rgba(210,150,30,.45); }
+  #ff14-runtime-status-bar .ff14-identity-badge[data-role="temporary"] { color:var(--blue);border-color:rgba(40,145,200,.42); }
+  #ff14-runtime-status-bar .ff14-identity-badge[data-role="visitor"] { color:var(--text-muted); }
+  .ff14-gate-weekday { display:inline-flex;margin-top:3px;align-items:center;gap:5px;font-size:12px;font-weight:850;color:var(--blue); }
+  .ff14-gate-weekday::before { content:'周';opacity:.65;font-size:10px; }
+  .ff14-gate-weekday-row .fc-val { color:var(--blue)!important;font-size:12px!important; }
+  .ff14-last-kill-age { display:block; margin:4px 0 7px; font-size:11px;line-height:1.5;color:var(--text-muted);font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere; }
+  .ff14-last-kill-age.has-record { color:var(--gold); }
+  .ff14-local-et-panel { margin-top:9px;padding:9px;border:1px solid var(--border);border-radius:10px;background:linear-gradient(135deg,rgba(255,255,255,.20),rgba(var(--panel-rgb,26,26,46),.42)); }
+  .ff14-local-et-heading { display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:11px;font-weight:900;color:var(--accent); }
+  .ff14-local-et-target { font-size:11px;color:var(--text-muted);line-height:1.5;overflow-wrap:anywhere;margin-bottom:5px; }
+  .ff14-local-et-countdown { font:800 15px/1.35 ui-monospace,Consolas,monospace;color:var(--accent);font-variant-numeric:tabular-nums;overflow-wrap:anywhere;margin:3px 0 7px; }
+  .ff14-local-et-input { display:block;width:100%;min-width:0;box-sizing:border-box;background:rgba(var(--panel-rgb,26,26,46),.38)!important;color:var(--text)!important;border:1px solid var(--input-border,var(--border))!important;border-radius:8px;padding:7px 8px;font-size:12px; }
+  .ff14-local-et-actions { display:flex;gap:6px;margin-top:6px; }
+  .ff14-local-et-actions button { flex:1;min-width:0;padding:5px 7px;font-size:11px; }
+  .floating-window .et-float-remaining,.floating-window .et-float-target { display:none!important; }
+  .ff14-sorted-route-mini { margin-top:10px;border:1px solid var(--border);border-radius:10px;background:rgba(var(--panel-rgb,26,26,46),.35);overflow:hidden; }
+  .ff14-sorted-route-mini > summary { cursor:pointer;padding:8px 9px;font-size:11px;font-weight:900;color:var(--blue);list-style:none; }
+  .ff14-sorted-route-mini > summary::-webkit-details-marker { display:none; }
+  .ff14-sorted-route-mini > summary::after { content:'＋';float:right;color:var(--text-muted); }
+  .ff14-sorted-route-mini[open] > summary::after { content:'－'; }
+  .ff14-sorted-route-list { max-height:170px;overflow:auto;margin:0;padding:0 9px 9px 28px;font-size:11px;line-height:1.65;color:var(--text); }
+  .ff14-sorted-route-list li { padding:3px 0;border-bottom:1px dashed var(--border);overflow-wrap:anywhere; }
+  .ff14-sorted-route-list li:last-child { border-bottom:0; }
+  .ff14-sorted-route-list .ff14-route-dead { opacity:.48;text-decoration:line-through; }
+  #ff14-aom-select-controls { display:flex;gap:7px;flex-wrap:wrap;margin:0 0 8px; }
+  #ff14-aom-select-controls button { flex:1;min-width:105px;padding:7px 9px;font-size:12px;font-weight:850; }
+  #ff14-route-order-tools { display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap; }
+  #ff14-route-order-state { font-size:11px;color:var(--text-muted);font-weight:750; }
+  @media(max-width:650px) {
+    #ff14-runtime-status-bar { position:relative;top:auto;padding:8px;margin-bottom:8px; }
+    #ff14-runtime-status-bar .ff14-status-pill { font-size:11px;padding:5px 7px; }
+    .ff14-local-et-countdown { font-size:14px; }
+  }
+</style>
+<script id="ff14-oct28-regression-fixes-js">
+(function FF14Oct28RegressionFixes(){
+  'use strict';
+  const $=(selector,root=document)=>root.querySelector(selector);
+  const $$=(selector,root=document)=>Array.from(root.querySelectorAll(selector));
+  const safe=(fn,fallback=null)=>{try{return fn();}catch(_){return fallback;}};
+  const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const setText=(el,value)=>{if(el&&el.textContent!==String(value))el.textContent=String(value);};
+  const DAYS=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  const LOCAL_ET_KEY='ff14_float_independent_et_targets_v2';
+  let localETTargets=safe(()=>JSON.parse(localStorage.getItem(LOCAL_ET_KEY)||'{}'),{});
+  if(!localETTargets||typeof localETTargets!=='object'||Array.isArray(localETTargets))localETTargets={};
+  const ROUTE_ORDER_KEY='ff14_manual_route_order_v2';
+  let routeOrderSnapshot=safe(()=>{const value=JSON.parse(localStorage.getItem(ROUTE_ORDER_KEY)||'null');return Array.isArray(value)&&value.every(item=>typeof item==='string')?value:null;},null);
+  let routeOrderButton=null;
+  const floatMeta=window.__ff14FloatMeta||(window.__ff14FloatMeta={});
+
+  function toast(message){safe(()=>{if(typeof window.showToast==='function')window.showToast(message);else console.info(message);});}
+  function roleInfo(){
+    let dev=false,special=false,vip=false;
+    try{dev=(typeof isDeveloperMode!=='undefined'&&!!isDeveloperMode)||localStorage.getItem('ff14_developer_mode')==='true';}catch(_){}
+    try{special=(typeof isMasterVerified!=='undefined'&&!!isMasterVerified)||localStorage.getItem('ff14_master_verified')==='true';}catch(_){}
+    try{vip=(typeof isVipUnlocked!=='undefined'&&!!isVipUnlocked)||special||dev;}catch(_){}
+    if(dev)return{role:'developer',label:'开发者身份',detail:'最高级访问权限'};
+    if(special)return{role:'special',label:'特殊身份',detail:'特殊邀请权限'};
+    if(vip)return{role:'temporary',label:'临时身份',detail:'临时邀请码权限'};
+    return{role:'visitor',label:'普通访客',detail:'尚未解锁特权'};
+  }
+  function ensureStatusBar(){
+    let bar=$('#ff14-runtime-status-bar');
+    if(!bar){
+      bar=document.createElement('div');bar.id='ff14-runtime-status-bar';bar.setAttribute('role','status');bar.setAttribute('aria-live','polite');
+      bar.innerHTML='<div class="ff14-status-group"><span class="ff14-status-pill ff14-identity-badge" id="ff14-runtime-identity" data-role="visitor">当前身份：普通访客</span><span class="ff14-status-pill">北京时间 <strong id="ff14-beijing-clock">--</strong></span></div><div class="ff14-status-group"><span class="ff14-status-pill" id="ff14-runtime-access-note">特权状态同步中…</span></div>';
+      const body=document.body;if(body)body.insertBefore(bar,body.firstChild);
+    }
+    updateStatusBar();
+  }
+  function updateStatusBar(){
+    const role=roleInfo(),badge=$('#ff14-runtime-identity'),note=$('#ff14-runtime-access-note'),clock=$('#ff14-beijing-clock');
+    if(badge){badge.dataset.role=role.role;setText(badge,`当前身份：${role.label}`);badge.title=role.detail;}
+    if(note)setText(note,role.detail);
+    if(clock){
+      let value='';try{value=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(new Date());}catch(_){value=new Date().toLocaleString('zh-CN');}
+      setText(clock,value);
+    }
+  }
+
+  // Global glass/background fix: selected theme presets must update the inline palette vars as well as data-theme.
+  function applyGlassStrengthToGlobal(value){
+    const strength=Math.max(0,Math.min(100,Number(value)||0));
+    const blur=`${8+strength*.27}px`,alpha=String(.42+strength/100*.42);
+    const root=document.documentElement,body=document.body;
+    [root,body].filter(Boolean).forEach(node=>{
+      node.style.setProperty('--ff14-glass-alpha',alpha);
+      node.style.setProperty('--ff14-glass-blur',blur);
+      node.style.setProperty('--ff14-global-glass-blur',blur);
+      node.style.setProperty('--ff14-glass-fill',`rgba(var(--panel-rgb,26,26,46),${alpha})`);
+    });
+  }
+  function syncLiquidPreset(button){
+    if(!button)return;
+    const theme=button.getAttribute('data-liquid-theme')||button.dataset.theme;
+    const map={mint:'mint',ocean:'ice',aurora:'lavender',sakura:'rose',sunset:'pearl',lavender:'lavender',midnight:'deep',dark:'deep',light:'pearl',pink:'rose',sky:'ice'};
+    const palette=map[String(theme||'').toLowerCase()];
+    if(!palette)return;
+    const paletteBtn=$(`#ff14GlassWorkshop .ff14-gw-palette[data-palette="${palette}"]`);
+    if(paletteBtn)paletteBtn.click();
+    else {
+      // Fallback if the glass workshop is not mounted yet: clear stale inline colors so theme CSS can apply.
+      ['--bg','--panel','--panel-rgb','--panel-light','--text','--text-muted','--accent','--gold','--blue','--red','--purple','--border','--input-bg','--input-border'].forEach(name=>document.body.style.removeProperty(name));
+      document.documentElement.classList.toggle('ff14-liquid-glass-theme',true);
+    }
+  }
+  document.addEventListener('click',event=>{
+    const preset=event.target?.closest?.('[data-liquid-theme], .theme-switcher .theme-btn:not(.glass-more)');
+    if(preset)setTimeout(()=>{
+      if(preset.hasAttribute('data-liquid-theme'))syncLiquidPreset(preset);
+      else { const classes=Array.from(preset.classList); const theme=classes.find(name=>['mint','ocean','aurora','sakura','sunset','lavender','midnight','dark','light','pink','sky'].includes(name)); if(theme)syncLiquidPreset({getAttribute:(attr)=>attr==='data-liquid-theme'?theme:null,dataset:{theme}}); }
+    },0);
+    if(event.target?.closest?.('#ff14-bg-save'))setTimeout(()=>{
+      // A saved custom image takes precedence over the pure-color canvas; otherwise the image sliders appear ineffective.
+      const root=document.documentElement;
+      if(root.classList.contains('ff14-user-bg-active')){
+        const solid=$('#ff14GwSolid');
+        if(solid&&solid.checked){solid.checked=false;solid.dispatchEvent(new Event('change',{bubbles:true}));}
+        root.dataset.ff14GlassSolid='off';
+      }
+      const strength=$('#ff14-bg-glass-strength');if(strength)applyGlassStrengthToGlobal(strength.value);
+    },0);
+    if(event.target?.closest?.('#ff14-bg-glass-strength'))setTimeout(()=>applyGlassStrengthToGlobal($('#ff14-bg-glass-strength')?.value),0);
+  });
+  document.addEventListener('input',event=>{if(event.target?.id==='ff14-bg-glass-strength')applyGlassStrengthToGlobal(event.target.value);});
+  // When the existing background image layer is re-applied, ensure the glass canvas cannot cover it.
+  // CSS override above keeps uploaded image visible; this observer intentionally does not mutate theme state.
+  const backgroundObserver=new MutationObserver(()=>{const root=document.documentElement;if(root.classList.contains('ff14-user-bg-active'))root.style.setProperty('--ff14-background-image-visible','1');});
+  backgroundObserver.observe(document.documentElement,{attributes:true,attributeFilter:['class','data-ff14-glass','data-ff14-glass-solid']});
+
+  // Stable route order: after a user moves a target or marks it SS, future additions must not reset the chosen sequence.
+  function getMonsters(){return safe(()=>Array.isArray(parsedMonsters)?parsedMonsters:[],[]);}
+  function routeKey(monster){return `${String(monster.server||'未知')}\u241f${String(monster.originalName||monster.name||'')}`;}
+  function takeOrderSnapshot(){routeOrderSnapshot=getMonsters().map(routeKey);safe(()=>localStorage.setItem(ROUTE_ORDER_KEY,JSON.stringify(routeOrderSnapshot)));updateRouteOrderButton();}
+  function updateRouteOrderButton(){
+    const button=routeOrderButton||$('#ff14-restore-route-order');if(!button)return;
+    button.textContent=routeOrderSnapshot?'恢复默认排序':'默认排序';
+    button.title=routeOrderSnapshot?'已保护手动车序；点击恢复默认按版本排序':'当前按默认规则排序';
+    button.style.borderColor=routeOrderSnapshot?'var(--gold)':'var(--border)';
+    button.style.color=routeOrderSnapshot?'var(--gold)':'var(--text-muted)';
+    const state=$('#ff14-route-order-state');if(state)setText(state,routeOrderSnapshot?'已锁定手动车序':'默认排序');
+  }
+  function restoreSnapshotOrder(){
+    if(!routeOrderSnapshot||!routeOrderSnapshot.length)return;
+    const current=getMonsters().slice();
+    const currentKeys=new Set(current.map(routeKey));const overlap=routeOrderSnapshot.filter(key=>currentKeys.has(key)).length;
+    if(current.length&&overlap===0){routeOrderSnapshot=null;safe(()=>localStorage.removeItem(ROUTE_ORDER_KEY));updateRouteOrderButton();return;}
+    const byKey=new Map();current.forEach(monster=>{const key=routeKey(monster);if(!byKey.has(key))byKey.set(key,monster);});
+    const currentServers=[];current.forEach(monster=>{const server=String(monster.server||'未知');if(!currentServers.includes(server))currentServers.push(server);});
+    const orderedServers=[];
+    routeOrderSnapshot.forEach(key=>{const monster=byKey.get(key);if(monster){const server=String(monster.server||'未知');if(!orderedServers.includes(server))orderedServers.push(server);}});
+    currentServers.forEach(server=>{if(!orderedServers.includes(server))orderedServers.push(server);});
+    const knownKeys=new Set(routeOrderSnapshot);const restored=[];const included=new Set();
+    orderedServers.forEach(server=>{
+      routeOrderSnapshot.forEach(key=>{const monster=byKey.get(key);if(monster&&String(monster.server||'未知')===server&&!included.has(key)){restored.push(monster);included.add(key);}});
+      // Newly added targets are appended to their own server group in the default sort order.
+      current.forEach(monster=>{const key=routeKey(monster);if(String(monster.server||'未知')===server&&!knownKeys.has(key)&&!included.has(key)){restored.push(monster);included.add(key);}});
+    });
+    current.forEach(monster=>{const key=routeKey(monster);if(!included.has(key)){restored.push(monster);included.add(key);}});
+    try{parsedMonsters.splice(0,parsedMonsters.length,...restored);}catch(_){window.parsedMonsters=restored;}
+    routeOrderSnapshot=getMonsters().map(routeKey);safe(()=>localStorage.setItem(ROUTE_ORDER_KEY,JSON.stringify(routeOrderSnapshot)));updateRouteOrderButton();
+  }
+  function installOrderHooks(){
+    const originalSort=window.sortParsedMonstersDefault;
+    if(typeof originalSort==='function'&&!originalSort.__ff14OrderPreserveWrapped){
+      const wrapped=function(...args){const result=originalSort.apply(this,args);if(routeOrderSnapshot)restoreSnapshotOrder();return result;};wrapped.__ff14OrderPreserveWrapped=true;wrapped.__ff14OrderPreserveOriginal=originalSort;window.sortParsedMonstersDefault=wrapped;
+    }
+    ['moveMonster','moveServer','setServerAsFirst','toggleSS'].forEach(name=>{
+      const original=window[name];if(typeof original!=='function'||original.__ff14OrderSnapshotWrapped)return;
+      const wrapped=function(...args){const result=original.apply(this,args);takeOrderSnapshot();syncFloatRouteLists();return result;};wrapped.__ff14OrderSnapshotWrapped=true;wrapped.__ff14OrderSnapshotOriginal=original;window[name]=wrapped;
+    });
+  }
+  function ensureRouteOrderControl(){
+    const boxes=$$('#routeResultBox .section-title');
+    const heading=boxes.find(el=>(el.textContent||'').includes('最终发车顺序'));
+    if(!heading)return;
+    const actions=heading.querySelector(':scope > span:last-child');if(!actions)return;
+    if(!$('#ff14-restore-route-order',actions)){
+      const wrap=document.createElement('span');wrap.id='ff14-route-order-tools';
+      routeOrderButton=document.createElement('button');routeOrderButton.id='ff14-restore-route-order';routeOrderButton.type='button';routeOrderButton.className='btn btn-outline';routeOrderButton.style.cssText='padding:6px 10px;font-size:12px';
+      routeOrderButton.addEventListener('click',()=>{routeOrderSnapshot=null;safe(()=>localStorage.removeItem(ROUTE_ORDER_KEY));const sort=window.sortParsedMonstersDefault;if(typeof sort==='function')sort();if(typeof window.renderRouteResult==='function')window.renderRouteResult();updateRouteOrderButton();toast('已恢复默认按版本排序');});
+      const state=document.createElement('span');state.id='ff14-route-order-state';state.textContent='默认排序';wrap.append(routeOrderButton,state);actions.appendChild(wrap);
+    }else routeOrderButton=$('#ff14-restore-route-order',actions);
+    updateRouteOrderButton();
+  }
+
+  // Per-floating-window ET clock targets; never reuse the global ET target for every monster.
+  function saveLocalET(){safe(()=>localStorage.setItem(LOCAL_ET_KEY,JSON.stringify(localETTargets)));}
+  function parseLocalET(raw,nowMs=Date.now()){
+    let input=String(raw||'').trim().toUpperCase().replace(/[：]/g,':').replace(/[OＯoｏ]/g,'0').replace(/[Iil丨]/g,'1').replace(/，/g,',');
+    if(!input)return{error:'请输入 +3ET、ET2130 或 21:30。'};
+    const relative=input.match(/^\+\s*(\d+(?:[.,]\d+)?)\s*(?:E\.?T\.?)?$/i);
+    if(relative){const hours=Number(relative[1].replace(',','.'));if(!Number.isFinite(hours)||hours<0||hours>10000)return{error:'ET 小时请填写 0–10000。'};return{targetMs:nowMs+hours*175000,label:`+${hours} ET`};}
+    input=input.replace(/E\.?T\.?/gi,'').replace(/\s+/g,'').replace(/点/g,':').replace(/分$/,'');
+    let hour=NaN,minute=0;let match;
+    if((match=input.match(/^(\d{1,2}):(\d{1,2})$/))){hour=Number(match[1]);minute=Number(match[2]);}
+    else if((match=input.match(/^(\d{3,4})$/))){const digits=match[1];hour=Number(digits.slice(0,-2));minute=Number(digits.slice(-2));}
+    else if((match=input.match(/^(\d{1,2})$/))){hour=Number(match[1]);minute=0;}
+    if(!Number.isInteger(hour)||hour<0||hour>23||!Number.isInteger(minute)||minute<0||minute>59)return{error:'ET 时间格式无法识别。请使用 +3ET、ET2130、2100 或 21:30。'};
+    const nowEtMinute=Math.floor(nowMs*60/175000);const dayIndex=Math.floor(nowEtMinute/1440);const currentDayMinute=nowEtMinute%1440;
+    let targetEtMinute=dayIndex*1440+hour*60+minute;if(targetEtMinute<=nowEtMinute)targetEtMinute+=1440;
+    const deltaEtMinutes=targetEtMinute-nowEtMinute;
+    return{targetMs:nowMs+deltaEtMinutes*175000/60,label:`ET ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`};
+  }
+  function localDateTime(ms){if(!Number.isFinite(Number(ms)))return'—';return safe(()=>new Date(Number(ms)).toLocaleString('zh-CN',{hour12:false}),new Date(Number(ms)).toLocaleString());}
+  function compactRemain(ms){if(ms<=0)return'已到时间';let seconds=Math.floor(ms/1000);const d=Math.floor(seconds/86400);seconds%=86400;const h=Math.floor(seconds/3600);seconds%=3600;const m=Math.floor(seconds/60);seconds%=60;return`${d?d+'天 ':''}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;}
+  function attachIndependentET(win,recordId){
+    if(!win)return;
+    const body=win.querySelector('.fc-body');if(!body)return;
+    let panel=win.querySelector('.et-float-panel');
+    // The legacy floating window does not ship with .et-float-panel; create it lazily rather than silently skipping this target.
+    if(!panel){
+      panel=document.createElement('div');panel.className='et-float-panel';panel.dataset.ff14CreatedPanel='1';
+      const estimate=body.querySelector('[id^="fc-est-"]');
+      if(estimate)estimate.insertAdjacentElement('beforebegin',panel);else body.appendChild(panel);
+    }
+    const key=String(recordId??win.id.replace(/^win_/,''));win.dataset.ff14RecordKey=key;panel.dataset.ff14RecordKey=key;
+    if(panel.querySelector('.ff14-local-et-panel'))return;
+    const box=document.createElement('section');box.className='ff14-local-et-panel';
+    box.innerHTML=`<div class="ff14-local-et-heading"><span>本目标独立 ET 倒数</span><span data-local-et-label>未设置</span></div><div class="ff14-local-et-target" data-local-et-target>此目标有独立时间，不会覆盖其他 S怪。</div><div class="ff14-local-et-countdown" data-local-et-countdown>未设置倒计时</div><input class="ff14-local-et-input" data-local-et-input type="text" autocomplete="off" spellcheck="false" placeholder="+3ET / ET2130 / 21:30"><div class="ff14-local-et-actions"><button class="btn btn-accent" type="button" data-local-et-set>设置本怪 ET</button><button class="btn btn-outline" type="button" data-local-et-clear>清除</button></div>`;
+    panel.appendChild(box);
+    ['mousedown','pointerdown','touchstart'].forEach(type=>box.addEventListener(type,event=>event.stopPropagation(),{passive:true}));
+    const input=$('[data-local-et-input]',box),set=$('[data-local-et-set]',box),clear=$('[data-local-et-clear]',box);
+    function apply(){const parsed=parseLocalET(input.value);if(parsed.error){toast(parsed.error);input.focus();return;}localETTargets[key]={targetMs:parsed.targetMs,label:parsed.label,raw:input.value,updatedAt:Date.now()};saveLocalET();updateFloatETPanels();toast(`已设置 ${win.querySelector('.fc-title')?.textContent?.trim()||'本目标'} 的独立 ET 时间`);}
+    set.addEventListener('click',apply);input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();apply();}});
+    clear.addEventListener('click',()=>{delete localETTargets[key];saveLocalET();input.value='';updateFloatETPanels();toast('已清除此目标的 ET 倒计时');});
+    const saved=localETTargets[key];if(saved&&Number.isFinite(Number(saved.targetMs)))input.value=saved.raw||saved.label||'';
+    updateFloatETPanels();
+  }
+  function updateFloatETPanels(){
+    $$('.floating-window').forEach(win=>{
+      const panel=win.querySelector('.ff14-local-et-panel');if(!panel)return;const key=panel.dataset.ff14RecordKey||win.dataset.ff14RecordKey;const item=localETTargets[String(key)];
+      const label=$('[data-local-et-label]',panel),target=$('[data-local-et-target]',panel),countdown=$('[data-local-et-countdown]',panel);
+      if(!item||!Number.isFinite(Number(item.targetMs))){setText(label,'未设置');setText(target,'此目标尚未设置 ET 时间；可在下方输入。');setText(countdown,'未设置倒计时');return;}
+      const remaining=Number(item.targetMs)-Date.now();setText(label,item.label||'ET 目标');setText(target,`目标时间：${localDateTime(item.targetMs)} · ${item.label||''}`);setText(countdown,remaining>0?compactRemain(remaining):`已到达 · ${compactRemain(-remaining)} 前`);
+      countdown.style.color=remaining<=0?'var(--gold)':remaining<60000?'var(--red)':'var(--accent)';
+    });
+  }
+  const initialCreateFloat=window.createFloatingWindow;
+  if(typeof initialCreateFloat==='function'&&!initialCreateFloat.__ff14IndependentETWrapped){
+    const wrapped=function(...args){const result=initialCreateFloat.apply(this,args);const recordId=args[0];const win=document.getElementById('win_'+String(recordId));const gate=args[1] instanceof Date?args[1].getTime():(args[1]===null&&args[3]?Date.now():null);floatMeta[String(recordId)]={gateTimeMs:gate,isGreen:!!args[3],name:String(args[7]||''),server:String(args[8]||'')};if(win){attachIndependentET(win,recordId);addGateWeekdayToFloat(win,recordId);syncFloatRouteLists();}return result;};wrapped.__ff14IndependentETWrapped=true;wrapped.__ff14IndependentETOriginal=initialCreateFloat;window.createFloatingWindow=wrapped;
+  }
+  function ensureIndependentETPanels(){
+    $$('.floating-window').forEach(win=>{const key=win.dataset.ff14RecordKey||win.id.replace(/^win_/,'');attachIndependentET(win,key);if(!floatMeta[key]){const title=win.querySelector('.fc-title')?.textContent||'';floatMeta[key]={gateTimeMs:null,isGreen:false,name:title,server:''};}addGateWeekdayToFloat(win,key);});
+  }
+
+  // Weekday labels for the manual result and all countdown windows.
+  function weekdayText(ms){const date=new Date(Number(ms));return Number.isFinite(date.getTime())?DAYS[date.getDay()]:'';}
+  function currentManualGateMs(){return safe(()=>{if(typeof currentManualCalcData==='undefined'||!currentManualCalcData)return null;if(currentManualCalcData.isDynamicGate)return Date.now();const date=currentManualCalcData.targetGateTime;return date instanceof Date?date.getTime():null;},null);}
+  function addManualWeekday(){
+    const box=$('#manualResultBox');if(!box)return;const gateItem=Array.from(box.querySelectorAll('.res-item')).find(item=>(item.querySelector('.res-label')?.textContent||'').includes('绝对进闸时间'));
+    if(!gateItem)return;const value=gateItem.querySelector('.res-val');if(!value)return;let weekday=gateItem.querySelector('.ff14-gate-weekday');if(!weekday){weekday=document.createElement('span');weekday.className='ff14-gate-weekday';value.insertAdjacentElement('afterend',weekday);}const ms=currentManualGateMs();setText(weekday,ms?weekdayText(ms):'暂无');
+  }
+  function addGateWeekdayToFloat(win,key){
+    if(!win)return;const rows=$$('.fc-row',win);const gateRow=rows.find(row=>(row.querySelector('.fc-label')?.textContent||'').includes('进闸时间'));if(!gateRow)return;
+    let dayRow=win.querySelector('.ff14-gate-weekday-row');if(!dayRow){dayRow=document.createElement('div');dayRow.className='fc-row ff14-gate-weekday-row';dayRow.innerHTML='<span class="fc-label">进闸星期</span><span class="fc-val" data-ff14-gate-weekday>—</span>';gateRow.insertAdjacentElement('afterend',dayRow);}const meta=floatMeta[String(key)]||{};let ms=meta.gateTimeMs;if((ms===null||ms===undefined||!Number.isFinite(Number(ms)))&&meta.isGreen)ms=Date.now();const hasValidTime=ms!==null&&ms!==undefined&&Number.isFinite(Number(ms))&&Number(ms)>0;setText($('[data-ff14-gate-weekday]',dayRow),hasValidTime?`${weekdayText(ms)} · ${localDateTime(ms)}`:'未计算');
+  }
+
+  // Add previous local kill timestamp + elapsed duration to route's S-monster cards.
+  function killTimestamp(record){
+    for(const key of ['killTimeMs','timestampMs','timeMs','createdAt','timestamp']){const value=Number(record?.[key]);if(Number.isFinite(value)&&value>0)return value;}
+    if(record?.time){const parsed=Date.parse(String(record.time).replace(/-/g,'/'));if(Number.isFinite(parsed))return parsed;}
+    return null;
+  }
+  function elapsedText(ms){if(!Number.isFinite(ms)||ms<0)return'时间未知';let min=Math.floor(ms/60000);const days=Math.floor(min/1440);min%=1440;const hours=Math.floor(min/60);const minutes=min%60;if(days>0)return`${days}天 ${hours}小时 ${minutes}分`;if(hours>0)return`${hours}小时 ${minutes}分`;return`${minutes}分`;}
+  function getLastKill(name,server){
+    const records=safe(()=>Array.isArray(allKillRecords)?allKillRecords:[],[]);let best=null;
+    for(const record of records){if(!record)continue;const rn=String(record.name||record.monsterName||'');const rs=String(record.server||'');if(rs!==String(server||'')||!(rn===String(name||'')||rn===String(name||'').replace(/\s*(SS|S)$/i,'')))continue;const ms=killTimestamp(record);if(ms&&(!best||ms>best.ms))best={ms,record};}
+    return best;
+  }
+  function decorateLastKillAges(){
+    const root=$('#routeLogList');if(!root)return;const cards=$$('.server-card',root);const monsters=getMonsters();const serverOrder=[];monsters.forEach(m=>{const s=String(m.server||'未知');if(!serverOrder.includes(s))serverOrder.push(s);});
+    cards.forEach((card,cardIndex)=>{
+      const server=serverOrder[cardIndex];if(!server)return;const list=monsters.filter(m=>String(m.server||'未知')===server);const rows=$$('.monster-list-item',card);
+      rows.forEach((row,index)=>{
+        const m=list[index];if(!m)return;let age=row.querySelector('.ff14-last-kill-age');if(!age){age=document.createElement('div');age.className='ff14-last-kill-age';const info=row.firstElementChild;const triggerRow=info?.querySelector('.row-flex');if(triggerRow)triggerRow.insertAdjacentElement('beforebegin',age);else info?.appendChild(age);}
+        const latest=getLastKill(m.originalName||m.name,server);if(!latest){age.classList.remove('has-record');setText(age,'上次击杀：暂无本地记录');age.removeAttribute('title');age.dataset.killTimeMs='';return;}
+        age.classList.add('has-record');age.dataset.killTimeMs=String(latest.ms);const date=localDateTime(latest.ms);setText(age,`上次击杀：${date} · 已过 ${elapsedText(Date.now()-latest.ms)}`);age.title='根据本地击杀记录计算；旧记录如果没有精确时间戳，按记录时间估算。';
+      });
+    });
+    const recent=safe(()=>Array.isArray(recentRecords)?recentRecords:[],[]);
+    $$('#recentListContainer .recent-item').forEach((card,index)=>{
+      const record=recent[index];if(!record)return;const info=card.querySelector('.recent-item-info');if(!info)return;
+      let age=info.querySelector('.ff14-last-kill-age-recent');if(!age){age=document.createElement('div');age.className='ff14-last-kill-age ff14-last-kill-age-recent';const title=info.querySelector('.recent-item-title');if(title)title.insertAdjacentElement('afterend',age);else info.prepend(age);}
+      const latest=getLastKill(record.name,record.server);if(!latest){age.classList.remove('has-record');setText(age,'上次击杀：暂无本地记录');age.dataset.killTimeMs='';return;}
+      age.classList.add('has-record');age.dataset.killTimeMs=String(latest.ms);setText(age,`上次击杀：${localDateTime(latest.ms)} · 已过 ${elapsedText(Date.now()-latest.ms)}`);
+    });
+  }
+  function syncFloatRouteLists(){
+    const monsters=getMonsters();
+    $$('.floating-window').forEach(win=>{
+      let details=win.querySelector('.ff14-sorted-route-mini');if(!details){details=document.createElement('details');details.className='ff14-sorted-route-mini';details.innerHTML='<summary>当前已排序 S怪</summary><ol class="ff14-sorted-route-list"></ol>';const body=win.querySelector('.fc-body')||win;body.appendChild(details);}
+      const summary=$('summary',details);const active=monsters.filter(m=>!m.isDead).length;setText(summary,`当前已排序 S怪 · ${active} 只存活 / ${monsters.length} 只总计`);
+      const list=$('.ff14-sorted-route-list',details);if(!list)return;const wasOpen=details.open;list.innerHTML='';if(!monsters.length){const li=document.createElement('li');li.textContent='当前排车列表为空';list.appendChild(li);}else monsters.forEach((m,index)=>{const li=document.createElement('li');if(m.isDead)li.classList.add('ff14-route-dead');const shownName=m.name||m.originalName||'未知目标';li.textContent=`${String(index+1).padStart(2,'0')}. [${m.server||'未知'}] ${shownName}${m.isSS?'（SS）':''} · ${m.isDead?'已去世':'待排'} · ${m.version||''}`;list.appendChild(li);});details.open=wasOpen;
+    });
+  }
+
+  function installAomSelectAll(){
+    const list=$('#aomServerList');if(!list)return;const group=list.closest('.input-group');if(!group||$('#ff14-aom-select-controls',group))return;
+    const label=$('label',group);const controls=document.createElement('div');controls.id='ff14-aom-select-controls';
+    controls.innerHTML='<button class="btn btn-outline" type="button" data-aom-select="toggle">全选本大区</button><button class="btn btn-outline" type="button" data-aom-select="invert">反选服务器</button><button class="btn btn-outline" type="button" data-aom-select="clear">清空选择</button>';
+    if(label)label.insertAdjacentElement('afterend',controls);else group.insertBefore(controls,list);
+    controls.addEventListener('click',event=>{const button=event.target.closest('button[data-aom-select]');if(!button)return;const boxes=$$('.aom-server-cb',list);const action=button.dataset.aomSelect;if(action==='toggle'){const all=boxes.length>0&&boxes.every(cb=>cb.checked);boxes.forEach(cb=>cb.checked=!all);button.textContent=all?'全选本大区':'取消全选';}else if(action==='invert'){boxes.forEach(cb=>cb.checked=!cb.checked);}else{boxes.forEach(cb=>cb.checked=false);}updateAomSelectCount();});
+    list.addEventListener('change',event=>{if(event.target.matches('.aom-server-cb'))updateAomSelectCount();});
+    const observer=new MutationObserver(()=>updateAomSelectCount());observer.observe(list,{childList:true,subtree:true});
+    function updateAomSelectCount(){const boxes=$$('.aom-server-cb',list);const n=boxes.filter(cb=>cb.checked).length;controls.dataset.count=`${n}/${boxes.length}`;const labelText=$('label',group);if(labelText)labelText.dataset.selection=`已选择 ${n}/${boxes.length}`;const toggle=$('[data-aom-select="toggle"]',controls);if(toggle)toggle.textContent=boxes.length>0&&n===boxes.length?'取消全选':'全选本大区';}
+  }
+
+  function installRenderHooks(){
+    const originalRender=window.renderRouteResult;
+    if(typeof originalRender==='function'&&!originalRender.__ff14BugfixRenderWrapped){
+      const wrapped=function(...args){const result=originalRender.apply(this,args);setTimeout(()=>{decorateLastKillAges();syncFloatRouteLists();ensureRouteOrderControl();ensureStatusBar();},0);return result;};wrapped.__ff14BugfixRenderWrapped=true;wrapped.__ff14BugfixRenderOriginal=originalRender;window.renderRouteResult=wrapped;
+    }
+    const originalRecentRender=window.renderRecentList;
+    if(typeof originalRecentRender==='function'&&!originalRecentRender.__ff14LastKillAgeRenderWrapped){
+      const wrapped=function(...args){const result=originalRecentRender.apply(this,args);setTimeout(()=>decorateLastKillAges(),0);return result;};
+      wrapped.__ff14LastKillAgeRenderWrapped=true;wrapped.__ff14LastKillAgeRenderOriginal=originalRecentRender;window.renderRecentList=wrapped;
+    }
+    const originalKill=window.addAllKillRecord;
+    if(typeof originalKill==='function'&&!originalKill.__ff14KillTimeRefreshWrapped){
+      const wrapped=function(...args){const before=safe(()=>Array.isArray(allKillRecords)?allKillRecords.length:0,0);const result=originalKill.apply(this,args);try{if(result&&!result.killTimeMs)result.killTimeMs=Date.now();if(typeof allKillRecords!=='undefined')localStorage.setItem('ff14_all_kill_records',JSON.stringify(allKillRecords));}catch(_){}setTimeout(()=>{decorateLastKillAges();},0);return result;};wrapped.__ff14KillTimeRefreshWrapped=true;wrapped.__ff14KillTimeRefreshOriginal=originalKill;window.addAllKillRecord=wrapped;
+    }
+    const originalCalc=window.calcManual;
+    if(typeof originalCalc==='function'&&!originalCalc.__ff14WeekdayWrapped){const wrapped=function(...args){const result=originalCalc.apply(this,args);setTimeout(addManualWeekday,0);return result;};wrapped.__ff14WeekdayWrapped=true;wrapped.__ff14WeekdayOriginal=originalCalc;window.calcManual=wrapped;}
+  }
+
+  function install(){
+    if(!document.body)return false;
+    ensureStatusBar();installOrderHooks();installRenderHooks();installAomSelectAll();ensureIndependentETPanels();syncFloatRouteLists();decorateLastKillAges();ensureRouteOrderControl();addManualWeekday();updateFloatETPanels();
+    return true;
+  }
+  if(!install()){
+    const timer=setInterval(()=>{if(install())clearInterval(timer);},300);
+  }
+  setInterval(()=>{updateStatusBar();addManualWeekday();updateFloatETPanels();addGateWeekdayToAllFloats();updateLastKillAgeTexts();},1000);
+  function addGateWeekdayToAllFloats(){ $$('.floating-window').forEach(win=>addGateWeekdayToFloat(win,win.dataset.ff14RecordKey||win.id.replace(/^win_/,''))); }
+  function updateLastKillAgeTexts(){ $$('.ff14-last-kill-age.has-record').forEach(el=>{const ms=Number(el.dataset.killTimeMs);if(Number.isFinite(ms)&&ms>0){const base=el.textContent.split(' · 已过 ')[0];setText(el,`${base} · 已过 ${elapsedText(Date.now()-ms)}`);}}); }
+  // AOM modal content is generated on demand; re-install the select-all row after it opens if necessary.
+  const aomOpenOriginal=window.openAomPresetModal;
+  if(typeof aomOpenOriginal==='function'&&!aomOpenOriginal.__ff14AomSelectWrapped){const wrapped=function(...args){const result=aomOpenOriginal.apply(this,args);setTimeout(installAomSelectAll,0);return result;};wrapped.__ff14AomSelectWrapped=true;wrapped.__ff14AomSelectOriginal=aomOpenOriginal;window.openAomPresetModal=wrapped;}
+  // When a saved theme preset is applied, ask the global glass workshop to sync its actual inline palette.
+  const workshopWatcher=new MutationObserver(()=>{updateStatusBar();});
+  workshopWatcher.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-ff14-glass-palette']});
+})();
+</script>
+
+
+
+<!-- 2026-10-28 增量修复：本地时区星期固定行 + 邀请码三级权限 -->
+<style id="ff14-local-weekday-role-permission-style">
+  /* 星期行固定在主倒计时下面，固定高度/行距，秒数变化时不参与倒计时文字的尺寸变化。 */
+  .floating-window .ff14-gate-weekday-row {
+    display:flex !important;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    width:100%;
+    min-width:0;
+    min-height:25px;
+    height:25px;
+    max-height:25px;
+    margin:6px 0 0 !important;
+    padding:5px 7px !important;
+    box-sizing:border-box;
+    flex:0 0 25px;
+    overflow:hidden;
+    border-top:1px solid rgba(140,170,215,.22);
+    border-radius:7px;
+    background:rgba(var(--panel-rgb,26,26,46),.22);
+    color:var(--text-muted);
+    line-height:14px;
+    font-size:11px;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+    pointer-events:none;
+  }
+  .floating-window .ff14-gate-weekday-row .fc-label,
+  .floating-window .ff14-gate-weekday-row .fc-val {
+    display:block;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    line-height:14px;
+    font-size:11px !important;
+  }
+  .floating-window .ff14-gate-weekday-row .fc-val { color:var(--accent) !important; text-align:right; }
+  #inviteModal .ff14-role-tier-hint {
+    margin-top:10px;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:rgba(var(--panel-rgb,26,26,46),.48);
+    color:var(--text);
+    line-height:1.75;
+    font-size:12px;
+    text-align:left;
+  }
+  #inviteModal .ff14-role-tier-hint strong { color:var(--accent); }
+  #inviteModal .ff14-role-tier-hint .temporary { color:var(--blue); }
+  #inviteModal .ff14-role-tier-hint .special { color:var(--gold); }
+  #inviteModal .ff14-role-tier-hint .developer { color:var(--purple); }
+  #ff14-runtime-status-bar .ff14-identity-badge[data-role="temporary"] { color:var(--blue); border-color:rgba(40,145,200,.5); }
+  #ff14-runtime-status-bar .ff14-identity-badge[data-role="special"] { color:var(--gold); border-color:rgba(210,150,30,.5); }
+  #ff14-runtime-status-bar .ff14-identity-badge[data-role="developer"] { color:var(--purple); border-color:rgba(143,85,217,.55); }
+  body.ff14-role-temp .btn-large-route { filter:grayscale(.55); opacity:.82; }
+  body.ff14-role-temp .btn-large-route::before { content:'临时用户不可进入排车'; position:absolute; right:10px; bottom:5px; font-size:10px; opacity:.85; }
+</style>
+<script id="ff14-local-weekday-role-permission-script">
+(function FF14LocalWeekdayAndRolePermissions(){
+  'use strict';
+  const $=(selector,root=document)=>root.querySelector(selector);
+  const $$=(selector,root=document)=>Array.from(root.querySelectorAll(selector));
+  const safe=(fn,fallback=null)=>{try{return fn();}catch(_){return fallback;}};
+  const roleSessionKey='ff14_user_role_session_v1';
+  const roleLabel={visitor:'普通访客',temporary:'临时用户',special:'特殊邀请用户',developer:'开发者'};
+  let currentRole=safe(()=>{
+    if(localStorage.getItem('ff14_developer_mode')==='true')return 'developer';
+    if(localStorage.getItem('ff14_master_verified')==='true')return 'special';
+    if(sessionStorage.getItem(roleSessionKey)==='temporary')return 'temporary';
+    return 'visitor';
+  },'visitor');
+  let lastDeniedNotice=0;
+  let syncingWeekday=false;
+
+  function roleRank(role=currentRole){return role==='developer'?3:role==='special'?2:role==='temporary'?1:0;}
+  function getRole(){
+    // Permit legacy permission prompts to upgrade the active identity when a valid higher code is entered.
+    const legacyDev=safe(()=>localStorage.getItem('ff14_developer_mode')==='true',false) || safe(()=>typeof isDeveloperMode!=='undefined'&&!!isDeveloperMode,false);
+    const legacySpecial=safe(()=>localStorage.getItem('ff14_master_verified')==='true',false) || safe(()=>typeof isMasterVerified!=='undefined'&&!!isMasterVerified,false);
+    if(legacyDev)return 'developer';
+    if(legacySpecial)return 'special';
+    if(currentRole==='temporary'||safe(()=>sessionStorage.getItem(roleSessionKey)==='temporary',false))return 'temporary';
+    return currentRole==='special'||currentRole==='developer'?currentRole:'visitor';
+  }
+  function routeAllowed(){return roleRank(getRole())>=2;}
+  function toast(message){safe(()=>{if(typeof window.showToast==='function')window.showToast(message);else console.info(message);});}
+  function hideRoutePage(){const page=$('#focusRoutePage');if(page&&page.style.display!=='none')page.style.display='none';}
+  function refreshTriggerViews(){
+    safe(()=>{if(typeof updateGlobalTriggers==='function')updateGlobalTriggers();});
+    safe(()=>{if(typeof renderTriggerList==='function')renderTriggerList();});
+    safe(()=>{if(typeof renderRouteTriggerList==='function')renderRouteTriggerList();});
+  }
+  function updateIdentityUI(){
+    const role=getRole();
+    document.body?.classList.toggle('ff14-role-temp',role==='temporary');
+    const badge=$('#ff14-runtime-identity'),note=$('#ff14-runtime-access-note');
+    if(badge){const label=roleLabel[role]||roleLabel.visitor;if(badge.dataset.role!==role)badge.dataset.role=role;const value=`当前身份：${label}`;if(badge.textContent!==value)badge.textContent=value;badge.title=role==='developer'?'最高级访问权限':role==='special'?'特殊邀请权限':role==='temporary'?'基础临时权限，不可使用排车':'尚未通过身份验证';}
+    if(note){const detail=role==='developer'?'最高权限 · 排车及全部高级功能':role==='special'?'特殊邀请权限 · 可使用排车及高级功能':role==='temporary'?'基础临时权限 · 不开放排车内容':'未验证 · 仅开放基础功能';if(note.textContent!==detail)note.textContent=detail;}
+    const modal=$('#inviteModal');
+    if(modal){
+      const status=$('#vipStatusText',modal);
+      if(status){const color=role==='developer'?'var(--purple)':role==='special'?'var(--gold)':role==='temporary'?'var(--blue)':'var(--red)';const detail=role==='developer'?'开发者身份（最高权限）':role==='special'?'特殊邀请用户（可使用排车）':role==='temporary'?'临时用户（不可使用排车）':'未验证';const html=`当前状态：<span style="color:${color};font-weight:bold">${detail}</span>`;if(status.innerHTML!==html)status.innerHTML=html;}
+      const desc=$$('.modal-desc',modal)[0];if(desc){desc.innerHTML='邀请码用于确定用户权限等级。<br><span style="color:var(--red);font-weight:bold">临时用户不能进入或使用排车页面。</span>';}
+      let legend=$('.ff14-role-tier-hint',modal);if(!legend){legend=document.createElement('div');legend.className='ff14-role-tier-hint';const target=$$('.modal-desc',modal)[1]||desc;if(target)target.insertAdjacentElement('afterend',legend);}
+      if(legend)legend.innerHTML='<strong class="temporary">临时用户</strong>：基础权限，可使用基础功能，不可使用排车。<br><strong class="special">特殊邀请用户</strong>：可使用排车和高级功能。<br><strong class="developer">开发者</strong>：最高级访问权限。';
+    }
+  }
+  function setRole(role, options={}){
+    if(!['visitor','temporary','special','developer'].includes(role))role='visitor';
+    currentRole=role;
+    try{
+      if(role==='developer'){
+        localStorage.setItem('ff14_developer_mode','true');localStorage.setItem('ff14_master_verified','true');sessionStorage.removeItem(roleSessionKey);
+      }else if(role==='special'){
+        localStorage.removeItem('ff14_developer_mode');localStorage.setItem('ff14_master_verified','true');sessionStorage.removeItem(roleSessionKey);
+      }else if(role==='temporary'){
+        localStorage.removeItem('ff14_developer_mode');localStorage.removeItem('ff14_master_verified');sessionStorage.setItem(roleSessionKey,'temporary');
+      }else{
+        localStorage.removeItem('ff14_developer_mode');localStorage.removeItem('ff14_master_verified');sessionStorage.removeItem(roleSessionKey);
+      }
+    }catch(_){}
+    safe(()=>{if(typeof isDeveloperMode!=='undefined')isDeveloperMode=role==='developer';});
+    safe(()=>{if(typeof isMasterVerified!=='undefined')isMasterVerified=role==='special'||role==='developer';});
+    safe(()=>{if(typeof isVipUnlocked!=='undefined')isVipUnlocked=role==='special'||role==='developer';});
+    if(roleRank(role)<2){
+      hideRoutePage();
+      // If preset-name privacy had been separately unlocked, relock it when downgrading to a temporary account.
+      const lockButton=$$('#ff14TriggerPrivacyGate button').find(button=>(button.textContent||'').includes('立即重新隐藏'));
+      if(lockButton)lockButton.click();
+    }
+    refreshTriggerViews();
+    if(typeof window.updateInviteStatusUI==='function')safe(()=>window.updateInviteStatusUI());
+    updateIdentityUI();
+    if(options.toast!==false)toast(role==='developer'?'开发者权限已启用（最高权限）':role==='special'?'特殊邀请权限已启用':role==='temporary'?'临时用户权限已启用；排车功能不可用':'权限已重置');
+    return role;
+  }
+  // Narrow bridge used by the added session-exit UI; the role policy remains centralized in setRole/getRole.
+  window.__ff14AuthBridge = { setRole: (role, options={}) => setRole(role, options), getRole: () => getRole() };
+  function denyRoute(action='此功能'){
+    hideRoutePage();
+    const now=Date.now();if(now-lastDeniedNotice>1500){lastDeniedNotice=now;toast(`当前身份为${roleLabel[getRole()]||'普通访客'}，无法使用${action}。需要特殊邀请或开发者权限才能使用排车功能。`);}
+    const modal=$('#inviteModal');if(modal&&modal.style.display!=='flex'&&typeof window.openInviteModal==='function')safe(()=>window.openInviteModal());
+    return false;
+  }
+  function requireRoute(action){return routeAllowed()||denyRoute(action);}
+
+  function closeInviteModal(){const modal=$('#inviteModal');if(modal)modal.style.display='none';}
+  function openInviteModalAndSync(){updateIdentityUI();const modal=$('#inviteModal');if(modal)modal.style.display='flex';}
+  // Apply a single role policy to the two existing invite-code entry points.
+  window.validateInviteCode=function validateInviteCodeByRole(){
+    const input=$('#inviteCodeInput');const code=String(input?.value||'').trim().toLowerCase();
+    if(code==='y616'){setRole('temporary',{toast:false});closeInviteModal();toast('已验证为临时用户：基础功能可用，排车权限关闭。');return;}
+    if(code==='w6168'){setRole('special',{toast:false});closeInviteModal();toast('特殊邀请用户验证成功：已解锁排车与高级功能。');safe(()=>{if($('#focusRoutePage')?.style.display==='flex')window.calculateRouteTime?.();});return;}
+    if(code==='kfz6168'){setRole('developer',{toast:false});closeInviteModal();toast('开发者验证成功：最高权限已解锁。');safe(()=>{if($('#focusRoutePage')?.style.display==='flex')window.calculateRouteTime?.();});return;}
+    if(currentActiveInvite&&code===String(currentActiveInvite).toLowerCase()&&Date.now()<Number(inviteExpireTime||0)){currentActiveInvite=null;setRole('temporary');closeInviteModal();toast('临时邀请码验证成功：排车权限关闭。');return;}
+    toast('邀请码无效或已过期，请检查后重新输入。');
+  };
+  window.generateInviteCode=function generateInviteCodeByRole(){
+    const input=$('#masterCodeInput');const code=String(input?.value||'').trim().toLowerCase();
+    if(code==='y616'){setRole('temporary',{toast:false});closeInviteModal();toast('临时用户验证成功；无法生成排车权限。');return;}
+    if(code==='kfz6168'){setRole('developer',{toast:false});closeInviteModal();toast('开发者身份已解锁。');return;}
+    if(code!=='w6168'){toast('请输入有效的主控授权码。');return;}
+    setRole('special',{toast:false});
+    if(Date.now()<Number(generateCooldownEnd||0)){toast(`邀请码生成冷却中，请等待 ${Math.ceil((Number(generateCooldownEnd)-Date.now())/1000)} 秒。`);return;}
+    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';let newCode='';for(let i=0;i<16;i++)newCode+=chars.charAt(Math.floor(Math.random()*chars.length));
+    currentActiveInvite=newCode;inviteExpireTime=Date.now()+30000;
+    const codeText=$('#generatedCodeText'),result=$('#newCodeResult'),countdown=$('#inviteCountdown'),button=$('#btnGenerateInvite');
+    if(codeText)codeText.textContent=newCode;if(result)result.style.display='block';if(input)input.value='';if(button)button.disabled=true;
+    if(typeof inviteTimerInterval!=='undefined'&&inviteTimerInterval)clearInterval(inviteTimerInterval);
+    inviteTimerInterval=setInterval(()=>{
+      const remain=Number(inviteExpireTime)-Date.now();
+      if(remain>0){if(countdown)countdown.textContent=`（剩余 ${Math.ceil(remain/1000)} 秒）`;}
+      else{clearInterval(inviteTimerInterval);currentActiveInvite=null;generateCooldownEnd=Date.now()+60000;if(countdown)countdown.textContent='（已过期；请等待 1 分钟）';if(button)button.disabled=false;toast('临时邀请码已过期。');}
+    },250);
+    updateIdentityUI();toast('已生成 30 秒有效的临时邀请码；接收者仅获得临时权限，不能使用排车。');
+  };
+
+  // Role UI sync replaces the legacy status text with an explicit 3-tier label.
+  const originalUpdateInviteStatusUI=window.updateInviteStatusUI;
+  window.updateInviteStatusUI=function updateInviteStatusUIByRole(...args){
+    if(typeof originalUpdateInviteStatusUI==='function')safe(()=>originalUpdateInviteStatusUI.apply(this,args));
+    updateIdentityUI();
+  };
+  const originalOpenInvite=window.openInviteModal;
+  window.openInviteModal=function openInviteModalByRole(...args){
+    const result=typeof originalOpenInvite==='function'?originalOpenInvite.apply(this,args):undefined;
+    updateIdentityUI();return result;
+  };
+
+  // Route is available only to special-invite and developer identities. This guard also covers legacy direct-entry buttons.
+  const routeFunctions=['openFocusRoute','loadSavedRouteDirect','addRecentToRoute','openBatchAddModal','addBatchSelectionToQueue','generateAnnouncement','saveRouteData','calculateRouteTime','handleRouteAdd','openAomPresetModal','setServerAsFirst','moveServer','moveMonster','toggleSS','restoreRouteFromHistory'];
+  routeFunctions.forEach(name=>{
+    const original=window[name];if(typeof original!=='function'||original.__ff14RoleRouteGuard)return;
+    const wrapped=function(...args){if(!requireRoute(name==='openFocusRoute'?'专注排车': '排车功能'))return false;return original.apply(this,args);};
+    wrapped.__ff14RoleRouteGuard=true;wrapped.__ff14RoleRouteOriginal=original;window[name]=wrapped;
+  });
+  document.addEventListener('click',event=>{
+    if(routeAllowed())return;
+    const insideRoute=event.target?.closest?.('#focusRoutePage');
+    const routeAction=event.target?.closest?.('[onclick*="addRecentToRoute"],[onclick*="openBatchAddModal"],[onclick*="generateAnnouncement"],[onclick*="openAomPresetModal"],[onclick*="loadSavedRouteDirect"]');
+    if(insideRoute||routeAction){event.preventDefault();event.stopImmediatePropagation();denyRoute('排车页面内容');}
+  },true);
+  const routePage=$('#focusRoutePage');
+  if(routePage&&typeof MutationObserver!=='undefined'){
+    const routeVisibilityObserver=new MutationObserver(()=>{if(!routeAllowed()&&routePage.style.display==='flex'){routePage.style.display='none';denyRoute('排车页面内容');}});
+    routeVisibilityObserver.observe(routePage,{attributes:true,attributeFilter:['style']});
+  }
+
+  // The older preset-list privacy dialog accepts legacy e6168. Capture its input first and map only the new actual tiers.
+  function normalizePresetPrivacyCode(input,event){
+    if(!input)return;
+    if(safe(()=>sessionStorage.getItem('ff14_pending_relogin_mixed_code_v1'),'')){
+      if(event){event.preventDefault();event.stopImmediatePropagation();}
+      const status=$('#ff14TriggerPrivacyStatus');if(status)status.textContent='当前已退出身份，请先完成邀请码与16位混淆验证码验证。';
+      const modal=$('#inviteModal');if(modal)modal.style.display='flex';return;
+    }
+    const code=String(input.value||'').trim().toLowerCase();
+    if(code==='w6168'){setRole('special',{toast:false});input.value='e6168';}
+    else if(code==='kfz6168'){setRole('developer',{toast:false});input.value='kfz6168';}
+    else{
+      if(event){event.preventDefault();event.stopImmediatePropagation();}
+      const status=$('#ff14TriggerPrivacyStatus');
+      if(status)status.textContent=code==='y616'?'当前临时权限无法查看预设触发者名单，需要更高级别的授权。':'授权码不正确；请使用已获分配的高级权限进行验证。';
+    }
+  }
+  document.addEventListener('click',event=>{
+    if(event.target?.id!=='ff14TriggerPrivacySubmit')return;
+    const input=$('#ff14TriggerPrivacyCode');normalizePresetPrivacyCode(input,event);
+  },true);
+  document.addEventListener('keydown',event=>{
+    if(event.target?.id!=='ff14TriggerPrivacyCode'||event.key!=='Enter')return;
+    normalizePresetPrivacyCode(event.target,event);
+  },true);
+
+  // Stable, local-timezone weekday row immediately below each floating-window countdown.
+  function getLocalTimezone(){return safe(()=>Intl.DateTimeFormat().resolvedOptions().timeZone,'本地时区')||'本地时区';}
+  function weekdayForTimestamp(ms){const date=new Date(Number(ms));if(!Number.isFinite(date.getTime()))return'未计算';return safe(()=>new Intl.DateTimeFormat('zh-CN',{weekday:'long'}).format(date),['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][date.getDay()]);}
+  function stableWeekdayRows(){
+    if(syncingWeekday)return;syncingWeekday=true;
+    try{
+      const metaMap=window.__ff14FloatMeta||{};
+      $$('.floating-window').forEach(win=>{
+        const countdown=win.querySelector('.fc-countdown');if(!countdown)return;
+        let row=win.querySelector('.ff14-gate-weekday-row');
+        if(!row){row=document.createElement('div');row.className='fc-row ff14-gate-weekday-row';row.innerHTML='<span class="fc-label">本地星期</span><span class="fc-val" data-ff14-gate-weekday>未计算</span>';}
+        if(countdown.nextElementSibling!==row)countdown.insertAdjacentElement('afterend',row);
+        const key=String(win.dataset.ff14RecordKey||win.id.replace(/^win_/,''));const meta=metaMap[key]||{};
+        let ms=Number(meta.gateTimeMs);if(!Number.isFinite(ms)||ms<=0){ms=meta.isGreen?Date.now():NaN;}
+        const value=Number.isFinite(ms)?weekdayForTimestamp(ms):'未计算';
+        const span=row.querySelector('[data-ff14-gate-weekday]')||row.querySelector('.fc-val');
+        if(span&&span.textContent!==value)span.textContent=value;
+        row.title=`按当前设备本地时区计算（${getLocalTimezone()}）；不使用固定北京时间。`;
+        row.setAttribute('aria-label',`进闸时间对应${value}，按本地时区${getLocalTimezone()}计算`);
+      });
+    }finally{syncingWeekday=false;}
+  }
+  // If the legacy updater rewrites the row each second, restore the stable content/position immediately.
+  const weekdayObserver=new MutationObserver(()=>stableWeekdayRows());
+  safe(()=>weekdayObserver.observe(document.body,{childList:true,subtree:true,characterData:true}));
+  setInterval(stableWeekdayRows,250);
+
+  function init(){
+    // Legacy initialization reads these same flags after load; make the current invite session the source of truth.
+    if(currentRole==='temporary')setRole('temporary',{toast:false});
+    else if(currentRole==='special')setRole('special',{toast:false});
+    else if(currentRole==='developer')setRole('developer',{toast:false});
+    else {safe(()=>{isVipUnlocked=false;isMasterVerified=false;isDeveloperMode=false;});updateIdentityUI();}
+    const modal=$('#inviteModal');if(modal&&!$('.ff14-role-tier-hint',modal))updateIdentityUI();
+    stableWeekdayRows();
+  }
+  init();
+  window.addEventListener('load',()=>setTimeout(init,180));
+  const identityBadge=$('#ff14-runtime-identity');
+  if(identityBadge&&typeof MutationObserver!=='undefined'){const identityObserver=new MutationObserver(()=>updateIdentityUI());identityObserver.observe(identityBadge,{attributes:true,attributeFilter:['data-role'],childList:true,characterData:true,subtree:true});}
+  setInterval(updateIdentityUI,350);
+})();
+</script>
+
+
+
+<!-- 2026-10-28 补丁：顶部本地时间、固定进闸星期行、退出身份与16位混淆验证码 -->
+<style id="ff14-local-clock-fixed-weekday-reauth-css">
+  /* Keep the weekday in its own reserved line so it never pushes the description or neighboring controls. */
+  #manualResultBox .res-item .ff14-gate-weekday {
+    display:flex !important; align-items:center; justify-content:flex-start;
+    box-sizing:border-box; width:100%; min-width:0; height:22px; min-height:22px; max-height:22px;
+    flex:0 0 22px; margin:3px 0 2px !important; padding:0 2px;
+    overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:22px;
+    font-size:12px; font-weight:850; font-variant-numeric:tabular-nums;
+    pointer-events:none; user-select:none; contain:layout paint;
+  }
+  #manualResultBox .res-item .ff14-gate-weekday::before { content:none !important; }
+  #manualResultBox .res-item .res-desc { min-height:18px; line-height:1.45; overflow-wrap:anywhere; }
+  #ff14-runtime-status-bar .ff14-local-clock-pill { min-width:255px; justify-content:flex-start; white-space:nowrap; }
+  #ff14-runtime-status-bar .ff14-local-clock-pill strong { min-width:178px; display:inline-block; text-align:left; font-variant-numeric:tabular-nums; }
+  #ff14-runtime-status-bar .ff14-local-clock-zone { color:var(--text-muted); font-size:10px; font-weight:700; }
+  #ff14-runtime-status-bar #ff14-identity-session-button { border:1px solid var(--border); background:rgba(var(--panel-rgb,26,26,46),.55); color:var(--text); border-radius:999px; padding:6px 10px; font-size:11px; font-weight:900; cursor:pointer; white-space:nowrap; transition:background .18s,border-color .18s; }
+  #ff14-runtime-status-bar #ff14-identity-session-button:hover { border-color:var(--accent); color:var(--accent); background:rgba(var(--panel-rgb,26,26,46),.78); }
+  #ff14-runtime-status-bar #ff14-identity-session-button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  #ff14-relogin-challenge-panel { margin-top:12px; padding:13px; border:1px solid var(--gold); border-radius:11px; background:linear-gradient(135deg,rgba(var(--panel-rgb,26,26,46),.76),rgba(160,180,220,.12)); box-shadow:inset 0 1px 0 rgba(255,255,255,.18); text-align:left; }
+  #ff14-relogin-challenge-panel[hidden] { display:none !important; }
+  #ff14-relogin-challenge-panel .ff14-relogin-title { font-size:13px; font-weight:900; color:var(--gold); margin-bottom:7px; }
+  #ff14-relogin-challenge-panel .ff14-relogin-help { color:var(--text-muted); font-size:12px; line-height:1.55; margin-bottom:9px; }
+  #ff14-relogin-challenge-panel label { display:block; color:var(--text); font-size:12px; font-weight:850; margin:8px 0 5px; }
+  #ff14-relogin-challenge-panel .ff14-relogin-code-row { display:flex; gap:7px; align-items:stretch; min-width:0; }
+  #ff14-relogin-challenge-panel input { min-width:0; flex:1; width:100%; box-sizing:border-box; background:var(--input-bg)!important; color:var(--text)!important; border:1px solid var(--input-border)!important; border-radius:8px; padding:9px 10px; font-family:ui-monospace,Consolas,monospace; letter-spacing:1px; }
+  #ff14-relogin-challenge-panel #ff14-relogin-challenge-display { color:var(--accent)!important; font-weight:900; }
+  #ff14-relogin-challenge-panel button { flex-shrink:0; padding:7px 10px; border-radius:8px; border:1px solid var(--accent); color:var(--accent); background:rgba(var(--panel-rgb,26,26,46),.5); font-weight:900; cursor:pointer; }
+  #ff14-relogin-challenge-panel button:hover { background:rgba(var(--panel-rgb,26,26,46),.8); }
+  #ff14-relogin-challenge-panel .ff14-relogin-status { margin-top:8px; min-height:18px; color:var(--text-muted); font-size:11px; line-height:1.5; }
+  @media(max-width:650px) {
+    #ff14-runtime-status-bar .ff14-local-clock-pill { min-width:0; white-space:normal; }
+    #ff14-runtime-status-bar .ff14-local-clock-pill strong { min-width:0; }
+    #ff14-relogin-challenge-panel .ff14-relogin-code-row { flex-wrap:wrap; }
+    #ff14-relogin-challenge-panel .ff14-relogin-code-row button { width:100%; }
+  }
+</style>
+<script id="ff14-local-clock-fixed-weekday-reauth-js">
+(function FF14LocalClockFixedWeekdayAndReauth(){
+  'use strict';
+  const $=(selector,root=document)=>root.querySelector(selector);
+  const safe=(fn,fallback=null)=>{try{return fn();}catch(_){return fallback;}};
+  const AUTH_CHALLENGE_KEY='ff14_pending_relogin_mixed_code_v1';
+  const ROLE_BRIDGE=()=>window.__ff14AuthBridge||null;
+  const toast=message=>safe(()=>typeof window.showToast==='function'?window.showToast(message):console.info(message));
+  const role=()=>safe(()=>ROLE_BRIDGE()?.getRole?.(),'visitor')||'visitor';
+  const modal=()=>$('#inviteModal');
+  let clockTimer=null;
+
+  function localZone(){return safe(()=>Intl.DateTimeFormat().resolvedOptions().timeZone,'设备本地时区')||'设备本地时区';}
+  function formatLocalTime(date){
+    try{return new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(date);}
+    catch(_){return date.toLocaleString('zh-CN',{hour12:false});}
+  }
+  function formatBeijingTime(date){
+    try{return new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(date);}
+    catch(_){return formatLocalTime(date);}
+  }
+  function ensureStatusExtras(){
+    const bar=$('#ff14-runtime-status-bar');if(!bar)return false;
+    const groups=bar.querySelectorAll('.ff14-status-group');
+    const first=groups[0]||bar;
+    if(!$('#ff14-local-clock-pill',bar)){
+      const pill=document.createElement('span');pill.id='ff14-local-clock-pill';pill.className='ff14-status-pill ff14-local-clock-pill';
+      pill.innerHTML='本地时间 <strong id="ff14-local-clock">--</strong> <small class="ff14-local-clock-zone" id="ff14-local-clock-zone"></small>';
+      const beijing=$('#ff14-beijing-clock',bar)?.closest('.ff14-status-pill');
+      if(beijing)beijing.insertAdjacentElement('afterend',pill);else first.appendChild(pill);
+    }
+    const second=groups[1]||bar;
+    if(!$('#ff14-identity-session-button',bar)){
+      const button=document.createElement('button');button.type='button';button.id='ff14-identity-session-button';button.textContent='退出当前身份';
+      button.addEventListener('click',()=>{
+        if(role()==='visitor'){
+          const challenge=getPendingChallenge();
+          openLoginModal();
+          if(challenge)toast('请完成邀请码和16位混淆验证码验证后重新进入。');
+          else toast('请输入邀请码验证身份。');
+          return;
+        }
+        const confirmed=safe(()=>window.confirm('确定退出当前身份？退出后需要重新输入身份邀请码，并填写本次生成的16位混淆验证码。'),true);
+        if(confirmed)logoutCurrentIdentity();
+      });
+      second.appendChild(button);
+    }
+    updateSessionButton();
+    return true;
+  }
+  function updateClocks(){
+    const now=new Date();
+    const local=$('#ff14-local-clock'),zone=$('#ff14-local-clock-zone');
+    if(local){const value=formatLocalTime(now);if(local.textContent!==value)local.textContent=value;}
+    if(zone){const value=localZone();if(zone.textContent!==value)zone.textContent=value;zone.title='根据浏览器设备的当前时区计算。';}
+    // Keep both time values legible with stable-width numerals.
+    const beijing=$('#ff14-beijing-clock');if(beijing){const value=formatBeijingTime(now);if(beijing.textContent!==value)beijing.textContent=value;}
+  }
+  function getPendingChallenge(){return safe(()=>sessionStorage.getItem(AUTH_CHALLENGE_KEY)||'','')||'';}
+  function randomChallenge(){
+    const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let output='';
+    try{
+      const bytes=new Uint8Array(16);if(window.crypto&&typeof window.crypto.getRandomValues==='function')window.crypto.getRandomValues(bytes);else throw new Error('crypto unavailable');
+      for(const byte of bytes)output+=alphabet[byte%alphabet.length];
+    }catch(_){for(let i=0;i<16;i++)output+=alphabet[Math.floor(Math.random()*alphabet.length)];}
+    return output;
+  }
+  function ensureChallengePanel(){
+    const content=$('#inviteModal .modal-content');if(!content)return null;
+    let panel=$('#ff14-relogin-challenge-panel',content);if(panel)return panel;
+    panel=document.createElement('section');panel.id='ff14-relogin-challenge-panel';panel.hidden=true;
+    panel.innerHTML='<div class="ff14-relogin-title">退出后重新验证</div><div class="ff14-relogin-help">请同时输入你的身份邀请码和下方的 16 位混淆验证码。点击“一键复制”可复制本次验证码，再粘贴到下方输入框完成确认。此码只用于当前网页会话的二次确认。</div><label for="ff14-relogin-challenge-display">本次 16 位混淆验证码</label><div class="ff14-relogin-code-row"><input id="ff14-relogin-challenge-display" type="text" readonly autocomplete="off" spellcheck="false" aria-label="本次16位混淆验证码"><button type="button" id="ff14-copy-relogin-challenge">一键复制</button></div><label for="ff14-relogin-challenge-entry">再次输入 16 位混淆验证码</label><input id="ff14-relogin-challenge-entry" type="text" maxlength="16" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="粘贴或输入刚才复制的 16 位码"><div class="ff14-relogin-status" id="ff14-relogin-challenge-status">尚未验证。请输入邀请码和混淆验证码。</div>';
+    content.appendChild(panel);
+    $('#ff14-copy-relogin-challenge',panel).addEventListener('click',copyChallenge);
+    $('#ff14-relogin-challenge-entry',panel).addEventListener('keydown',event=>{
+      if(event.key==='Enter'){event.preventDefault();$('#inviteCodeInput')?.focus();}
+    });
+    return panel;
+  }
+  function syncChallengePanel(){
+    const panel=ensureChallengePanel();if(!panel)return;
+    const code=getPendingChallenge();panel.hidden=!code;
+    const display=$('#ff14-relogin-challenge-display',panel),entry=$('#ff14-relogin-challenge-entry',panel),status=$('#ff14-relogin-challenge-status',panel);
+    if(display&&display.value!==code)display.value=code;
+    if(!code&&entry)entry.value='';
+    if(status){const message=code?'请填写身份邀请码，并在下方重新输入完整的16位混淆验证码。':'当前没有待完成的退出后验证。';if(status.textContent!==message)status.textContent=message;}
+    updateSessionButton();
+  }
+  async function copyChallenge(){
+    const code=getPendingChallenge();if(!code){toast('当前没有可复制的混淆验证码。');return;}
+    let copied=false;
+    try{await navigator.clipboard.writeText(code);copied=true;}catch(_){
+      const display=$('#ff14-relogin-challenge-display');
+      if(display){display.focus();display.select();copied=safe(()=>document.execCommand('copy'),false);display.setSelectionRange?.(display.value.length,display.value.length);}
+    }
+    if(copied){const status=$('#ff14-relogin-challenge-status');if(status)status.textContent='已复制。请将这16位码粘贴到下方输入框，再输入身份邀请码进行验证。';toast('16位混淆验证码已复制。');}
+    else toast('自动复制失败，请选中上方验证码后手动复制。');
+  }
+  function openLoginModal(){
+    syncChallengePanel();const el=modal();if(el)el.style.display='flex';
+    safe(()=>window.openInviteModal?.());
+    syncChallengePanel();
+    const panel=$('#ff14-relogin-challenge-panel');if(panel&&!panel.hidden)setTimeout(()=>$('#inviteCodeInput')?.focus(),60);
+  }
+  function updateSessionButton(){
+    const button=$('#ff14-identity-session-button');if(!button)return;
+    const current=role(),pending=!!getPendingChallenge();
+    const label=current==='visitor'?(pending?'继续身份验证':'输入邀请码'):'退出当前身份';
+    const title=current==='visitor'?(pending?'继续完成邀请码和16位混淆验证码验证':'打开身份邀请码验证'):'退出后需要重新输入邀请码与16位混淆验证码';
+    if(button.textContent!==label)button.textContent=label;
+    if(button.title!==title)button.title=title;
+    if(button.dataset.role!==current)button.dataset.role=current;
+  }
+  function logoutCurrentIdentity(){
+    const code=randomChallenge();
+    safe(()=>sessionStorage.setItem(AUTH_CHALLENGE_KEY,code));
+    const bridge=ROLE_BRIDGE();
+    if(bridge&&typeof bridge.setRole==='function')bridge.setRole('visitor',{toast:false});
+    else {
+      safe(()=>{localStorage.removeItem('ff14_developer_mode');localStorage.removeItem('ff14_master_verified');sessionStorage.removeItem('ff14_user_role_session_v1');});
+      safe(()=>{if(typeof isDeveloperMode!=='undefined')isDeveloperMode=false;if(typeof isMasterVerified!=='undefined')isMasterVerified=false;if(typeof isVipUnlocked!=='undefined')isVipUnlocked=false;});
+    }
+    safe(()=>{if(typeof window.closeRecentDetail==='function')window.closeRecentDetail();});
+    safe(()=>{const page=$('#focusRoutePage');if(page)page.style.display='none';});
+    const inviteInput=$('#inviteCodeInput');if(inviteInput)inviteInput.value='';
+    const masterInput=$('#masterCodeInput');if(masterInput)masterInput.value='';
+    const challengeEntry=$('#ff14-relogin-challenge-entry');if(challengeEntry)challengeEntry.value='';
+    syncChallengePanel();updateSessionButton();openLoginModal();
+    toast('已退出当前身份。重新登录必须填写邀请码及本次16位混淆验证码。');
+  }
+  function challengeMatches(){
+    const expected=getPendingChallenge();if(!expected)return true;
+    const entry=$('#ff14-relogin-challenge-entry');const value=String(entry?.value||'').trim().toUpperCase();
+    if(value!==expected){const status=$('#ff14-relogin-challenge-status');if(status)status.textContent='混淆验证码不匹配，请复制上方验证码并完整粘贴（16位）。';toast('请先正确输入本次16位混淆验证码。');entry?.focus();return false;}
+    return true;
+  }
+  function consumeChallengeIfAuthenticated(beforeRole){
+    const pending=getPendingChallenge();if(!pending)return;
+    const after=role();
+    if(after!=='visitor'&&after!==beforeRole){safe(()=>sessionStorage.removeItem(AUTH_CHALLENGE_KEY));const entry=$('#ff14-relogin-challenge-entry');if(entry)entry.value='';syncChallengePanel();toast('身份验证成功，16位混淆验证码已作废。');}
+    else if(after!=='visitor'){
+      // In case an existing role is revalidated without a role transition, only consume after a valid identity code was supplied.
+      const invite=String($('#inviteCodeInput')?.value||$('#masterCodeInput')?.value||'').trim().toLowerCase();
+      if(['y616','w6168','kfz6168'].includes(invite)||invite===String(window.__ff14CurrentInvite||'').toLowerCase()){
+        safe(()=>sessionStorage.removeItem(AUTH_CHALLENGE_KEY));syncChallengePanel();
+      }
+    }
+  }
+  function wrapEntryPoint(name){
+    const original=window[name];if(typeof original!=='function'||original.__ff14ReauthGuard)return;
+    const wrapped=function(...args){
+      const pending=getPendingChallenge();if(pending&&!challengeMatches())return false;
+      const before=role();const result=original.apply(this,args);
+      if(pending)setTimeout(()=>consumeChallengeIfAuthenticated(before),0);
+      return result;
+    };
+    wrapped.__ff14ReauthGuard=true;wrapped.__ff14ReauthOriginal=original;window[name]=wrapped;
+  }
+  function install(){
+    ensureStatusExtras();syncChallengePanel();updateClocks();
+    if(!clockTimer)clockTimer=setInterval(()=>{ensureStatusExtras();updateClocks();updateSessionButton();},1000);
+    // When a tab is reloaded after exiting, the pending challenge remains for this tab session and must be completed.
+    if(getPendingChallenge()&&modal()&&modal().style.display!=='flex')modal().style.display='flex';
+  }
+  // The role closure is in the previous appended script; capture it through the intentionally narrow bridge.
+  wrapEntryPoint('validateInviteCode');
+  wrapEntryPoint('generateInviteCode');
+  document.addEventListener('click',event=>{
+    if(event.target?.closest?.('#ff14-copy-relogin-challenge')){event.preventDefault();event.stopPropagation();}
+  },true);
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Enter'&&event.target?.id==='ff14-relogin-challenge-entry'){
+      event.preventDefault();$('#inviteCodeInput')?.focus();
+    }
+  });
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+  const bodyObserver=new MutationObserver(()=>{ensureStatusExtras();syncChallengePanel();});
+  if(document.body)bodyObserver.observe(document.body,{childList:true,subtree:true});
+  // Keep the stable weekday text line reserved; update its value only, never append/reflow a new line repeatedly.
+  function lockManualWeekdayLayout(){
+    const box=$('#manualResultBox');if(!box)return;
+    const items=Array.from(box.querySelectorAll('.res-item'));
+    const gate=items.find(item=>(item.querySelector('.res-label')?.textContent||'').includes('绝对进闸时间'));
+    if(!gate)return;
+    let value=gate.querySelector('.res-val');if(!value)return;
+    let day=gate.querySelector('.ff14-gate-weekday');
+    if(!day){day=document.createElement('span');day.className='ff14-gate-weekday';day.setAttribute('aria-live','off');day.textContent='星期计算中';value.insertAdjacentElement('afterend',day);}
+    // Always keep it between the time value and the description; CSS reserves a fixed-height row.
+    const desc=gate.querySelector('.res-desc');if(desc&&day.nextElementSibling!==desc)desc.insertAdjacentElement('beforebegin',day);
+    // The prior calcManual wrapper is the source of the weekday value. This layer only reserves its slot
+    // and keeps it in a stable position; never rewrite the label here, otherwise two timers could oscillate.
+    day.title=`按设备本地时区（${localZone()}）计算；星期行固定高度，不影响下方内容。`;
+  }
+  const manualBox=$('#manualResultBox');
+  if(manualBox){const mo=new MutationObserver(()=>lockManualWeekdayLayout());mo.observe(manualBox,{childList:true,subtree:true,characterData:true});}
+  lockManualWeekdayLayout();setInterval(lockManualWeekdayLayout,1000);
+})();
+</script>
+
+
+
+<!-- 2026-10-28 patch: hide visible invitation-code strings, ET adaptive digit contrast, top identity exit -->
+<style id="ff14-invite-privacy-et-contrast-css">
+  /* Keep the identity action at the top-level status bar, not buried inside a subgroup. */
+  #ff14-runtime-status-bar > #ff14-identity-session-button {
+    flex:0 0 auto; margin-left:auto; align-self:center; order:99;
+    border:1px solid var(--ff14-glass-edge,rgba(255,255,255,.65));
+    border-radius:999px; padding:7px 12px; font:800 12px/1.2 'Segoe UI',sans-serif;
+    color:var(--text); background:rgba(var(--panel-rgb,26,26,46),.32);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.62); cursor:pointer;
+    backdrop-filter:blur(12px) saturate(145%); -webkit-backdrop-filter:blur(12px) saturate(145%);
+  }
+  #ff14-runtime-status-bar > #ff14-identity-session-button:hover { border-color:var(--accent); transform:translateY(-1px); }
+  #ff14-runtime-status-bar > #ff14-identity-session-button[data-role="visitor"] { color:var(--accent); }
+  #etCountdownCard .et-digit-settings .et-digit-color-setting { min-width:0; display:flex; flex-direction:column; gap:6px; }
+  #etCountdownCard .et-digit-settings .et-digit-color-setting label { font-size:12px; font-weight:700; color:var(--text-muted); }
+  #etCountdownCard .et-digit-settings #etDigitColorMode {
+    width:100%; min-width:0; padding:8px 10px; border-radius:9px;
+    color:var(--text)!important; background:var(--input-bg)!important; border:1px solid var(--input-border,var(--border))!important;
+  }
+  #etCountdownCard .et-digit-settings .et-digit-color-help { font-size:10px; line-height:1.5; color:var(--text-muted); }
+  #inviteModal #inviteCodeInput, #ff14TriggerPrivacyCode { -webkit-text-security:disc; }
+  @media(max-width:650px) { #ff14-runtime-status-bar > #ff14-identity-session-button { margin-left:0; } }
+</style>
+<script id="ff14-invite-privacy-et-contrast-js">
+(function FF14InvitePrivacyAndETContrast(){
+  'use strict';
+  const $=(selector,root=document)=>root.querySelector(selector);
+  const safe=(fn,fallback=null)=>{try{return fn();}catch(_){return fallback;}};
+  const ET_COLOR_KEY='ff14_et_digit_color_mode_v1';
+  const validModes=['auto','dark','light'];
+  const REDACT_RE=/(kfz6168|w6168|y616|e6168)/ig;
+  let colorMode=safe(()=>localStorage.getItem(ET_COLOR_KEY)||'auto','auto');
+  if(!validModes.includes(colorMode))colorMode='auto';
+  const isProtectedElement=el=>!!el?.closest?.('script,style,pre,code');
+  function redactText(text){return String(text??'').replace(REDACT_RE,'授权码');}
+  function scrubNode(node){
+    if(!node)return;
+    if(node.nodeType===Node.TEXT_NODE){
+      const parent=node.parentElement;
+      if(!parent||isProtectedElement(parent))return;
+      const current=node.nodeValue||'',next=redactText(current);
+      if(next!==current)node.nodeValue=next;
+      return;
+    }
+    if(node.nodeType!==Node.ELEMENT_NODE)return;
+    const el=node;
+    if(isProtectedElement(el))return;
+    ['title','placeholder','aria-label','alt','data-original-title'].forEach(attr=>{
+      if(!el.hasAttribute(attr))return;
+      const current=el.getAttribute(attr)||'',next=redactText(current);
+      if(next!==current)el.setAttribute(attr,next);
+    });
+    if(el.matches?.('input')){
+      const currentValue=String(el.value||'');
+      if(/(?:kfz6168|w6168|y616|e6168)/i.test(currentValue)){if(el.type!=='password')el.type='password';}
+      // Credential entry controls are always masked, but their actual value remains intact for validation.
+      if(el.matches('#inviteCodeInput,#ff14TriggerPrivacyCode,#masterCodeInput')){
+        if(el.type!=='password')el.type='password';
+        el.setAttribute('autocomplete','new-password');
+        el.setAttribute('autocapitalize','off');
+        el.setAttribute('spellcheck','false');
+      }
+    }
+    if(el.matches?.('textarea')){
+      const value=String(el.value||''),next=redactText(value);
+      if(next!==value)el.value=next;
+      const original=String(el.defaultValue||''),cleanOriginal=redactText(original);
+      if(cleanOriginal!==original)el.defaultValue=cleanOriginal;
+    }
+    for(const child of Array.from(el.childNodes))scrubNode(child);
+  }
+  function scrubAll(){if(!document.body)return;scrubNode(document.body);}
+  function runScrub(){scrubScheduled=false;scrubAll();}
+  function installScrubber(){
+    scrubAll();
+    if(!document.body||typeof MutationObserver==='undefined')return;
+    const observer=new MutationObserver(records=>{
+      for(const record of records){
+        if(record.type==='characterData')scrubNode(record.target);
+        else if(record.type==='attributes')scrubNode(record.target);
+        else for(const node of record.addedNodes)scrubNode(node);
+      }
+    });
+    observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['title','placeholder','aria-label','alt','data-original-title']});
+  }
+
+  function parseColor(value){
+    if(!value)return null;
+    const v=String(value).trim();
+    let m=v.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+    if(m){let h=m[1];if(h.length===3)h=h.split('').map(c=>c+c).join('');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+    m=v.match(/rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i);
+    if(m)return [Number(m[1]),Number(m[2]),Number(m[3])];
+    return null;
+  }
+  function luminance(rgb){
+    if(!rgb)return null;
+    const v=rgb.map(n=>{const c=Math.max(0,Math.min(255,n))/255;return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);});
+    return .2126*v[0]+.7152*v[1]+.0722*v[2];
+  }
+  function currentBackgroundIsLight(){
+    const root=document.documentElement,style=getComputedStyle(root);
+    const glassOn=root.dataset.ff14Glass==='on';
+    const solidOn=root.dataset.ff14GlassSolid==='on';
+    let candidates=[];
+    if(glassOn&&solidOn)candidates.push(style.getPropertyValue('--ff14-glass-canvas'));
+    candidates.push(style.getPropertyValue('--bg'),style.getPropertyValue('--panel'),style.getPropertyValue('--panel-rgb'));
+    for(const candidate of candidates){const lum=luminance(parseColor(candidate));if(lum!==null)return lum>.46;}
+    const theme=(root.getAttribute('data-theme')||'').toLowerCase();
+    if(['dark','midnight'].includes(theme))return false;
+    if(['light','pink','sky','mint','ocean','aurora','sakura','sunset','lavender'].includes(theme))return true;
+    return false;
+  }
+  function resolvedETColor(){
+    if(colorMode==='dark')return '#172631';
+    if(colorMode==='light')return '#f8fcff';
+    return currentBackgroundIsLight()?'#173a2c':'#f6fbff';
+  }
+  function saveColorMode(){safe(()=>localStorage.setItem(ET_COLOR_KEY,colorMode));}
+  function applyETColor(card){
+    if(!card)return;
+    const color=resolvedETColor();
+    if(card.style.getPropertyValue('--ff14-et-digit-color').trim()!==color)card.style.setProperty('--ff14-et-digit-color',color);
+    const select=$('#etDigitColorMode',card);if(select&&select.value!==colorMode)select.value=colorMode;
+  }
+  function ensureETColorControl(){
+    const card=$('#etCountdownCard'),settings=card?.querySelector('.et-digit-settings');
+    if(!card||!settings)return false;
+    let control=$('.et-digit-color-setting',settings);
+    if(!control){
+      control=document.createElement('div');control.className='et-digit-color-setting';
+      control.innerHTML='<label for="etDigitColorMode">ET 数字颜色适配</label><select id="etDigitColorMode"><option value="auto">自动适配背景（深色／浅色）</option><option value="dark">固定深色数字</option><option value="light">固定浅色数字</option></select><div class="et-digit-color-help">自动模式会按当前主题与纯色玻璃底板的亮度切换深浅字色；使用复杂背景图片时，也可手动指定。</div>';
+      settings.appendChild(control);
+      $('#etDigitColorMode',control).addEventListener('change',event=>{
+        const value=event.target.value;colorMode=validModes.includes(value)?value:'auto';saveColorMode();applyETColor(card);
+      });
+    }
+    applyETColor(card);return true;
+  }
+  function pinTopExit(){
+    const bar=$('#ff14-runtime-status-bar'),button=$('#ff14-identity-session-button');
+    if(!bar||!button)return;
+    button.classList.add('ff14-top-exit-action');
+    if(button.parentElement!==bar)bar.appendChild(button);
+    const role=button.dataset.role||'visitor';
+    button.textContent=role==='visitor'?'输入身份邀请码':'退出当前身份';
+    button.title=role==='visitor'?'打开身份验证':'退出身份并要求重新验证';
+  }
+  function install(){ensureETColorControl();pinTopExit();installScrubber();}
+  // Theme/background palettes update root variables and attributes; recalculate ET contrast without touching ET calculations.
+  const rootObserver=new MutationObserver(()=>{if(colorMode==='auto')applyETColor($('#etCountdownCard'));pinTopExit();});
+  if(document.documentElement)rootObserver.observe(document.documentElement,{attributes:true,attributeFilter:['style','class','data-theme','data-ff14-glass','data-ff14-glass-solid','data-ff14-glass-palette']});
+  const bodyObserver=new MutationObserver(()=>{if(colorMode==='auto')applyETColor($('#etCountdownCard'));pinTopExit();});
+  if(document.body)bodyObserver.observe(document.body,{attributes:true,attributeFilter:['style','class','data-theme']});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+  const poll=setInterval(()=>{ensureETColorControl();pinTopExit();},500);
+  // Stop retrying after the ET editor and top bar are both ready; MutationObservers handle later updates.
+  let attempts=0;const readyTimer=setInterval(()=>{attempts++;ensureETColorControl();pinTopExit();if((($('#etDigitColorMode')&&$('#ff14-identity-session-button'))||attempts>60)){clearInterval(readyTimer);clearInterval(poll);}},250);
 })();
 </script>
 
