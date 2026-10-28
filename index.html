@@ -9121,3 +9121,1072 @@ window.closeRecentDetail = function closeRecentDetail() {
   else init();
 })();
 </script>
+
+<!-- ET 液态玻璃卡片实验版：追加式 UX 增强层，不替换原 ET 计时与解析逻辑 -->
+<style id="ff14-et-liquid-card-ux-style">
+  #etCountdownCard {
+    width: min(100%, 980px) !important;
+    max-width: 980px !important;
+    padding: 14px 18px !important;
+    margin: 12px auto 18px !important;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.42) !important;
+    border-left: 1px solid rgba(255,255,255,.42) !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, rgba(199,255,225,.34), rgba(195,239,255,.24) 46%, rgba(231,211,255,.25)) !important;
+    box-shadow: 0 14px 40px rgba(40,105,95,.16), inset 0 1px 0 rgba(255,255,255,.68), inset 0 -1px 0 rgba(255,255,255,.12) !important;
+    backdrop-filter: blur(24px) saturate(175%);
+    -webkit-backdrop-filter: blur(24px) saturate(175%);
+    transition: box-shadow .22s ease, border-color .22s ease;
+  }
+  #etCountdownCard::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse at 8% 0%, rgba(255,255,255,.62), transparent 38%),
+                radial-gradient(ellipse at 92% 100%, rgba(130,240,210,.22), transparent 45%),
+                linear-gradient(120deg, rgba(255,255,255,.12), transparent 42%, rgba(255,255,255,.07));
+  }
+  #etCountdownCard .manual-header {
+    display: flex !important; align-items: center; flex-wrap: wrap; gap: 10px;
+    margin: 0 0 12px !important; padding: 0 0 10px !important;
+    border-bottom: 1px solid rgba(255,255,255,.38) !important;
+  }
+  #etCountdownCard .manual-header h2 { flex: 1 1 240px; min-width: 0; font-size: 17px !important; line-height: 1.35; }
+  #etCountdownCard .manual-header > span { font-size: 11px !important; }
+  #etCountdownCard .et-ux-toolbar { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex:0 0 auto; flex-wrap:wrap; }
+  #etCountdownCard .et-ux-btn {
+    appearance:none; border:1px solid rgba(255,255,255,.48); border-radius:10px;
+    padding:6px 10px; min-height:30px; background:rgba(255,255,255,.26); color:var(--text);
+    font:inherit; font-size:12px; font-weight:600; line-height:1.2; cursor:pointer; white-space:nowrap;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.48), 0 2px 8px rgba(30,70,70,.06);
+    transition:background .18s ease, transform .18s ease, border-color .18s ease;
+  }
+  #etCountdownCard .et-ux-btn:hover { background:rgba(255,255,255,.46); border-color:rgba(255,255,255,.78); transform:translateY(-1px); }
+  #etCountdownCard .et-main-grid {
+    display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:12px !important; align-items:stretch;
+  }
+  #etCountdownCard .et-box {
+    min-width:0; margin:0 !important; padding:13px 15px !important; border-radius:15px !important;
+    border:1px solid rgba(255,255,255,.43) !important;
+    background:rgba(255,255,255,.23) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.52), inset 0 -1px 0 rgba(255,255,255,.1), 0 5px 18px rgba(35,75,75,.04);
+    backdrop-filter:blur(16px) saturate(155%); -webkit-backdrop-filter:blur(16px) saturate(155%);
+  }
+  #etCountdownCard .et-box > div:first-child,
+  #etCountdownCard .et-box > label { letter-spacing:.2px; }
+  #etCountdownCard #etCurrentClock,
+  #etCountdownCard #etTargetCountdown {
+    font-family:var(--ff14-et-digit-font, ui-monospace, Consolas, "Courier New", monospace) !important;
+    font-variant-numeric:tabular-nums lining-nums; font-feature-settings:"tnum" 1, "lnum" 1;
+    font-size:var(--ff14-et-current-size, 36px) !important; line-height:1.24 !important;
+    letter-spacing:0 !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:100%; min-height:1.24em; cursor:pointer; user-select:none;
+    text-shadow:0 1px 12px rgba(255,255,255,.24);
+  }
+  #etCountdownCard #etTargetCountdown { font-size:var(--ff14-et-count-size, 30px) !important; }
+  #etCountdownCard #etCurrentClock:hover,
+  #etCountdownCard #etTargetCountdown:hover { filter:brightness(1.08); }
+  #etCountdownCard #etCurrentClock:focus-visible,
+  #etCountdownCard #etTargetCountdown:focus-visible { outline:2px solid var(--blue); outline-offset:4px; border-radius:4px; }
+  #etCountdownCard .et-editor-box { display:none; grid-column:1 / -1; }
+  #etCountdownCard.et-editor-open .et-editor-box { display:block; }
+  #etCountdownCard .et-editor-box input { min-width:0; }
+  #etCountdownCard .et-digit-settings {
+    display:grid; grid-template-columns:minmax(180px,1fr) minmax(180px,1fr); gap:12px;
+    padding:11px 12px; margin-top:12px; border-radius:12px;
+    background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.36);
+  }
+  #etCountdownCard .et-digit-setting { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  #etCountdownCard .et-digit-setting label { font-size:12px; font-weight:700; color:var(--text-muted); }
+  #etCountdownCard .et-digit-setting select { width:100%; min-width:0; padding:8px 10px; font-size:13px; border-radius:9px; }
+  #etCountdownCard .et-digit-setting input[type="range"] { padding:0; accent-color:var(--blue); min-width:0; }
+  #etCountdownCard .et-digit-size-line { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); }
+  #etCountdownCard.et-collapsed .et-main-grid { display:none !important; }
+  #etCountdownCard.et-collapsed .manual-header { margin-bottom:0 !important; padding-bottom:0 !important; border-bottom:0 !important; }
+  #etCountdownCard.et-expanded {
+    position:fixed !important; z-index:19999 !important; top:50% !important; left:50% !important;
+    right:auto !important; bottom:auto !important; transform:translate(-50%,-50%) !important;
+    width:min(94vw, 1040px) !important; max-width:min(94vw, 1040px) !important;
+    max-height:88vh !important; overflow:auto !important; margin:0 !important; padding:20px 22px !important;
+    box-shadow:0 28px 90px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.78) !important;
+  }
+  .ff14-et-expand-backdrop {
+    position:fixed; inset:0; z-index:19998; background:rgba(12,30,35,.36);
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  }
+  [data-theme="dark"] #etCountdownCard, body:not([data-theme]) #etCountdownCard,
+  [data-theme="dark"] #etCountdownCard .et-box, body:not([data-theme]) #etCountdownCard .et-box {
+    color:var(--text);
+  }
+  @media (max-width:650px) {
+    #etCountdownCard { padding:12px !important; border-radius:16px !important; }
+    #etCountdownCard .manual-header h2 { flex-basis:100%; }
+    #etCountdownCard .et-ux-toolbar { justify-content:flex-start; width:100%; }
+    #etCountdownCard .et-main-grid { grid-template-columns:minmax(0,1fr) !important; }
+    #etCountdownCard .et-editor-box { grid-column:auto; }
+    #etCountdownCard .et-digit-settings { grid-template-columns:minmax(0,1fr); }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    #etCountdownCard, #etCountdownCard * { transition:none !important; animation:none !important; }
+  }
+</style>
+<script id="ff14-et-liquid-card-ux-script">
+(() => {
+  'use strict';
+  if (window.__ff14ETLiquidCardUX) return;
+  window.__ff14ETLiquidCardUX = true;
+  const PREF_KEY = 'ff14_et_visual_preferences_v1';
+  const FONTS = {
+    mono: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace',
+    terminal: '"Courier New", Consolas, monospace',
+    clean: '"Segoe UI", Arial, sans-serif',
+    rounded: '"Trebuchet MS", "Segoe UI", sans-serif',
+    serif: 'Georgia, "Times New Roman", serif',
+    block: 'Impact, "Arial Black", sans-serif'
+  };
+  let backdrop = null;
+  let prefs = { font: 'mono', size: 36, collapsed: false };
+  try {
+    const saved = JSON.parse(localStorage.getItem(PREF_KEY) || 'null');
+    if (saved && typeof saved === 'object') {
+      if (FONTS[saved.font]) prefs.font = saved.font;
+      if (Number.isFinite(Number(saved.size))) prefs.size = Math.max(22, Math.min(64, Number(saved.size)));
+      prefs.collapsed = saved.collapsed === true;
+    }
+  } catch (_) {}
+  function persist() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (_) {} }
+  function applyDigits(card) {
+    if (!card) return;
+    card.style.setProperty('--ff14-et-digit-font', FONTS[prefs.font] || FONTS.mono);
+    card.style.setProperty('--ff14-et-current-size', `${prefs.size}px`);
+    card.style.setProperty('--ff14-et-count-size', `${Math.max(18, Math.round(prefs.size * 0.84))}px`);
+    const select = card.querySelector('#etDigitFontSelect');
+    const range = card.querySelector('#etDigitSizeRange');
+    const value = card.querySelector('#etDigitSizeValue');
+    if (select && select.value !== prefs.font) select.value = prefs.font;
+    if (range && Number(range.value) !== prefs.size) range.value = String(prefs.size);
+    if (value) value.textContent = `${prefs.size}px`;
+  }
+  function init() {
+    const card = document.getElementById('etCountdownCard');
+    if (!card || card.dataset.ff14EtCardUx === '1') return !!card;
+    card.dataset.ff14EtCardUx = '1';
+    const mainGrid = card.querySelector('.et-main-grid');
+    const header = card.querySelector('.manual-header');
+    if (!mainGrid || !header) return false;
+    const boxes = Array.from(mainGrid.children).filter(el => el.classList.contains('et-box'));
+    const editBox = boxes[1] || null;
+    const countdown = card.querySelector('#etTargetCountdown');
+    const countdownBox = countdown ? countdown.closest('.et-box') : null;
+    const clock = card.querySelector('#etCurrentClock');
+    const input = card.querySelector('#etTargetInput');
+    if (editBox) editBox.classList.add('et-editor-box');
+    if (countdownBox && editBox && countdownBox.parentElement !== mainGrid) mainGrid.insertBefore(countdownBox, editBox);
+
+    const oldStatus = header.querySelector('span');
+    if (oldStatus) oldStatus.textContent = '点击 ET 时间编辑 · 液态玻璃实验版';
+    const toolbar = document.createElement('div');
+    toolbar.className = 'et-ux-toolbar';
+    toolbar.innerHTML = `
+      <button type="button" class="et-ux-btn" data-et-ux="edit" title="点击编辑 ET 目标时间">✎ 编辑时间</button>
+      <button type="button" class="et-ux-btn" data-et-ux="collapse" title="折叠或展开 ET 卡片">⌄ 折叠</button>
+      <button type="button" class="et-ux-btn" data-et-ux="expand" title="放大查看 ET 时间卡片">⤢ 放大</button>`;
+    header.appendChild(toolbar);
+
+    if (editBox && !editBox.querySelector('.et-digit-settings')) {
+      const settings = document.createElement('div');
+      settings.className = 'et-digit-settings';
+      settings.innerHTML = `
+        <div class="et-digit-setting">
+          <label for="etDigitFontSelect">ET 数字字体（仅影响此卡片）</label>
+          <select id="etDigitFontSelect">
+            <option value="mono">经典等宽 · Monospace</option>
+            <option value="terminal">复古终端 · Courier</option>
+            <option value="clean">清爽无衬线 · Segoe UI</option>
+            <option value="rounded">圆润柔和 · Trebuchet</option>
+            <option value="serif">优雅衬线 · Georgia</option>
+            <option value="block">粗块科技 · Impact</option>
+          </select>
+        </div>
+        <div class="et-digit-setting">
+          <div class="et-digit-size-line"><label for="etDigitSizeRange">ET 数字大小</label><strong id="etDigitSizeValue">36px</strong></div>
+          <input id="etDigitSizeRange" type="range" min="22" max="64" step="1" value="36" aria-label="调整 ET 数字大小">
+          <div class="et-help" style="margin:0">只调整当前 ET 时钟和倒计时，不影响 S 怪卡片或其他悬浮窗。</div>
+        </div>`;
+      editBox.appendChild(settings);
+    }
+
+    function setEditor(open, focus) {
+      if (open) {
+        card.classList.remove('et-collapsed');
+        card.classList.add('et-editor-open');
+        const collapseBtn = toolbar.querySelector('[data-et-ux="collapse"]');
+        if (collapseBtn) collapseBtn.textContent = '⌄ 折叠';
+        if (focus && input) setTimeout(() => { try { input.focus(); input.select(); } catch (_) {} }, 40);
+      } else card.classList.remove('et-editor-open');
+    }
+    function closeExpanded() {
+      card.classList.remove('et-expanded');
+      if (backdrop) { backdrop.remove(); backdrop = null; }
+      document.body.style.removeProperty('overflow');
+      const b = toolbar.querySelector('[data-et-ux="expand"]');
+      if (b) b.textContent = '⤢ 放大';
+    }
+    function toggleExpanded() {
+      if (card.classList.contains('et-expanded')) { closeExpanded(); return; }
+      if (!backdrop) {
+        backdrop = document.createElement('div'); backdrop.className = 'ff14-et-expand-backdrop';
+        backdrop.addEventListener('click', closeExpanded);
+      }
+      document.body.appendChild(backdrop);
+      card.classList.remove('et-collapsed');
+      card.classList.add('et-expanded');
+      document.body.style.overflow = 'hidden';
+      const b = toolbar.querySelector('[data-et-ux="expand"]');
+      if (b) b.textContent = '⤡ 还原';
+    }
+    toolbar.addEventListener('click', event => {
+      const button = event.target.closest('[data-et-ux]');
+      if (!button) return;
+      const action = button.dataset.etUx;
+      if (action === 'edit') setEditor(!card.classList.contains('et-editor-open'), true);
+      if (action === 'collapse') {
+        const collapsing = !card.classList.contains('et-collapsed');
+        card.classList.toggle('et-collapsed', collapsing);
+        if (collapsing) card.classList.remove('et-editor-open');
+        button.textContent = collapsing ? '⌄ 展开' : '⌄ 折叠';
+        prefs.collapsed = collapsing; persist();
+      }
+      if (action === 'expand') toggleExpanded();
+    });
+    if (clock) {
+      clock.setAttribute('role', 'button'); clock.setAttribute('tabindex', '0');
+      clock.setAttribute('aria-label', '点击编辑 ET 目标时间');
+      clock.title = '点击这里填写 ET 开怪时间';
+      clock.addEventListener('click', () => setEditor(!card.classList.contains('et-editor-open'), true));
+      clock.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setEditor(!card.classList.contains('et-editor-open'), true); } });
+    }
+    if (countdown) {
+      countdown.setAttribute('role', 'button'); countdown.setAttribute('tabindex', '0');
+      countdown.title = '点击设置或修改目标 ET 时间';
+      countdown.addEventListener('click', () => setEditor(!card.classList.contains('et-editor-open'), true));
+      countdown.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setEditor(!card.classList.contains('et-editor-open'), true); } });
+    }
+    const fontSelect = card.querySelector('#etDigitFontSelect');
+    const sizeRange = card.querySelector('#etDigitSizeRange');
+    if (fontSelect) fontSelect.addEventListener('change', () => { if (FONTS[fontSelect.value]) prefs.font = fontSelect.value; applyDigits(card); persist(); });
+    if (sizeRange) sizeRange.addEventListener('input', () => { prefs.size = Math.max(22, Math.min(64, Number(sizeRange.value) || 36)); applyDigits(card); persist(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && card.classList.contains('et-expanded')) closeExpanded(); });
+    card.classList.toggle('et-collapsed', prefs.collapsed);
+    const collapseBtn = toolbar.querySelector('[data-et-ux="collapse"]');
+    if (collapseBtn) collapseBtn.textContent = prefs.collapsed ? '⌄ 展开' : '⌄ 折叠';
+    applyDigits(card);
+    window.__ff14ETCardUXControls = { openEditor: () => setEditor(true, true), closeExpanded, toggleExpanded, card };
+    return true;
+  }
+  let tries = 0;
+  function retry() {
+    if (init()) return;
+    if (++tries < 80) setTimeout(retry, 100);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', retry, { once: true });
+  else retry();
+})();
+</script>
+
+<style id="ff14-manual-route-glass-polish-css">
+  /* 快速手动输入：延续 ET 液态玻璃风格，不影响 ET 卡片自身 */
+  #manualCard:not(#etCountdownCard) {
+    background: linear-gradient(128deg, rgba(var(--panel-rgb,26,26,46),.86), rgba(var(--panel-rgb,26,26,46),.70) 58%, rgba(0,191,255,.055)) !important;
+    color: var(--text) !important;
+    border: 1px solid rgba(145,185,220,.27) !important;
+    border-left: 4px solid var(--accent) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 14px 34px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.09) !important;
+    backdrop-filter: blur(22px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(140%) !important;
+  }
+  #manualCard .manual-header { border-bottom-color: rgba(145,185,220,.25) !important; }
+  #manualCard .input-section,
+  #manualCard .manual-result-box,
+  #manualCard .counter-panel,
+  #ff14StandaloneTriggerSection {
+    color: var(--text) !important;
+    background: rgba(var(--panel-rgb,26,26,46),.60) !important;
+    border-color: rgba(145,185,220,.22) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+    backdrop-filter: blur(15px) saturate(128%);
+    -webkit-backdrop-filter: blur(15px) saturate(128%);
+  }
+  #manualCard .section-title,
+  #manualCard .manual-header h2,
+  #ff14StandaloneTriggerSection summary { color: var(--text) !important; }
+  #manualCard .input-group label,
+  #manualCard .res-label,
+  #manualCard .res-desc,
+  #ff14StandaloneTriggerSection .trigger-tag .server-part { color: var(--text-muted) !important; }
+
+  /* 修复手动输入、专注排车、OCR 与公告编辑中的纯白/不适配输入底色 */
+  #manualCard input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  #manualCard select,
+  #manualCard textarea,
+  #focusRoutePage .focus-col-left input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  #focusRoutePage .focus-col-left select,
+  #focusRoutePage .focus-col-left textarea,
+  #focusRoutePage .focus-col-right input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  #focusRoutePage .focus-col-right select,
+  #focusRoutePage .focus-col-right textarea,
+  #focusRoutePage .route-textarea,
+  #focusRoutePage .announcement-textarea,
+  #focusRoutePage .input-trigger-compact,
+  #ff14StandaloneTriggerSection input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  #ff14StandaloneTriggerSection select {
+    background: var(--input-bg, var(--panel)) !important;
+    color: var(--text) !important;
+    border-color: var(--input-border, var(--border)) !important;
+    caret-color: var(--accent) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  }
+  #manualCard input::placeholder,
+  #manualCard textarea::placeholder,
+  #focusRoutePage input::placeholder,
+  #focusRoutePage textarea::placeholder,
+  #ff14StandaloneTriggerSection input::placeholder { color: var(--text-muted) !important; opacity: .88; }
+  #manualCard input:focus,
+  #manualCard select:focus,
+  #manualCard textarea:focus,
+  #focusRoutePage .focus-col-left input:focus,
+  #focusRoutePage .focus-col-left select:focus,
+  #focusRoutePage .focus-col-left textarea:focus,
+  #focusRoutePage .focus-col-right input:focus,
+  #focusRoutePage .focus-col-right select:focus,
+  #focusRoutePage .focus-col-right textarea:focus,
+  #focusRoutePage .route-textarea:focus,
+  #focusRoutePage .announcement-textarea:focus,
+  #focusRoutePage .input-trigger-compact:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(0,191,255,.12), inset 0 1px 0 rgba(255,255,255,.025) !important;
+    outline: none !important;
+  }
+  #manualCard select option,
+  #focusRoutePage select option,
+  #ff14StandaloneTriggerSection select option { background: var(--panel); color: var(--text); }
+
+  /* 今日统计卡片 */
+  .ff14-daily-stats {
+    display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px;
+    margin: 0 0 15px; padding: 12px;
+    border: 1px solid rgba(125,195,225,.27); border-radius: 14px;
+    background: linear-gradient(125deg, rgba(0,191,255,.09), rgba(155,89,182,.075), rgba(var(--panel-rgb,26,26,46),.65));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 8px 20px rgba(0,0,0,.08);
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+  .ff14-daily-stat { min-width:0; padding:10px 12px; border-radius:10px; background:rgba(var(--panel-rgb,26,26,46),.48); border:1px solid rgba(145,185,220,.17); }
+  .ff14-daily-stat-label { color:var(--text-muted); font-size:11px; font-weight:750; margin-bottom:5px; }
+  .ff14-daily-stat-value { color:var(--accent); font-size:23px; line-height:1.2; font-weight:900; font-variant-numeric:tabular-nums; font-family:ui-monospace,Consolas,monospace; }
+  .ff14-daily-stat-value small { color:var(--text-muted); font-size:11px; font-weight:700; margin-left:3px; }
+  .ff14-daily-stat-ratio { height:6px; width:100%; overflow:hidden; border-radius:99px; background:rgba(128,128,128,.22); margin-top:8px; }
+  .ff14-daily-stat-ratio-fill { display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--accent),var(--blue)); transition:width .22s ease; }
+  .ff14-daily-stat-footnote { grid-column:1/-1; color:var(--text-muted); font-size:10px; line-height:1.45; padding:0 2px; }
+  #ff14StandaloneTriggerSection { width:100%; max-width:1250px; margin:0 auto 14px; padding:14px 18px !important; border-radius:15px; }
+  #ff14StandaloneTriggerSection details > summary { cursor:pointer; font-weight:850; padding:7px 2px; }
+  #ff14StandaloneTriggerSection .trigger-container { background:rgba(var(--panel-rgb,26,26,46),.42) !important; }
+
+  /* 二级数字样式菜单：挂在 body 下，避免被主卡片、排车列或玻璃层裁切 */
+  #ff14TimeDigitMenu {
+    display:none; position:fixed; z-index:2147483647; width:min(430px,calc(100vw - 24px));
+    max-height:min(78vh,650px); overflow:auto; padding:16px;
+    border:1px solid rgba(130,190,225,.38); border-radius:17px;
+    color:var(--text); background:linear-gradient(135deg,rgba(var(--panel-rgb,26,26,46),.93),rgba(var(--panel-rgb,26,26,46),.82),rgba(0,191,255,.09));
+    box-shadow:0 22px 65px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.14);
+    backdrop-filter:blur(28px) saturate(155%); -webkit-backdrop-filter:blur(28px) saturate(155%);
+    isolation:isolate;
+  }
+  #ff14TimeDigitMenu:popover-open { display:block !important; }
+  #ff14TimeDigitMenu .ff14-time-menu-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+  #ff14TimeDigitMenu .ff14-time-menu-title { color:var(--accent); font-size:15px; font-weight:900; }
+  #ff14TimeDigitMenu .ff14-time-menu-close { background:transparent; border:1px solid var(--border); color:var(--text); width:30px; height:30px; border-radius:8px; cursor:pointer; }
+  #ff14TimeDigitMenu .ff14-time-menu-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+  #ff14TimeDigitMenu .ff14-time-control { display:flex; flex-direction:column; gap:7px; min-width:0; padding:10px; border-radius:11px; border:1px solid rgba(145,185,220,.19); background:rgba(var(--panel-rgb,26,26,46),.55); }
+  #ff14TimeDigitMenu .ff14-time-control label { color:var(--text-muted); font-weight:750; font-size:11px; }
+  #ff14TimeDigitMenu select,
+  #ff14TimeDigitMenu input[type="range"] { width:100%; min-width:0; background:var(--input-bg) !important; color:var(--text) !important; border:1px solid var(--input-border,var(--border)); border-radius:8px; padding:8px; }
+  #ff14TimeDigitMenu input[type="color"] { width:100%; height:38px; padding:3px; border-radius:8px; border:1px solid var(--border); background:var(--input-bg); cursor:pointer; }
+  #ff14TimeDigitMenu .ff14-time-menu-actions { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  #ff14TimeDigitMenu .ff14-time-menu-note { color:var(--text-muted); font-size:10px; line-height:1.5; margin-top:10px; }
+  .ff14-time-style-target,
+  #manualCard .recent-time-val,
+  #manualCard .weather-countdown-val,
+  #manualCard .fc-timer,
+  #manualCard .fc-timer-neg,
+  #manualCard .fate-time,
+  #focusRoutePage .fc-timer,
+  #focusRoutePage .fc-timer-neg,
+  #focusRoutePage #routeTotalDuration,
+  #focusRoutePage #ssRateText,
+  #focusRoutePage .route-log-list .recent-time-val,
+  #focusRoutePage .route-log-list .time-text,
+  #etRouteQueue .et-queue-time,
+  #etRouteQueue .et-queue-remain {
+    font-family:var(--ff14-time-font,ui-monospace,Consolas,monospace) !important;
+    font-size:var(--ff14-time-size,18px) !important;
+    color:var(--ff14-time-color,var(--accent)) !important;
+    font-variant-numeric:tabular-nums lining-nums !important;
+    line-height:1.32 !important; letter-spacing:0 !important; overflow-wrap:anywhere;
+  }
+  .ff14-time-input-target {
+    font-family:var(--ff14-time-font,ui-monospace,Consolas,monospace) !important;
+    font-size:min(var(--ff14-time-size,18px),24px) !important;
+    color:var(--ff14-time-color,var(--accent)) !important;
+    font-variant-numeric:tabular-nums lining-nums !important;
+  }
+  #manualCard .recent-time-val, #focusRoutePage .route-log-list .recent-time-val { max-width:100%; }
+  #manualCard .recent-time-block, #manualCard .res-item, #focusRoutePage .route-result-box .res-item { min-width:0; }
+  @media(max-width:720px) {
+    .ff14-daily-stats { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; padding:9px; }
+    .ff14-daily-stat:last-of-type { grid-column:1/-1; }
+    .ff14-daily-stat-value { font-size:20px; }
+    #ff14TimeDigitMenu .ff14-time-menu-grid { grid-template-columns:1fr; }
+    #ff14StandaloneTriggerSection { padding:11px !important; }
+  }
+</style>
+<script id="ff14-manual-route-glass-polish-script">
+(() => {
+  'use strict';
+  if (window.__ff14ManualRouteGlassPolishV1) return;
+  window.__ff14ManualRouteGlassPolishV1 = true;
+
+  const DAILY_KEY = 'ff14_daily_target_stats_v1';
+  const STYLE_KEY = 'ff14_global_time_digit_style_v1';
+  const FONTS = {
+    mono: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace',
+    terminal: '"Courier New", Consolas, monospace',
+    clean: '"Segoe UI", Arial, sans-serif',
+    rounded: '"Trebuchet MS", "Segoe UI", sans-serif',
+    serif: 'Georgia, "Times New Roman", serif',
+    block: 'Impact, "Arial Black", sans-serif'
+  };
+  const DEFAULT_STYLE = { font:'mono', size:18, color:'theme' };
+  let stylePrefs = { ...DEFAULT_STYLE };
+  let currentTrigger = null;
+  let digitMenu = null;
+  let statsEl = null;
+  let daily = { date:'', targets:[] };
+  let cleanScheduled = false;
+
+  const $ = (selector, root=document) => root.querySelector(selector);
+  const $$ = (selector, root=document) => Array.from(root.querySelectorAll(selector));
+  const localDateKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  const targetKey = (server, name) => `${String(server||'').trim().toLowerCase()}|${String(name||'').trim().toLowerCase()}`;
+  const readList = () => { try { return typeof recentRecords !== 'undefined' && Array.isArray(recentRecords) ? recentRecords : []; } catch (_) { return []; } };
+  function readDaily() {
+    const today = localDateKey();
+    try {
+      const saved = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null');
+      if (saved && saved.date === today && Array.isArray(saved.targets)) daily = { date:today, targets:[...new Set(saved.targets.filter(x => typeof x === 'string'))] };
+      else daily = { date:today, targets:[] };
+    } catch (_) { daily = { date:today, targets:[] }; }
+  }
+  function saveDaily() { try { localStorage.setItem(DAILY_KEY, JSON.stringify(daily)); } catch (_) {} }
+  function currentTarget() {
+    const server = ($('#mServer')?.value || '').trim();
+    const raw = ($('#mMonster')?.value || '未知|未知').split('|');
+    const name = (raw[0] || '').trim();
+    if (!server || !name || name === '未知' || name.startsWith('---')) return null;
+    return { server, name, key:targetKey(server,name) };
+  }
+  function trackCurrentTarget() {
+    const target = currentTarget();
+    if (!target) return;
+    if (!daily.targets.includes(target.key)) {
+      daily.targets.push(target.key);
+      saveDaily();
+    }
+    updateStats();
+  }
+  function isTodayTimestamp(value) {
+    const n = typeof value === 'number' ? value : (typeof value === 'string' && /^\d{10,}$/.test(value) ? Number(value) : NaN);
+    return Number.isFinite(n) && localDateKey(new Date(n)) === localDateKey();
+  }
+  function todayListKeys() {
+    const keys = new Set();
+    for (const record of readList()) {
+      if (!record || !isTodayTimestamp(record.id)) continue;
+      const key = targetKey(record.server, record.name);
+      if (key && !key.startsWith('|')) keys.add(key);
+    }
+    return keys;
+  }
+  function updateStats() {
+    if (!statsEl) return;
+    if (daily.date !== localDateKey()) readDaily();
+    const listed = todayListKeys();
+    const allTargets = new Set([...daily.targets, ...listed]);
+    const calculatedCount = allTargets.size;
+    const listedCount = listed.size;
+    const ratio = calculatedCount ? Math.max(0, Math.min(100, listedCount / calculatedCount * 100)) : 0;
+    const calcValue = $('#ff14DailyCalculated', statsEl);
+    const listValue = $('#ff14DailyListed', statsEl);
+    const ratioValue = $('#ff14DailyRatioText', statsEl);
+    const fill = $('#ff14DailyRatioFill', statsEl);
+    const setTextIfChanged = (el, value) => { if (el && el.textContent !== value) el.textContent = value; };
+    setTextIfChanged(calcValue, String(calculatedCount));
+    setTextIfChanged(listValue, String(listedCount));
+    setTextIfChanged(ratioValue, `${ratio.toFixed(1)}%`);
+    if (fill && fill.style.width !== `${ratio}%`) fill.style.width = `${ratio}%`;
+    const foot = $('.ff14-daily-stat-footnote', statsEl);
+    setTextIfChanged(foot, `统计日期：${localDateKey()} · 按服务器与 S 怪名称去重；比例 = 今日加入列表的目标数 ÷ 今日已统计目标数。`);
+    saveDaily();
+  }
+
+  function injectStats(manual) {
+    const body = $('#manualCardBody', manual);
+    if (!body) return;
+    if (!$('#ff14DailyStats', body)) {
+      statsEl = document.createElement('section');
+      statsEl.id = 'ff14DailyStats';
+      statsEl.className = 'ff14-daily-stats';
+      statsEl.setAttribute('aria-label','今日 S 怪统计');
+      statsEl.innerHTML = `
+        <div class="ff14-daily-stat"><div class="ff14-daily-stat-label">今日已统计</div><div class="ff14-daily-stat-value"><span id="ff14DailyCalculated">0</span><small>只</small></div></div>
+        <div class="ff14-daily-stat"><div class="ff14-daily-stat-label">今日加入列表</div><div class="ff14-daily-stat-value"><span id="ff14DailyListed">0</span><small>只</small></div></div>
+        <div class="ff14-daily-stat"><div class="ff14-daily-stat-label">加入列表比例</div><div class="ff14-daily-stat-value"><span id="ff14DailyRatioText">0.0%</span></div><div class="ff14-daily-stat-ratio"><span id="ff14DailyRatioFill" class="ff14-daily-stat-ratio-fill"></span></div></div>
+        <div class="ff14-daily-stat-footnote"></div>`;
+      const firstSection = $('.input-section', body);
+      if (firstSection) body.insertBefore(statsEl, firstSection); else body.prepend(statsEl);
+    } else statsEl = $('#ff14DailyStats', body);
+  }
+
+  function moveTriggerList() {
+    const triggerContainer = $('#triggerContainer');
+    const section = triggerContainer?.closest('.input-section');
+    const topBar = $('.top-bar');
+    if (!section || !topBar || section.dataset.ff14MovedToToolbar === '1') return;
+    section.id = 'ff14StandaloneTriggerSection';
+    section.dataset.ff14MovedToToolbar = '1';
+    section.style.background = 'transparent';
+    section.style.border = 'none';
+    section.style.padding = '0';
+    topBar.parentNode.insertBefore(section, topBar);
+  }
+
+  function addStyleButton(parent, beforeNode=null) {
+    if (!parent || $('.ff14-time-style-open', parent)) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn btn-outline ff14-time-style-open';
+    button.textContent = '数字样式';
+    button.title = '打开时间数字的字体、字号和颜色设置';
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      if (digitMenu && digitMenu.style.display === 'block' && currentTrigger === button) { closeMenu(); return; }
+      openMenu(button);
+    });
+    if (beforeNode) parent.insertBefore(button, beforeNode); else parent.appendChild(button);
+  }
+
+  function getAccentHex() {
+    try {
+      const value = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      const match = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+      if (match) {
+        let hex = match[1];
+        if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
+        return `#${hex}`;
+      }
+      const rgb = value.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+      if (rgb) return '#' + rgb.slice(1,4).map(v => Number(v).toString(16).padStart(2,'0')).join('');
+    } catch (_) {}
+    return '#00bfa5';
+  }
+  function loadStyle() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STYLE_KEY) || 'null');
+      if (saved && typeof saved === 'object') {
+        if (FONTS[saved.font]) stylePrefs.font = saved.font;
+        if (Number.isFinite(Number(saved.size))) stylePrefs.size = Math.max(12,Math.min(36,Number(saved.size)));
+        if (saved.color === 'theme' || (typeof saved.color === 'string' && /^#[0-9a-f]{6}$/i.test(saved.color))) stylePrefs.color = saved.color;
+      }
+    } catch (_) {}
+  }
+  function saveStyle() { try { localStorage.setItem(STYLE_KEY, JSON.stringify(stylePrefs)); } catch (_) {} }
+  function applyStyle() {
+    const root = document.documentElement;
+    root.style.setProperty('--ff14-time-font', FONTS[stylePrefs.font] || FONTS.mono);
+    root.style.setProperty('--ff14-time-size', `${stylePrefs.size}px`);
+    root.style.setProperty('--ff14-time-color', stylePrefs.color === 'theme' ? 'var(--accent)' : stylePrefs.color);
+    if (!digitMenu) return;
+    const font = $('#ff14TimeDigitFont',digitMenu), size = $('#ff14TimeDigitSize',digitMenu), color = $('#ff14TimeDigitColor',digitMenu), sizeVal = $('#ff14TimeDigitSizeValue',digitMenu);
+    if (font) font.value = stylePrefs.font;
+    if (size) size.value = String(stylePrefs.size);
+    if (sizeVal) sizeVal.textContent = `${stylePrefs.size}px`;
+    if (color) color.value = stylePrefs.color === 'theme' ? getAccentHex() : stylePrefs.color;
+  }
+  function ensureDigitMenu() {
+    if (digitMenu) return;
+    digitMenu = document.createElement('div');
+    digitMenu.id = 'ff14TimeDigitMenu';
+    // 浏览器顶层 Popover 可越过普通 z-index 层叠上下文，解决最大 z-index 相同的二级菜单遮挡。
+    digitMenu.setAttribute('popover','manual');
+    digitMenu.setAttribute('role','dialog');
+    digitMenu.setAttribute('aria-label','时间数字样式设置');
+    digitMenu.innerHTML = `
+      <div class="ff14-time-menu-head"><div class="ff14-time-menu-title">时间与进度数字样式</div><button type="button" class="ff14-time-menu-close" aria-label="关闭设置">×</button></div>
+      <div class="ff14-time-menu-grid">
+        <div class="ff14-time-control"><label for="ff14TimeDigitFont">字体组合</label><select id="ff14TimeDigitFont">
+          <option value="mono">经典等宽数字</option><option value="terminal">复古终端</option><option value="clean">清爽无衬线</option><option value="rounded">圆润柔和</option><option value="serif">优雅衬线</option><option value="block">粗块科技</option>
+        </select></div>
+        <div class="ff14-time-control"><label for="ff14TimeDigitSize">数字大小 <strong id="ff14TimeDigitSizeValue">18px</strong></label><input id="ff14TimeDigitSize" type="range" min="12" max="36" step="1" value="18"></div>
+        <div class="ff14-time-control"><label for="ff14TimeDigitColor">数字颜色</label><input id="ff14TimeDigitColor" type="color" value="#00bfa5"><button type="button" id="ff14TimeUseThemeColor" class="btn btn-outline" style="padding:6px 8px;font-size:11px;">跟随当前主题色</button></div>
+        <div class="ff14-time-control"><label>作用范围</label><div style="font-size:11px;line-height:1.6;color:var(--text);">手动计算结果、存活/CD记录、倒计时、排车时间结果及非 ET 的时间统计。ET 卡片保持独立设置。</div></div>
+      </div>
+      <div class="ff14-time-menu-actions"><button type="button" id="ff14TimeStyleReset" class="btn btn-outline">恢复默认样式</button><button type="button" class="btn btn-accent" id="ff14TimeStyleDone">完成</button></div>
+      <div class="ff14-time-menu-note">样式设置只影响时间/进度类显示，不更改时间计算、OCR 识别或排车算法。菜单始终置于页面最上层，避免被下拉菜单和玻璃面板遮挡。</div>`;
+    document.body.appendChild(digitMenu);
+    $('#ff14TimeDigitFont',digitMenu).addEventListener('change', e => { if (FONTS[e.target.value]) stylePrefs.font = e.target.value; applyStyle(); saveStyle(); });
+    $('#ff14TimeDigitSize',digitMenu).addEventListener('input', e => { stylePrefs.size = Math.max(12,Math.min(36,Number(e.target.value)||18)); applyStyle(); saveStyle(); });
+    $('#ff14TimeDigitColor',digitMenu).addEventListener('input', e => { stylePrefs.color = e.target.value; applyStyle(); saveStyle(); });
+    $('#ff14TimeUseThemeColor',digitMenu).addEventListener('click', () => { stylePrefs.color = 'theme'; applyStyle(); saveStyle(); });
+    $('#ff14TimeStyleReset',digitMenu).addEventListener('click', () => { stylePrefs = {...DEFAULT_STYLE}; applyStyle(); saveStyle(); });
+    $('#ff14TimeStyleDone',digitMenu).addEventListener('click', closeMenu);
+    $('.ff14-time-menu-close',digitMenu).addEventListener('click', closeMenu);
+  }
+  function positionMenu() {
+    if (!digitMenu || !currentTrigger) return;
+    const rect = currentTrigger.getBoundingClientRect();
+    const width = digitMenu.getBoundingClientRect().width || Math.min(430,window.innerWidth-24);
+    const height = digitMenu.getBoundingClientRect().height || 420;
+    let left = Math.max(12,Math.min(window.innerWidth-width-12,rect.right-width));
+    let top = rect.bottom + 8;
+    if (top + height > window.innerHeight - 12) top = Math.max(12,rect.top-height-8);
+    digitMenu.style.left = `${left}px`; digitMenu.style.top = `${top}px`;
+  }
+  function openMenu(trigger) {
+    ensureDigitMenu();
+    currentTrigger = trigger;
+    digitMenu.style.display = 'block';
+    digitMenu.style.zIndex = '2147483647';
+    try { if (typeof digitMenu.showPopover === 'function' && !digitMenu.matches(':popover-open')) digitMenu.showPopover(); } catch (_) {}
+    applyStyle();
+    requestAnimationFrame(positionMenu);
+  }
+  function closeMenu() {
+    if (digitMenu) {
+      try { if (typeof digitMenu.hidePopover === 'function' && digitMenu.matches(':popover-open')) digitMenu.hidePopover(); } catch (_) {}
+      digitMenu.style.display = 'none';
+    }
+    currentTrigger = null;
+  }
+
+  const DECORATIVE_EMOJI = /[\p{Extended_Pictographic}\uFE0F\u200D]/gu;
+  function stripDecorativeEmoji(root) {
+    if (!root) return;
+    const labels = 'h2,h3,.section-title,.manual-header-btns button,.recent-list-title,.recent-list-actions button,#ff14StandaloneTriggerSection summary,.collapse-box > summary,.focus-header button,.focus-title,.route-monitor-title,.server-card-title,.server-card-actions button,.advanced-route-header,.et-ux-toolbar button';
+    $$(labels,root).forEach(el => {
+      const before = el.textContent || '';
+      // Keep icon-only controls (e.g. reorder arrows); clean decorative icons only for text labels.
+      if (before.trim().length <= 2) return;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const textNodes = [];
+      while (walker.nextNode()) textNodes.push(walker.currentNode);
+      for (const node of textNodes) {
+        const oldText = node.nodeValue || '';
+        DECORATIVE_EMOJI.lastIndex = 0;
+        const cleaned = oldText.replace(DECORATIVE_EMOJI,'').replace(/\s{2,}/g,' ');
+        if (cleaned !== oldText) node.nodeValue = cleaned;
+      }
+    });
+  }
+  function markTimeTargets(root=document) {
+    const rows = $$('.res-item, .recent-time-block, .recent-progress-block, .fc-row, .route-monitor-item, .detail-row, .fate-record-item',root);
+    const labelPattern = /时间|时长|倒计时|剩余|进度|出货|进闸|强制|冷却|存活|CD/i;
+    for (const row of rows) {
+      if (row.closest('#etCountdownCard')) continue;
+      const label = row.querySelector('.res-label,.fc-label,.detail-label,.fate-time') || row.querySelector('.recent-time-block .res-label') || row.firstElementChild;
+      if (!label || !labelPattern.test(label.textContent || '')) continue;
+      const value = row.querySelector('.res-val:not(.countdown-big),.recent-time-val,.recent-progress-text,.fc-val,.route-monitor-val,.detail-val,.fate-time');
+      if (value && !value.closest('#etCountdownCard')) value.classList.add('ff14-time-style-target');
+    }
+    $$('#manualCard .recent-time-val, #manualCard .weather-countdown-val, #manualCard .fc-timer, #manualCard .fc-timer-neg, #manualCard .fate-time, #focusRoutePage .fc-timer, #focusRoutePage .fc-timer-neg, #focusRoutePage #routeTotalDuration, #focusRoutePage #ssRateText, #focusRoutePage .route-log-list .recent-time-val, #focusRoutePage .route-log-list .time-text, #etRouteQueue .et-queue-time, #etRouteQueue .et-queue-remain',root).forEach(el => { if (!el.closest('#etCountdownCard')) el.classList.add('ff14-time-style-target'); });
+    const timeInputIds = new Set(['mHour','mMin','mPercent','mFogHour','mFogMin','mFogSec','mFogDurHour','mFogDurMin','wRemHour','wRemMin','wRemSec','wDurHour','wDurMin']);
+    $$('#manualCard input, #focusRoutePage input, #focusRoutePage textarea',root).forEach(input => {
+      if (input.closest('#etCountdownCard') || input.closest('#ff14TimeDigitMenu') || ['checkbox','radio','range','color','file','hidden','button','submit'].includes((input.type||'').toLowerCase())) return;
+      const group = input.closest('.input-group');
+      const label = (group && group.querySelector('label') ? group.querySelector('label').textContent : '') + ' ' + (input.getAttribute('aria-label')||'') + ' ' + (input.placeholder||'');
+      if (timeInputIds.has(input.id) || /时间|时长|进度|倒计时|剩余|距.{0,5}(出现|天气|进闸)|持续|存活|开车时间|本次.*时间/i.test(label)) input.classList.add('ff14-time-input-target');
+    });
+  }
+
+  function init() {
+    const manual = $('#manualCard');
+    if (!manual) return false;
+    readDaily(); loadStyle();
+    injectStats(manual);
+    moveTriggerList();
+    const manualButtons = $('.manual-header-btns',manual);
+    addStyleButton(manualButtons);
+    const focusHeaderTools = $('#focusRoutePage .focus-header > .row-flex');
+    if (focusHeaderTools) addStyleButton(focusHeaderTools, $('button.btn-red',focusHeaderTools));
+    ensureDigitMenu();
+    applyStyle();
+    markTimeTargets();
+    stripDecorativeEmoji(manual);
+    stripDecorativeEmoji($('#ff14StandaloneTriggerSection'));
+    stripDecorativeEmoji($('#focusRoutePage'));
+
+    // 只计入本地日期内出现过的唯一「服务器 + S 怪」组合，不因每秒刷新重复计数。
+    ['input','change','blur'].forEach(evt => {
+      ['mHour','mMin','mPercent','mMonster','mServer'].forEach(id => { const el=$('#'+id); if (el) el.addEventListener(evt,trackCurrentTarget); });
+    });
+    $$('input[name="mStatus"]').forEach(el => el.addEventListener('change',trackCurrentTarget));
+    if (window.selectServer && !window.selectServer.__ff14StatsWrapped) {
+      const original = window.selectServer;
+      const wrapped = function(...args) { const result = original.apply(this,args); trackCurrentTarget(); return result; };
+      wrapped.__ff14StatsWrapped = true; window.selectServer = wrapped;
+    }
+    if (window.selectMonster && !window.selectMonster.__ff14StatsWrapped) {
+      const original = window.selectMonster;
+      const wrapped = function(...args) { const result = original.apply(this,args); trackCurrentTarget(); return result; };
+      wrapped.__ff14StatsWrapped = true; window.selectMonster = wrapped;
+    }
+    if (window.addToRecentList && !window.addToRecentList.__ff14StatsWrapped) {
+      const original = window.addToRecentList;
+      const wrapped = function(...args) { trackCurrentTarget(); const result = original.apply(this,args); updateStats(); return result; };
+      wrapped.__ff14StatsWrapped = true; window.addToRecentList = wrapped;
+    }
+    if (window.renderRecentList && !window.renderRecentList.__ff14StatsWrapped) {
+      const original = window.renderRecentList;
+      const wrapped = function(...args) { const result = original.apply(this,args); updateStats(); return result; };
+      wrapped.__ff14StatsWrapped = true; window.renderRecentList = wrapped;
+    }
+    document.addEventListener('pointerdown', event => {
+      if (!digitMenu || digitMenu.style.display !== 'block') return;
+      if (digitMenu.contains(event.target) || event.target.closest('.ff14-time-style-open')) return;
+      closeMenu();
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && digitMenu?.style.display === 'block') closeMenu(); });
+    window.addEventListener('resize',positionMenu);
+    window.addEventListener('scroll',positionMenu,true);
+    const observer = new MutationObserver(() => {
+      if (cleanScheduled) return;
+      cleanScheduled = true;
+      requestAnimationFrame(() => {
+        cleanScheduled = false;
+        stripDecorativeEmoji($('#manualCard'));
+        stripDecorativeEmoji($('#ff14StandaloneTriggerSection'));
+        stripDecorativeEmoji($('#focusRoutePage'));
+        markTimeTargets();
+        updateStats();
+      });
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+    updateStats();
+
+    // 把本次维护记入网页版本更新说明，不覆盖用户已有公告。
+    const addUpdateNote = () => {
+      const list = $('#updateContentList');
+      if (!list || $('#ff14ManualGlassUpdateNote')) return;
+      const li = document.createElement('li'); li.id = 'ff14ManualGlassUpdateNote';
+      li.innerHTML = '<strong>快速输入与排车界面打磨：</strong>新增今日统计与加入列表比例、独立触发者名单区、液态玻璃输入面板，以及可在二级菜单调整的时间数字字体、字号和颜色（包括相关时间输入框）；修正手动输入与排车页输入框的主题底色和文字对比。';
+      list.appendChild(li);
+    };
+    addUpdateNote();
+    const updateList = $('#updateContentList');
+    if (updateList) new MutationObserver(addUpdateNote).observe(updateList,{childList:true});
+    return true;
+  }
+  let attempts = 0;
+  function retryInit() { if (init()) return; if (++attempts < 80) setTimeout(retryInit,100); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',retryInit,{once:true}); else retryInit();
+})();
+</script>
+
+
+<!-- 增量补丁：预设触发者名单隐私授权门槛。只限制界面浏览，不改变原有触发者分配数据。 -->
+<style id="ff14-trigger-privacy-guard-style">
+  #ff14TriggerPrivacyGate {
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    padding:12px 14px; margin:0 0 12px; border:1px solid var(--gold);
+    border-radius:12px; background:linear-gradient(125deg,rgba(243,156,18,.10),rgba(var(--panel-rgb,26,26,46),.58));
+    color:var(--text); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  #ff14TriggerPrivacyGate .ff14-tpg-copy { display:flex; flex-direction:column; gap:4px; min-width:180px; flex:1; }
+  #ff14TriggerPrivacyGate .ff14-tpg-title { font-weight:850; font-size:13px; }
+  #ff14TriggerPrivacyGate .ff14-tpg-desc { font-size:12px; color:var(--text-muted); line-height:1.5; }
+  #ff14TriggerPrivacyGate .ff14-tpg-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .ff14-trigger-privacy-note { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 10px; margin:6px 0;
+    border:1px dashed var(--gold); border-radius:8px; color:var(--gold); background:rgba(243,156,18,.07); font-size:12px; }
+  .ff14-trigger-privacy-note button { border:1px solid var(--gold); border-radius:6px; padding:5px 9px; background:transparent; color:var(--gold); cursor:pointer; font:inherit; font-weight:800; }
+  #ff14TriggerPrivacyModal { display:none; position:fixed; inset:0; z-index:1000000; padding:18px; align-items:center; justify-content:center; background:rgba(4,8,18,.68); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+  #ff14TriggerPrivacyModal .ff14-tpm-card { width:min(440px,100%); padding:24px; border:1px solid rgba(255,255,255,.22); border-radius:18px;
+    color:var(--text); background:rgba(var(--panel-rgb,26,26,46),.90); box-shadow:0 18px 55px rgba(0,0,0,.45),inset 0 1px rgba(255,255,255,.15); }
+  #ff14TriggerPrivacyModal h3 { margin:0 0 8px; color:var(--gold); }
+  #ff14TriggerPrivacyModal p { color:var(--text-muted); font-size:13px; line-height:1.65; }
+  #ff14TriggerPrivacyModal input { width:100%; box-sizing:border-box; padding:11px 12px; border-radius:9px; border:1px solid var(--input-border); color:var(--text); background:var(--input-bg); margin:8px 0 12px; }
+  #ff14TriggerPrivacyModal input:focus { outline:2px solid var(--gold); outline-offset:1px; }
+  #ff14TriggerPrivacyModal .ff14-tpm-actions { display:flex; gap:8px; margin-top:8px; }
+  #ff14TriggerPrivacyModal .ff14-tpm-actions button { flex:1; padding:10px; border-radius:8px; font-weight:800; cursor:pointer; }
+  #ff14TriggerPrivacyModal .ff14-tpm-primary { border:0; background:var(--gold); color:#20170a; }
+  #ff14TriggerPrivacyModal .ff14-tpm-cancel { border:1px solid var(--border); background:transparent; color:var(--text); }
+  @media(max-width:600px){ #ff14TriggerPrivacyGate{align-items:flex-start} #ff14TriggerPrivacyGate .ff14-tpg-actions{width:100%} #ff14TriggerPrivacyGate .ff14-tpg-actions button{flex:1} #ff14TriggerPrivacyModal .ff14-tpm-card{padding:18px} }
+</style>
+<script id="ff14-trigger-privacy-guard-script">
+(() => {
+  'use strict';
+  // 授权仅存在于当前页面内存中，刷新/关闭页面后自动重新锁定。
+  let privacyUnlocked = false;
+  let privacyInitialized = false;
+  const normalize = value => String(value ?? '').trim().replace(/[＠]/g,'@').replace(/\s+/g,'').toLocaleLowerCase();
+  const presetSet = new Set((typeof DEFAULT_TRIGGERS !== 'undefined' && Array.isArray(DEFAULT_TRIGGERS) ? DEFAULT_TRIGGERS : []).map(normalize));
+  const isPreset = value => presetSet.has(normalize(value));
+  const $ = (selector, root=document) => root.querySelector(selector);
+  const $$ = (selector, root=document) => Array.from(root.querySelectorAll(selector));
+  let modal, codeInput, statusText, mainGate;
+
+  function notice(text='预设触发者名单受隐私保护。') {
+    const el = document.createElement('div');
+    el.className = 'ff14-trigger-privacy-note';
+    const message = document.createElement('span'); message.textContent = text; el.appendChild(message);
+    const button = document.createElement('button'); button.type='button'; button.textContent='授权查看';
+    button.addEventListener('click', openPrivacyModal); el.appendChild(button);
+    return el;
+  }
+
+  function createModal() {
+    if (modal) return;
+    modal = document.createElement('div');
+    modal.id = 'ff14TriggerPrivacyModal';
+    modal.innerHTML = `
+      <div class="ff14-tpm-card" role="dialog" aria-modal="true" aria-labelledby="ff14TpmTitle">
+        <h3 id="ff14TpmTitle">预设触发者隐私验证</h3>
+        <p>预设触发者角色名与服务器 ID 已隐藏。验证成功后，仅在当前页面会话中显示；刷新页面后会自动重新锁定。</p>
+        <label for="ff14TriggerPrivacyCode">授权码</label>
+        <input id="ff14TriggerPrivacyCode" type="password" autocomplete="off" spellcheck="false" placeholder="输入授权码后验证">
+        <div id="ff14TriggerPrivacyStatus" aria-live="polite" style="min-height:18px;font-size:12px;color:var(--red)"></div>
+        <div class="ff14-tpm-actions"><button type="button" class="ff14-tpm-cancel" id="ff14TriggerPrivacyCancel">取消</button><button type="button" class="ff14-tpm-primary" id="ff14TriggerPrivacySubmit">验证并显示</button></div>
+      </div>`;
+    document.body.appendChild(modal);
+    codeInput = $('#ff14TriggerPrivacyCode', modal);
+    statusText = $('#ff14TriggerPrivacyStatus', modal);
+    $('#ff14TriggerPrivacyCancel', modal).addEventListener('click', closePrivacyModal);
+    $('#ff14TriggerPrivacySubmit', modal).addEventListener('click', validateCode);
+    codeInput.addEventListener('keydown', event => { if (event.key === 'Enter') validateCode(); if (event.key === 'Escape') closePrivacyModal(); });
+    modal.addEventListener('pointerdown', event => { if (event.target === modal) closePrivacyModal(); });
+  }
+
+  function openPrivacyModal() {
+    createModal(); modal.style.display = 'flex'; statusText.textContent = ''; codeInput.value = ''; setTimeout(() => codeInput.focus(), 30);
+  }
+  function closePrivacyModal() { if (modal) modal.style.display = 'none'; }
+
+  function validateCode() {
+    const code = String(codeInput.value || '').trim().toLowerCase();
+    if (code !== 'e6168' && code !== 'kfz6168') {
+      statusText.textContent = '授权码不正确。预设名单仍保持隐藏。';
+      codeInput.select();
+      return;
+    }
+    privacyUnlocked = true;
+    closePrivacyModal();
+    refreshOriginalViews(true);
+    updateGateUI();
+    sanitizeAll();
+    if (typeof window.showToast === 'function') window.showToast('预设触发者名单已在当前页面临时解锁');
+  }
+
+  function lockPrivacy() {
+    privacyUnlocked = false;
+    closePrivacyModal();
+    updateGateUI();
+    // 重新锁定时只重绘可见名单，不重建全局选择框，避免清空用户当前已选触发者。
+    refreshOriginalViews(false);
+    sanitizeAll();
+    if (typeof window.showToast === 'function') window.showToast('预设触发者名单已重新隐藏');
+  }
+
+  function updateGateUI() {
+    if (!mainGate) return;
+    const title = $('.ff14-tpg-title', mainGate);
+    const desc = $('.ff14-tpg-desc', mainGate);
+    const actions = $('.ff14-tpg-actions', mainGate);
+    if (privacyUnlocked) {
+      title.textContent = '预设触发者名单：已授权查看';
+      desc.textContent = '当前页面会话有效；刷新页面后自动重新锁定。';
+      actions.innerHTML = '';
+      const lock = document.createElement('button'); lock.className='btn btn-outline'; lock.type='button'; lock.textContent='立即重新隐藏'; lock.addEventListener('click', lockPrivacy); actions.appendChild(lock);
+    } else {
+      title.textContent = '预设触发者名单：隐私保护已开启';
+      desc.textContent = '预设角色名与服务器 ID 默认隐藏；自定义触发者仍可照常管理。';
+      actions.innerHTML = '';
+      const unlock = document.createElement('button'); unlock.className='btn btn-outline'; unlock.type='button'; unlock.textContent='授权查看预设名单'; unlock.addEventListener('click', openPrivacyModal); actions.appendChild(unlock);
+    }
+  }
+
+  function installGateUI() {
+    const section = $('#ff14StandaloneTriggerSection') || $('#triggerContainer')?.closest('.input-section');
+    if (!section) return false;
+    if (!$('#ff14TriggerPrivacyGate', section)) {
+      mainGate = document.createElement('div'); mainGate.id = 'ff14TriggerPrivacyGate';
+      mainGate.innerHTML = '<div class="ff14-tpg-copy"><div class="ff14-tpg-title"></div><div class="ff14-tpg-desc"></div></div><div class="ff14-tpg-actions"></div>';
+      section.insertBefore(mainGate, section.firstChild);
+    } else mainGate = $('#ff14TriggerPrivacyGate', section);
+    updateGateUI();
+    return true;
+  }
+
+  function addLockNotice(container, label) {
+    if (!container) return;
+    const old = $('.ff14-trigger-privacy-note[data-privacy-target="' + label + '"]', container);
+    if (privacyUnlocked) { if (old) old.remove(); return; }
+    let el = old;
+    if (!el) { el = notice('预设触发者名单已隐藏；自定义名单仍可用。'); el.dataset.privacyTarget = label; container.insertBefore(el, container.firstChild); }
+  }
+
+  function sanitizeTagContainer(container, label) {
+    if (!container) return;
+    if (!privacyUnlocked) {
+      $$('.trigger-tag', container).forEach(tag => { if (isPreset(tag.textContent)) tag.remove(); });
+      addLockNotice(container, label);
+    } else {
+      const note = $('.ff14-trigger-privacy-note[data-privacy-target="' + label + '"]', container); if (note) note.remove();
+    }
+  }
+
+  function sanitizeDatalist() {
+    if (privacyUnlocked) return;
+    const datalist = $('#trigger-datalist');
+    if (datalist) $$('option', datalist).forEach(option => { if (isPreset(option.value)) option.remove(); });
+  }
+
+  function sanitizeSelectMenus() {
+    if (privacyUnlocked) return;
+    $$('.select-trigger').forEach(select => {
+      $$('option', select).forEach(option => {
+        if (!isPreset(option.value)) return;
+        if (option.selected) {
+          option.dataset.ff14PrivacyMasked = '1';
+          if (option.textContent !== '🔒 已选预设触发者（需授权查看）') option.textContent = '🔒 已选预设触发者（需授权查看）';
+        } else option.remove();
+      });
+    });
+    // 项目库里的正式目标下拉不得泄露预设 ID；实际已保存的绑定数据不被删除。
+    const targetList = $('#ff14-alias-target-list');
+    if (targetList) $$('option', targetList).forEach(option => { if (isPreset(option.value)) option.remove(); });
+  }
+
+  function sanitizeAliasProject() {
+    const modalEl = $('#ff14AliasProjectModal');
+    if (!modalEl || privacyUnlocked) return;
+    const targetList = $('#ff14-alias-target-list');
+    if (targetList) $$('option', targetList).forEach(option => { if (isPreset(option.value)) option.remove(); });
+    const targetInput = $('#ff14-alias-target', modalEl);
+    if (targetInput && isPreset(targetInput.value)) targetInput.value = '';
+    if (targetInput && $('#ff14-alias-type', modalEl)?.value === 'trigger') targetInput.placeholder = '预设触发者已隐藏；授权后可选择正式目标';
+    const list = $('#ff14-alias-list', modalEl);
+    if (!list) return;
+    const walker = document.createTreeWalker(list, NodeFilter.SHOW_TEXT);
+    const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+    const names = Array.from(presetSet).sort((a,b) => b.length-a.length);
+    nodes.forEach(node => {
+      let value = node.nodeValue || '';
+      names.forEach(name => {
+        if (!name || !normalize(value).includes(name)) return;
+        // 仅替换展示文本，不改 aliasLibrary / localStorage 中的真实绑定。
+        const real = (typeof DEFAULT_TRIGGERS !== 'undefined' ? DEFAULT_TRIGGERS : []).find(item => normalize(item) === name) || name;
+        value = value.split(real).join('（预设触发者已隐藏）');
+      });
+      if (value !== node.nodeValue) node.nodeValue = value;
+    });
+  }
+
+  function sanitizeTriggerCache() {
+    if (privacyUnlocked) return;
+    // 避免旧 VIP 状态或先前授权把预设 ID 留在全局自动补全缓存中。
+    try { if (typeof allTriggers !== 'undefined' && Array.isArray(allTriggers)) allTriggers = allTriggers.filter(item => !isPreset(item)); } catch (_) {}
+  }
+
+  function sanitizeAll() {
+    sanitizeTriggerCache();
+    sanitizeTagContainer($('#triggerContainer'), 'main');
+    sanitizeTagContainer($('#routeTriggerContainer'), 'route');
+    sanitizeTagContainer($('#selectTriggerList'), 'picker');
+    sanitizeDatalist();
+    sanitizeSelectMenus();
+    sanitizeAliasProject();
+  }
+
+  function refreshOriginalViews(rebuildGlobal = true) {
+    // 调用原有函数重新绘制，再由 sanitizeAll 根据隐私门槛过滤显示，不修改原始数据。
+    // 仅授权时重建建议列表；重新锁定时避免重建下拉框而意外清掉当前选中值。
+    if (rebuildGlobal) { try { if (typeof window.updateGlobalTriggers === 'function') window.updateGlobalTriggers(); } catch (error) { console.warn('[Trigger privacy] update list:', error); } }
+    try { if (typeof window.renderTriggerList === 'function') window.renderTriggerList(); } catch (error) { console.warn('[Trigger privacy] main list:', error); }
+    try { if (typeof window.renderRouteTriggerList === 'function') window.renderRouteTriggerList(); } catch (error) { console.warn('[Trigger privacy] route list:', error); }
+    const picker = $('#triggerSelectModal');
+    if (picker && picker.style.display === 'flex') {
+      try { if (typeof window.filterSelectTriggers === 'function') window.filterSelectTriggers(); } catch (error) { console.warn('[Trigger privacy] picker:', error); }
+    }
+    const library = $('#ff14AliasProjectModal');
+    if (library && library.__refresh) { try { library.__refresh(); } catch (_) {} }
+  }
+
+  function wrapViewFunction(name) {
+    const original = window[name];
+    if (typeof original !== 'function' || original.__ff14PrivacyWrapped) return;
+    const wrapped = function(...args) {
+      // 临时借用原有VIP分支仅渲染预设名单，不改写或持久化全站权限。
+      const hasVipBinding = typeof isVipUnlocked !== 'undefined';
+      const previousVipState = hasVipBinding ? isVipUnlocked : undefined;
+      if (privacyUnlocked && hasVipBinding) isVipUnlocked = true;
+      let result;
+      try { result = original.apply(this, args); }
+      finally { if (privacyUnlocked && hasVipBinding) isVipUnlocked = previousVipState; }
+      // 原函数同步绘制完成后立即过滤无权限的预设项。
+      sanitizeAll();
+      return result;
+    };
+    wrapped.__ff14PrivacyWrapped = true;
+    wrapped.__ff14PrivacyOriginal = original;
+    window[name] = wrapped;
+  }
+
+  function init() {
+    if (privacyInitialized) return true;
+    if (!document.body) return false;
+    createModal();
+    const gateReady = installGateUI();
+    wrapViewFunction('renderTriggerList');
+    wrapViewFunction('renderRouteTriggerList');
+    wrapViewFunction('filterSelectTriggers');
+    wrapViewFunction('updateGlobalTriggers');
+    sanitizeAll();
+    if (!observerInstalled) {
+      const observer = new MutationObserver(() => {
+        if (initQueued) return;
+        initQueued = true;
+        requestAnimationFrame(() => { initQueued=false; if (!mainGate) installGateUI(); sanitizeAll(); });
+      });
+      observer.observe(document.body, { childList:true, subtree:true });
+      observerInstalled = true;
+    }
+    privacyInitialized = gateReady;
+    return gateReady;
+  }
+  let initQueued = false, observerInstalled = false, retries = 0;
+  function retryInit() { if (init()) return; if (++retries < 80) setTimeout(retryInit, 100); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', retryInit, { once:true }); else retryInit();
+
+  // 页面更新公告：保留原内容，只追加本次隐私保护说明。
+  function addUpdateNote() {
+    const list = $('#updateContentList');
+    if (!list || $('#ff14TriggerPrivacyUpdateNote')) return;
+    const li = document.createElement('li'); li.id = 'ff14TriggerPrivacyUpdateNote';
+    li.innerHTML = '<strong>预设触发者隐私保护：</strong>预设触发者名单、选择器及自动补全默认隐藏；需通过授权码验证后才在当前页面会话中显示，支持立即重新隐藏与刷新后自动锁定。自定义触发者管理及已保存分配数据不被删除。';
+    list.appendChild(li);
+  }
+  addUpdateNote();
+  const noteObserver = new MutationObserver(addUpdateNote);
+  if (document.body) noteObserver.observe(document.body, { childList:true, subtree:true });
+})();
+</script>
