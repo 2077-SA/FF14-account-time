@@ -8863,9 +8863,6 @@ window.closeRecentDetail = function closeRecentDetail() {
 </style>
 <!-- ===== 液态玻璃主题卡片横向排版修复结束 ===== -->
 
-</body>
-</html>
-
 <!-- FF14 Toolbox Horizontal Layout Enhancement: append-only patch -->
 <style id="ff14-toolbox-horizontal-layout-fix">
   /* 将悬浮工具箱内原本纵向堆叠的菜单改为横向双列卡片；所有原按钮及事件保持不变。 */
@@ -10190,3 +10187,428 @@ window.closeRecentDetail = function closeRecentDetail() {
   if (document.body) noteObserver.observe(document.body, { childList:true, subtree:true });
 })();
 </script>
+
+
+<!-- 追加优化：高级计算透明度、时间描述优化与全局纯色液态玻璃 UI。原有功能代码完整保留。 -->
+<style id="ff14-advanced-glass-polish-style">
+  #ff14GlassLauncher {
+    position:fixed; left:18px; bottom:18px; z-index:16000; border-radius:999px;
+    padding:10px 15px; font-weight:850; letter-spacing:.2px; cursor:pointer;
+    color:var(--text); background:rgba(var(--panel-rgb,26,26,46),.68);
+    border:1px solid rgba(255,255,255,.48); box-shadow:0 8px 26px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.58);
+    backdrop-filter:blur(18px) saturate(1.45); -webkit-backdrop-filter:blur(18px) saturate(1.45);
+    transition:transform .18s ease,box-shadow .18s ease;
+  }
+  #ff14GlassLauncher:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.7); }
+  #ff14GlassWorkshop {
+    display:none; position:fixed; left:18px; bottom:70px; width:min(380px,calc(100vw - 36px));
+    z-index:18000; padding:16px; border-radius:18px; color:var(--text);
+    background:rgba(var(--panel-rgb,26,26,46),.82); border:1px solid rgba(255,255,255,.55);
+    box-shadow:0 18px 52px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.72);
+    backdrop-filter:blur(24px) saturate(1.5); -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  }
+  #ff14GlassWorkshop.open { display:block; animation:ff14GlassIn .18s ease-out; }
+  @keyframes ff14GlassIn { from {opacity:0;transform:translateY(8px) scale(.985)} to {opacity:1;transform:translateY(0) scale(1)} }
+  #ff14GlassWorkshop .ff14-gw-head { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px; }
+  #ff14GlassWorkshop .ff14-gw-title { font-size:16px;font-weight:900; }
+  #ff14GlassWorkshop .ff14-gw-sub { font-size:12px;line-height:1.55;color:var(--text-muted);margin-bottom:12px; }
+  #ff14GlassWorkshop .ff14-gw-palettes { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
+  #ff14GlassWorkshop .ff14-gw-palette { min-width:0;border:1px solid rgba(255,255,255,.52);border-radius:11px;padding:9px 5px;cursor:pointer;font-size:12px;font-weight:800;box-shadow:inset 0 1px 0 rgba(255,255,255,.65);transition:transform .15s,border-color .15s; }
+  #ff14GlassWorkshop .ff14-gw-palette:hover { transform:translateY(-2px); }
+  #ff14GlassWorkshop .ff14-gw-palette.active { outline:2px solid var(--accent);outline-offset:1px; }
+  #ff14GlassWorkshop .ff14-gw-line { display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;font-size:13px;font-weight:700; }
+  #ff14GlassWorkshop input[type=range] { width:145px;max-width:48%; }
+  #ff14GlassWorkshop .ff14-gw-foot { display:flex;gap:8px;margin-top:14px; }
+  #ff14GlassWorkshop .ff14-gw-foot button { flex:1; }
+  .ff14-time-definition { display:block;font-size:11px;line-height:1.45;color:var(--text-muted);margin:1px 0 4px;max-width:290px; }
+  #manualResultBox .res-item { min-width:190px; }
+  #manualResultBox .res-label[title],#recentListContainer .res-label[title] { cursor:help;text-decoration:underline dotted;text-underline-offset:3px; }
+  .ff14-advanced-algorithm {
+    margin-top:16px;padding:16px;border-radius:14px;border:1px solid rgba(243,156,18,.45);
+    background:linear-gradient(135deg,rgba(243,156,18,.11),rgba(255,255,255,.035));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  .ff14-advanced-algorithm summary { cursor:pointer;list-style:none;font-size:14px;font-weight:900;color:var(--gold);display:flex;align-items:center;justify-content:space-between;gap:10px; }
+  .ff14-advanced-algorithm summary::-webkit-details-marker { display:none; }
+  .ff14-advanced-algorithm summary::after { content:'＋';font-size:18px; }
+  .ff14-advanced-algorithm[open] summary::after { content:'－'; }
+  .ff14-advanced-algorithm .ff14-aa-caption { font-size:11px;color:var(--text-muted);line-height:1.55;margin:8px 0 12px; }
+  .ff14-advanced-algorithm .ff14-aa-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }
+  .ff14-advanced-algorithm .ff14-aa-cell { min-width:0;padding:10px;border-radius:9px;border:1px solid var(--border);background:rgba(var(--panel-rgb,26,26,46),.35); }
+  .ff14-advanced-algorithm .ff14-aa-label { color:var(--text-muted);font-size:11px;margin-bottom:4px; }
+  .ff14-advanced-algorithm .ff14-aa-value { font-size:13px;font-weight:800;line-height:1.55;overflow-wrap:anywhere; }
+  .ff14-advanced-algorithm .ff14-aa-formula { margin-top:10px;padding:10px;border-radius:8px;background:rgba(0,0,0,.09);font:12px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;white-space:pre-wrap; }
+  .ff14-advanced-algorithm .ff14-aa-note { margin-top:9px;font-size:11px;color:var(--text-muted);line-height:1.6; }
+  @media(max-width:560px) {
+    #ff14GlassLauncher { left:10px;bottom:10px;padding:9px 12px;font-size:12px; }
+    #ff14GlassWorkshop { left:10px;bottom:58px;width:calc(100vw - 20px); }
+    #ff14GlassWorkshop .ff14-gw-palettes { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .ff14-advanced-algorithm .ff14-aa-grid { grid-template-columns:1fr; }
+  }
+
+  /* 全局开启时，主界面、计算记录、弹窗、ET 卡片和专注排车共享同一套玻璃材质。 */
+  html[data-ff14-glass="on"][data-ff14-glass-solid="on"] body { background:var(--ff14-glass-canvas) !important;background-image:none !important;color:var(--text) !important; }
+  html[data-ff14-glass="on"][data-ff14-glass-solid="on"] #focusRoutePage { background:var(--ff14-glass-canvas) !important;background-image:none !important;color:var(--text) !important; }
+  html[data-ff14-glass="on"] body .manual-card,
+  html[data-ff14-glass="on"] body .input-section,
+  html[data-ff14-glass="on"] body .input-section > .section-title,
+  html[data-ff14-glass="on"] body .manual-result-box,
+  html[data-ff14-glass="on"] body .recent-item,
+  html[data-ff14-glass="on"] body .recent-item-times,
+  html[data-ff14-glass="on"] body .recent-list-content,
+  html[data-ff14-glass="on"] body .counter-panel,
+  html[data-ff14-glass="on"] body .weather-status-box,
+  html[data-ff14-glass="on"] body .announcement-box,
+  html[data-ff14-glass="on"] body .advanced-route-panel,
+  html[data-ff14-glass="on"] body .stat-box,
+  html[data-ff14-glass="on"] body .route-monitor-box,
+  html[data-ff14-glass="on"] body .server-card,
+  html[data-ff14-glass="on"] body .server-card-header,
+  html[data-ff14-glass="on"] body .focus-col-left,
+  html[data-ff14-glass="on"] body .focus-col-right,
+  html[data-ff14-glass="on"] body .route-log-list,
+  html[data-ff14-glass="on"] body .route-result-box,
+  html[data-ff14-glass="on"] body .monster-list-item,
+  html[data-ff14-glass="on"] body .trigger-container,
+  html[data-ff14-glass="on"] body .dropdown-region-group,
+  html[data-ff14-glass="on"] body .custom-dropdown-panel,
+  html[data-ff14-glass="on"] body .toolbox-menu,
+  html[data-ff14-glass="on"] body .quick-fix-menu,
+  html[data-ff14-glass="on"] body .floating-window,
+  html[data-ff14-glass="on"] body .modal-content,
+  html[data-ff14-glass="on"] body .update-modal-content,
+  html[data-ff14-glass="on"] body .detail-modal-content,
+  html[data-ff14-glass="on"] body .marquee-container,
+  html[data-ff14-glass="on"] body #etCountdownCard,
+  html[data-ff14-glass="on"] body #etCountdownCard .et-box,
+  html[data-ff14-glass="on"] body #results-container table,
+  html[data-ff14-glass="on"] body #focusRoutePage .server-card,
+  html[data-ff14-glass="on"] body #focusRoutePage .announcement-box {
+    background:linear-gradient(135deg,rgba(255,255,255,.52),var(--ff14-glass-fill) 48%,rgba(255,255,255,.16)) !important;
+    background-color:var(--ff14-glass-fill) !important;
+    border-color:var(--ff14-glass-edge) !important;
+    backdrop-filter:blur(var(--ff14-global-glass-blur)) saturate(1.35) !important;
+    -webkit-backdrop-filter:blur(var(--ff14-global-glass-blur)) saturate(1.35) !important;
+    box-shadow:0 12px 32px var(--ff14-glass-shadow),inset 0 1px 0 rgba(255,255,255,.62) !important;
+    color:var(--text) !important;
+  }
+  html[data-ff14-glass="on"] body th,
+  html[data-ff14-glass="on"] body .dropdown-region-title,
+  html[data-ff14-glass="on"] body .advanced-route-header,
+  html[data-ff14-glass="on"] body .manual-header { background:rgba(255,255,255,.17) !important;color:var(--text) !important;border-color:var(--ff14-glass-edge) !important; }
+  html[data-ff14-glass="on"] body input[type="text"],
+  html[data-ff14-glass="on"] body input[type="number"],
+  html[data-ff14-glass="on"] body input[type="password"],
+  html[data-ff14-glass="on"] body input[type="time"],
+  html[data-ff14-glass="on"] body input[type="date"],
+  html[data-ff14-glass="on"] body select,
+  html[data-ff14-glass="on"] body textarea,
+  html[data-ff14-glass="on"] body .route-textarea,
+  html[data-ff14-glass="on"] body .route-output,
+  html[data-ff14-glass="on"] body .announcement-textarea,
+  html[data-ff14-glass="on"] body .dropdown-search,
+  html[data-ff14-glass="on"] body .input-trigger-compact,
+  html[data-ff14-glass="on"] body .history-search {
+    background:rgba(var(--ff14-glass-input-rgb),.66) !important;color:var(--text) !important;
+    border-color:var(--input-border) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.55) !important;
+  }
+  html[data-ff14-glass="on"] body input::placeholder,
+  html[data-ff14-glass="on"] body textarea::placeholder { color:var(--text-muted) !important;opacity:.9; }
+  html[data-ff14-glass="on"] body input:focus,
+  html[data-ff14-glass="on"] body select:focus,
+  html[data-ff14-glass="on"] body textarea:focus { outline-color:var(--accent) !important;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 20%,transparent),inset 0 1px 0 rgba(255,255,255,.65) !important; }
+  html[data-ff14-glass="on"] body .btn,
+  html[data-ff14-glass="on"] body button.btn,
+  html[data-ff14-glass="on"] body .route-add-btn,
+  html[data-ff14-glass="on"] body .btn-fix,
+  html[data-ff14-glass="on"] body .quick-add-tag { border-radius:10px; }
+  html[data-ff14-glass="on"] body #focusRoutePage .focus-col-left,
+  html[data-ff14-glass="on"] body #focusRoutePage .focus-col-right { border-radius:18px !important; }
+  html[data-ff14-glass="on"] body #focusRoutePage .monster-list-item:hover,
+  html[data-ff14-glass="on"] body .recent-item:hover { background:linear-gradient(135deg,rgba(255,255,255,.48),var(--ff14-glass-fill)) !important; }
+</style>
+<script id="ff14-advanced-glass-polish-script">
+(() => {
+  'use strict';
+  const $ = (selector, root=document) => root.querySelector(selector);
+  const $$ = (selector, root=document) => Array.from(root.querySelectorAll(selector));
+  const STORAGE_KEY = 'ff14_global_liquid_glass_v1';
+  const PALETTES = {
+    mint: { name:'薄荷玻璃', canvas:'#d6eee0', panelRGB:'241,255,247', inputRGB:'248,255,250', text:'#19392c', muted:'#547263', accent:'#147b58', gold:'#94620c', blue:'#176d9c', red:'#b63246', purple:'#7652a4', border:'rgba(42,111,79,.24)', inputBorder:'rgba(49,119,84,.42)', shadow:'rgba(35,88,66,.18)', edge:'rgba(255,255,255,.82)' },
+    ice: { name:'冰川蓝璃', canvas:'#d9edf6', panelRGB:'244,252,255', inputRGB:'247,253,255', text:'#183b50', muted:'#557487', accent:'#087b94', gold:'#93600d', blue:'#126baf', red:'#b83243', purple:'#7552a6', border:'rgba(43,109,143,.23)', inputBorder:'rgba(44,114,150,.4)', shadow:'rgba(34,83,113,.18)', edge:'rgba(255,255,255,.86)' },
+    lavender: { name:'薰衣草紫', canvas:'#e4def3', panelRGB:'250,247,255', inputRGB:'252,250,255', text:'#352b51', muted:'#74688d', accent:'#6850a7', gold:'#8c5d13', blue:'#276caa', red:'#b83b5e', purple:'#805ab8', border:'rgba(112,87,163,.23)', inputBorder:'rgba(112,87,163,.38)', shadow:'rgba(77,58,123,.18)', edge:'rgba(255,255,255,.86)' },
+    rose: { name:'樱雾粉璃', canvas:'#f4e0e8', panelRGB:'255,248,251', inputRGB:'255,250,252', text:'#4b2b3b', muted:'#8a6577', accent:'#b2467d', gold:'#956016', blue:'#2679a5', red:'#b83248', purple:'#8659ab', border:'rgba(173,85,126,.23)', inputBorder:'rgba(173,85,126,.38)', shadow:'rgba(134,68,97,.18)', edge:'rgba(255,255,255,.88)' },
+    pearl: { name:'珍珠灰白', canvas:'#e5e8eb', panelRGB:'252,253,254', inputRGB:'255,255,255', text:'#27333b', muted:'#687782', accent:'#267e72', gold:'#936116', blue:'#236da2', red:'#b33643', purple:'#7457a3', border:'rgba(79,100,115,.22)', inputBorder:'rgba(79,100,115,.36)', shadow:'rgba(44,58,68,.17)', edge:'rgba(255,255,255,.9)' },
+    deep: { name:'深海夜璃', canvas:'#101b2a', panelRGB:'36,53,72', inputRGB:'14,27,42', text:'#e9f3fc', muted:'#afc2d2', accent:'#61e0bd', gold:'#ffc46b', blue:'#7ac9ff', red:'#ff7c87', purple:'#c3a0ff', border:'rgba(178,218,245,.24)', inputBorder:'rgba(178,218,245,.34)', shadow:'rgba(0,0,0,.36)', edge:'rgba(202,231,255,.38)' }
+  };
+  const BODY_VARS = ['--bg','--panel','--panel-rgb','--panel-light','--text','--text-muted','--accent','--gold','--blue','--red','--purple','--border','--input-bg','--input-border','--ff14-glass-canvas','--ff14-glass-fill','--ff14-glass-input-rgb','--ff14-glass-edge','--ff14-glass-shadow','--ff14-global-glass-blur'];
+  let settings = { enabled:true, solidCanvas:true, palette:'mint', opacity:62, blur:18 };
+  let workshop, launcher;
+  function readSettings() { try { const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); if(saved&&typeof saved==='object') settings={...settings,...saved}; } catch(_) {} if(!PALETTES[settings.palette])settings.palette='mint'; settings.opacity=Math.max(32,Math.min(82,Number(settings.opacity)||62)); settings.blur=Math.max(8,Math.min(28,Number(settings.blur)||18)); settings.enabled=settings.enabled!==false; settings.solidCanvas=settings.solidCanvas!==false; }
+  function saveSettings() { try { localStorage.setItem(STORAGE_KEY,JSON.stringify(settings)); } catch(_) {} }
+  function applyGlass() {
+    const root=document.documentElement, body=document.body;
+    if(!root||!body)return;
+    if(!settings.enabled) {
+      root.dataset.ff14Glass='off'; root.removeAttribute('data-ff14-glass-palette'); root.removeAttribute('data-ff14-glass-solid'); BODY_VARS.forEach(v=>body.style.removeProperty(v));
+      updateWorkshopUI(); return;
+    }
+    const p=PALETTES[settings.palette];
+    root.dataset.ff14Glass='on'; root.dataset.ff14GlassPalette=settings.palette; root.dataset.ff14GlassSolid=settings.solidCanvas?'on':'off';
+    const vars={ '--bg':p.canvas,'--panel':`rgba(${p.panelRGB},.78)`,'--panel-rgb':p.panelRGB,'--panel-light':`rgba(${p.panelRGB},.58)`, '--text':p.text,'--text-muted':p.muted,'--accent':p.accent,'--gold':p.gold,'--blue':p.blue,'--red':p.red,'--purple':p.purple,'--border':p.border,'--input-bg':`rgba(${p.inputRGB},.72)`,'--input-border':p.inputBorder,'--ff14-glass-canvas':p.canvas,'--ff14-glass-fill':`rgba(${p.panelRGB},${(settings.opacity/100).toFixed(2)})`,'--ff14-glass-input-rgb':p.inputRGB,'--ff14-glass-edge':p.edge,'--ff14-glass-shadow':p.shadow,'--ff14-global-glass-blur':`${settings.blur}px` };
+    Object.entries(vars).forEach(([k,v])=>body.style.setProperty(k,v));
+    updateWorkshopUI();
+  }
+  function makeWorkshop() {
+    if($('#ff14GlassLauncher')) { launcher=$('#ff14GlassLauncher'); workshop=$('#ff14GlassWorkshop'); return; }
+    launcher=document.createElement('button'); launcher.id='ff14GlassLauncher'; launcher.type='button'; launcher.textContent='液态玻璃'; launcher.title='打开全局液态玻璃设置'; launcher.setAttribute('aria-expanded','false');
+    workshop=document.createElement('section'); workshop.id='ff14GlassWorkshop'; workshop.setAttribute('aria-label','全局液态玻璃设置');
+    workshop.innerHTML=`<div class="ff14-gw-head"><div class="ff14-gw-title">全局液态玻璃</div><button type="button" class="btn btn-outline" id="ff14GwClose" aria-label="关闭玻璃工坊">关闭</button></div>
+      <div class="ff14-gw-sub">纯色背景 + 透明玻璃面板。主界面、计算记录、输入框、弹窗与专注排车共用同一套设置；关闭纯色底板即可继续使用原背景图片。</div>
+      <label class="ff14-gw-line" for="ff14GwEnabled"><span>启用全局液态玻璃</span><input type="checkbox" id="ff14GwEnabled"></label>
+      <label class="ff14-gw-line" for="ff14GwSolid"><span>纯色玻璃底板（关闭可沿用原背景图）</span><input type="checkbox" id="ff14GwSolid"></label>
+      <div class="ff14-gw-line"><span>纯色底板</span><span id="ff14GwPaletteName">薄荷玻璃</span></div>
+      <div class="ff14-gw-palettes">${Object.entries(PALETTES).map(([key,p])=>`<button type="button" class="ff14-gw-palette" data-palette="${key}">${p.name}</button>`).join('')}</div>
+      <label class="ff14-gw-line" for="ff14GwOpacity"><span>玻璃透明度</span><span id="ff14GwOpacityValue">62%</span></label><input id="ff14GwOpacity" type="range" min="32" max="82" value="62" step="1" aria-label="玻璃透明度">
+      <label class="ff14-gw-line" for="ff14GwBlur"><span>磨砂模糊</span><span id="ff14GwBlurValue">18px</span></label><input id="ff14GwBlur" type="range" min="8" max="28" value="18" step="1" aria-label="磨砂模糊程度">
+      <div class="ff14-gw-foot"><button type="button" class="btn btn-outline" id="ff14GwReset">恢复默认</button><button type="button" class="btn btn-accent" id="ff14GwDone">应用并关闭</button></div>`;
+    document.body.append(launcher,workshop);
+    launcher.addEventListener('click',()=>{ const open=!workshop.classList.contains('open'); workshop.classList.toggle('open',open); launcher.setAttribute('aria-expanded',String(open)); });
+    $('#ff14GwClose',workshop).addEventListener('click',closeWorkshop); $('#ff14GwDone',workshop).addEventListener('click',()=>{saveSettings();closeWorkshop();});
+    $('#ff14GwEnabled',workshop).addEventListener('change',e=>{settings.enabled=e.target.checked;applyGlass();saveSettings();});
+    $('#ff14GwSolid',workshop).addEventListener('change',e=>{settings.solidCanvas=e.target.checked;applyGlass();saveSettings();});
+    $$('.ff14-gw-palette',workshop).forEach(btn=>btn.addEventListener('click',()=>{settings.palette=btn.dataset.palette;settings.enabled=true;applyGlass();saveSettings();}));
+    $('#ff14GwOpacity',workshop).addEventListener('input',e=>{settings.opacity=Number(e.target.value);applyGlass();saveSettings();});
+    $('#ff14GwBlur',workshop).addEventListener('input',e=>{settings.blur=Number(e.target.value);applyGlass();saveSettings();});
+    $('#ff14GwReset',workshop).addEventListener('click',()=>{settings={enabled:true,solidCanvas:true,palette:'mint',opacity:62,blur:18};applyGlass();saveSettings();});
+    document.addEventListener('pointerdown',e=>{if(workshop&&workshop.classList.contains('open')&&!workshop.contains(e.target)&&e.target!==launcher)closeWorkshop();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&workshop?.classList.contains('open'))closeWorkshop();});
+    updateWorkshopUI();
+  }
+  function closeWorkshop(){if(workshop)workshop.classList.remove('open');if(launcher)launcher.setAttribute('aria-expanded','false');}
+  function updateWorkshopUI(){
+    if(!workshop)return;
+    const enabled=$('#ff14GwEnabled',workshop),solid=$('#ff14GwSolid',workshop),opacity=$('#ff14GwOpacity',workshop),blur=$('#ff14GwBlur',workshop);
+    if(enabled)enabled.checked=!!settings.enabled;if(solid)solid.checked=!!settings.solidCanvas;if(opacity)opacity.value=String(settings.opacity);if(blur)blur.value=String(settings.blur);
+    const ov=$('#ff14GwOpacityValue',workshop),bv=$('#ff14GwBlurValue',workshop),pn=$('#ff14GwPaletteName',workshop);
+    if(ov)ov.textContent=`${settings.opacity}%`;if(bv)bv.textContent=`${settings.blur}px`;if(pn)pn.textContent=PALETTES[settings.palette]?.name||'薄荷玻璃';
+    $$('.ff14-gw-palette',workshop).forEach(btn=>btn.classList.toggle('active',btn.dataset.palette===settings.palette));
+    if(launcher)launcher.style.opacity=settings.enabled?'1':'.76';
+  }
+
+  function wrapThemeSwitcher() {
+    const original=window.changeTheme;
+    if(typeof original!=='function'||original.__ff14GlobalGlassThemeWrapped)return;
+    const wrapped=function(theme,...args){
+      const result=original.call(this,theme,...args);
+      const map={dark:'deep',light:'pearl',pink:'rose',sky:'ice',mint:'mint'};
+      if(settings.enabled&&map[String(theme||'').toLowerCase()]){settings.palette=map[String(theme).toLowerCase()];applyGlass();saveSettings();}
+      return result;
+    };
+    wrapped.__ff14GlobalGlassThemeWrapped=true;wrapped.__ff14GlobalGlassThemeOriginal=original;window.changeTheme=wrapped;
+  }
+  function captureManualCalculation(originalResult) {
+    try {
+      const mode=$('input[name="mStatus"]:checked')?.value==='green';
+      const hh=Math.max(0,Number($('#mHour')?.value)||0),mm=Math.max(0,Number($('#mMin')?.value)||0);
+      const hidden=$('#mMonsterHidden')?.value||'';const monsterName=hidden.split('|')[0]||$('#mMonster')?.value||'';
+      let cd=84,life=48,weatherTarget=0,weatherDuration=3600000,maintenance=false;
+      if(typeof CD_HOURS!=='undefined')cd=Number(CD_HOURS)||84;
+      if(typeof LT_HOURS!=='undefined')life=Number(LT_HOURS)||48;
+      if(typeof weatherTargetEndTime!=='undefined')weatherTarget=Number(weatherTargetEndTime)||0;
+      if(typeof weatherDurationMs!=='undefined')weatherDuration=Number(weatherDurationMs)||3600000;
+      if(typeof isMaintenanceMode!=='undefined')maintenance=!!isMaintenanceMode;
+      window.__ff14LastManualSnapshot={calcCapturedAtMs:Date.now(),calcInputWasGreen:mode,calcInputHours:hh,calcInputMinutes:mm,calcInputElapsedMin:hh*60+mm,calcCDHours:cd,calcLifeHours:life,calcIsMaintenance:maintenance,calcIsWeatherMonster:/奇里格|布弗鲁|巨大鳐/.test(monsterName),calcWeatherTargetEndTime:weatherTarget,calcWeatherDurationMs:weatherDuration,calcAlgorithmVersion:'ff14-time-model-1',calcInputMonsterName:monsterName,calcResultGateTimeMs:originalResult&&originalResult.targetGateTime?originalResult.targetGateTime.getTime():null,calcResultForceTimeMs:originalResult&&originalResult.targetForceTime?originalResult.targetForceTime.getTime():null};
+    } catch(error) { console.warn('[FF14 manual calculation snapshot]',error); }
+  }
+  function wrapCalcManual() {
+    const original=window.calcManual;
+    if(typeof original!=='function'||original.__ff14AdvancedCalcWrapped)return;
+    const wrapped=function(...args){const result=original.apply(this,args);let data=null;try{if(typeof currentManualCalcData!=='undefined')data=currentManualCalcData;}catch(_){}captureManualCalculation(data);return result;};
+    wrapped.__ff14AdvancedCalcWrapped=true;wrapped.__ff14AdvancedCalcOriginal=original;window.calcManual=wrapped;
+  }
+  function canViewAdvanced() {
+    try { return (typeof isMasterVerified!=='undefined'&&!!isMasterVerified)||(typeof isDeveloperMode!=='undefined'&&!!isDeveloperMode); } catch(_) { return false; }
+  }
+  const htmlEscape = value => String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const number3 = value => Number.isFinite(Number(value)) ? Number(value).toFixed(3) : '—';
+  function localTime(ms, withMs=true) {
+    if(ms===null||ms===undefined||ms==='')return '—';
+    if(!Number.isFinite(Number(ms)))return '—';
+    const d=new Date(Number(ms));if(Number.isNaN(d.getTime()))return '—';
+    const base=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    return withMs?`${base}.${String(d.getMilliseconds()).padStart(3,'0')}`:base;
+  }
+  function formatDurationMs(ms) {
+    if(!Number.isFinite(Number(ms)))return '—';
+    const abs=Math.abs(Number(ms)), secs=abs/1000, hours=Math.floor(secs/3600), mins=Math.floor((secs%3600)/60), rest=(secs%60).toFixed(3).padStart(6,'0');
+    return `${Number(ms)<0?'-':''}${hours}小时${String(mins).padStart(2,'0')}分${rest}秒`;
+  }
+  function predictorInfo(r) {
+    try {
+      if(!window.__predictor||typeof window.__predictor.predict!=='function')return null;
+      const monster=(typeof S_MONSTERS!=='undefined'&&Array.isArray(S_MONSTERS))?S_MONSTERS.find(m=>m.name===r.name):null;
+      const version=(monster&&monster.version)||r.version||'6.0';
+      return window.__predictor.predict({name:r.name,version,gateTimeMs:r.gateTimeMs,forceTimeMs:r.forceTimeMs,isGreen:r.isGreen});
+    } catch(_) { return null; }
+  }
+  function makeCell(label,value) { return `<div class="ff14-aa-cell"><div class="ff14-aa-label">${htmlEscape(label)}</div><div class="ff14-aa-value">${htmlEscape(value)}</div></div>`; }
+  function buildAdvancedDetails(r) {
+    const hasSnapshot=Number.isFinite(Number(r.calcCapturedAtMs))&&typeof r.calcInputWasGreen==='boolean';
+    const t0=hasSnapshot?Number(r.calcCapturedAtMs):Number(r.id||Date.now());
+    const elapsedMin=hasSnapshot?Number(r.calcInputElapsedMin||0):Math.max(0,Number(r.h||0)*60+Number(r.m||0));
+    const cdH=hasSnapshot?Number(r.calcCDHours||84):((typeof CD_HOURS!=='undefined'&&Number(CD_HOURS))||84);
+    const lifeH=hasSnapshot?Number(r.calcLifeHours||48):((typeof LT_HOURS!=='undefined'&&Number(LT_HOURS))||48);
+    let baseGate=null,baseForce=null,formula='',modeText='';
+    if(hasSnapshot&&r.calcInputWasGreen) {
+      baseGate=t0-elapsedMin*60000;baseForce=t0+(lifeH*60-elapsedMin)*60000;
+      modeText='存活已知 / 输入已存活时长';formula=`T_gate = T_calc − elapsed\nT_force = T_calc + (lifeWindow − elapsed)\n= ${localTime(t0)} − ${number3(elapsedMin)} min；生命窗 ${number3(lifeH*60)} min`;
+    } else if(hasSnapshot) {
+      baseGate=t0+Math.max(0,cdH*60-elapsedMin)*60000;baseForce=baseGate+lifeH*3600000;
+      modeText='CD 中 / 输入 CD 已经过时长';formula=`T_gate = T_calc + max(0, CD − elapsed)\nT_force = T_gate + lifeWindow\n= ${localTime(t0)} + max(0, ${number3(cdH*60)} − ${number3(elapsedMin)}) min；生命窗 ${number3(lifeH*60)} min`;
+    } else {
+      modeText='旧记录 / 缺少原始输入分支';
+      formula=`历史快照缺少当时选择的“存活 / CD”输入模式，不能无损重建原始分支。\n展示以已保存时间锚点为准：T_gate=${localTime(r.gateTimeMs)}；T_force=${localTime(r.forceTimeMs)}`;
+    }
+    let gate=baseGate,force=baseForce,weatherUsed=false;
+    if(hasSnapshot&&r.calcIsWeatherMonster&&Number(r.calcWeatherTargetEndTime)>0&&Number(r.calcWeatherTargetEndTime)>baseGate) {
+      gate=Number(r.calcWeatherTargetEndTime);force=gate+lifeH*3600000;weatherUsed=true;
+      formula+=`\n天气约束生效：T_gate = max(T_base, T_weatherEnd) = ${localTime(gate)}；T_force = T_gate + ${number3(lifeH)} h`;
+    }
+    if(!hasSnapshot){gate=Number(r.gateTimeMs);force=Number(r.forceTimeMs);baseGate=gate;baseForce=force;}
+    const savedGate=Number(r.gateTimeMs),savedForce=Number(r.forceTimeMs),now=Date.now();
+    const remainingGate=savedGate-now,remainingForce=savedForce-now;
+    const lifeWindowMs=Math.max(1,savedForce-savedGate);
+    const elapsedLifeMs=Math.max(0,Math.min(lifeWindowMs,now-savedGate));
+    const timelinePct=now<savedGate?0:now>=savedForce?100:elapsedLifeMs/lifeWindowMs*100;
+    const state=now<savedGate?'CD 等待中':now<savedForce?'进闸存活窗口内':'已超过估算强制时间';
+    let weatherText='无天气强制约束';
+    if(hasSnapshot&&r.calcIsWeatherMonster)weatherText=weatherUsed?'天气结束时间晚于基准进闸时间，已覆盖基准进闸':'记录有天气目标，但天气时间未晚于基准进闸';
+    if(!hasSnapshot&&r.weatherTargetEndTime)weatherText=`历史天气记录：${localTime(r.weatherTargetEndTime)}`;
+    const pred=predictorInfo(r);
+    let predCells='';
+    if(pred&&pred.stats) {
+      const st=pred.stats;
+      predCells += makeCell('词库版本',((typeof S_MONSTERS!=='undefined'&&S_MONSTERS.find(m=>m.name===r.name)?.version)||r.version||'6.0'));
+      predCells += makeCell('有效历史样本',`${st.sampleCount} 条`);
+      predCells += makeCell('版本先验时长',`${number3(st.prior/60)} 小时`);
+      predCells += makeCell('加权均值 / 中位数',`${number3(st.mean/60)} h / ${number3(st.median/60)} h`);
+      predCells += makeCell('样本标准差',`${number3(st.stddev/60)} 小时`);
+      predCells += makeCell('置信度参考值',`${number3(st.confidence*100)}%（样本数封顶归一）`);
+      predCells += makeCell('预测出货时间',localTime(pred.predictedKillTime?.getTime?.() ?? pred.predictedKillMs));
+      predCells += makeCell('预测进度',`${number3(pred.progressPct)}%（显示可超过 100%，色条按 100% 封顶）`);
+      predCells += makeCell('预测剩余时间',formatDurationMs(pred.remainingMs));
+      predCells += makeCell('预测状态',pred.isTail?'长尾关注':pred.isOverdue?'已超过模型预测点':'预测窗口内');
+    } else predCells = makeCell('历史出货预测器','当前预测器不可用；基础时间算法仍可查看');
+    const captureTime=hasSnapshot?localTime(t0):'旧记录未保存原始计算快照';
+    const inputs=hasSnapshot?`${r.calcInputWasGreen?'存活':'CD'}；已输入 ${Math.floor(elapsedMin/60)} 小时 ${number3(elapsedMin%60)} 分；CD=${number3(cdH)}h，存活窗=${number3(lifeH)}h`:`记录内保存字段 h=${htmlEscape(r.h??'—')}，m=${htmlEscape(r.m??'—')}；原始输入模式未保存`;
+    return `<details class="ff14-advanced-algorithm" open><summary>高级算法详情 · 授权用户视图</summary>
+      <div class="ff14-aa-caption">本区仅对已解锁 w6168 主控权限或 kfz6168 开发者权限的当前权限状态显示。时间以浏览器本地时区展示，公式保留三位小数；这是现有计算器模型的透明说明，不代表游戏刷新点的绝对保证。</div>
+      <div class="ff14-aa-grid">${makeCell('计算快照时间',captureTime)}${makeCell('输入分支',modeText)}${makeCell('输入与参数',inputs)}${makeCell('天气约束',weatherText)}${makeCell('模型基准进闸',localTime(baseGate))}${makeCell('模型基准强制',localTime(baseForce))}${makeCell('列表保存的进闸时间',localTime(r.gateTimeMs))}${makeCell('列表保存的强制时间',localTime(r.forceTimeMs))}${makeCell('距进闸时间',remainingGate>0?formatDurationMs(remainingGate):`已过 ${formatDurationMs(-remainingGate)}`)}${makeCell('距强制时间',remainingForce>0?formatDurationMs(remainingForce):`已过 ${formatDurationMs(-remainingForce)}`)}${makeCell('当前时间阶段',state)}${makeCell('进闸至强制时间轴',`${number3(timelinePct)}%`)}${predCells}</div>
+      <div class="ff14-aa-formula">${htmlEscape(formula)}</div>
+      <div class="ff14-aa-note">说明：基准算法使用计算快照时间作为锚点；存活输入按“计算时间减已存活时长”估算进闸，CD 输入按“计算时间加剩余 CD”估算进闸，强制时间再加存活窗口。天气前置目标仅在其结束时间晚于基准进闸时覆盖进闸时间。旧记录没有原始输入模式的，明确标注不可还原，不猜测原数据。</div>
+    </details>`;
+  }
+  function appendAdvancedDetails(r) {
+    if(!canViewAdvanced())return;
+    const body=$('#recentDetailBody');if(!body||$('.ff14-advanced-algorithm',body))return;
+    const holder=document.createElement('div');holder.innerHTML=buildAdvancedDetails(r);
+    const panel=holder.firstElementChild;if(!panel)return;
+    const last=body.lastElementChild;
+    if(last)body.insertBefore(panel,last);else body.appendChild(panel);
+  }
+  function wrapRecentDetail() {
+    const original=window.renderRecentDetailUI;
+    if(typeof original!=='function'||original.__ff14AdvancedWrapped)return;
+    const wrapped=function(r,...args){const result=original.call(this,r,...args);try{appendAdvancedDetails(r);}catch(error){console.warn('[FF14 advanced details]',error);}return result;};
+    wrapped.__ff14AdvancedWrapped=true;wrapped.__ff14AdvancedOriginal=original;window.renderRecentDetailUI=wrapped;
+  }
+
+  // 新增记录保存原始输入分支与当时参数，让高级用户能复算；旧数据不做伪造补齐。
+  function wrapAddRecent() {
+    const original=window.addToRecentList;
+    if(typeof original!=='function'||original.__ff14AdvancedSnapshotWrapped)return;
+    const wrapped=function(...args){
+      let snap=window.__ff14LastManualSnapshot;
+      const modeNow=$('input[name="mStatus"]:checked')?.value==='green';
+      const hhNow=Math.max(0,Number($('#mHour')?.value)||0),mmNow=Math.max(0,Number($('#mMin')?.value)||0);
+      const hiddenNow=$('#mMonsterHidden')?.value||'';const monsterNow=hiddenNow.split('|')[0]||$('#mMonster')?.value||'';
+      const matches=snap&&snap.calcInputWasGreen===modeNow&&snap.calcInputHours===hhNow&&snap.calcInputMinutes===mmNow&&snap.calcInputMonsterName===monsterNow;
+      if(!matches&&typeof window.calcManual==='function') { try { window.calcManual();snap=window.__ff14LastManualSnapshot; } catch(_) {} }
+      const beforeTime=Date.now();
+      const snapshot={...(snap||{}),calcCapturedAtMs:(snap&&Number.isFinite(Number(snap.calcCapturedAtMs)))?Number(snap.calcCapturedAtMs):beforeTime};
+      let before=-1;try{before=typeof recentRecords!=='undefined'?recentRecords.length:-1;}catch(_){}
+      const result=original.apply(this,args);
+      try {
+        if(typeof recentRecords!=='undefined'&&Array.isArray(recentRecords)&&recentRecords.length&&(before<0||recentRecords.length>=before)) {
+          const r=recentRecords[0];
+          if(r&&Math.abs(Number(r.id||beforeTime)-beforeTime)<10000) {
+            const meta={calcCapturedAtMs:snapshot.calcCapturedAtMs,calcAlgorithmVersion:snapshot.calcAlgorithmVersion||'ff14-time-model-1'};
+            ['calcInputWasGreen','calcInputHours','calcInputMinutes','calcInputElapsedMin','calcCDHours','calcLifeHours','calcIsMaintenance','calcIsWeatherMonster','calcWeatherTargetEndTime','calcWeatherDurationMs'].forEach(key=>{if(snapshot[key]!==undefined)meta[key]=snapshot[key];});
+            // When possible, retain the exact gate/force outputs generated by the same calculation snapshot.
+            Object.assign(r,meta);
+            try{if(typeof saveLocalState==='function')saveLocalState();}catch(_){}
+            try{if(typeof window.renderRecentList==='function')window.renderRecentList();}catch(_){}
+          }
+        }
+      } catch(error) { console.warn('[FF14 calculation snapshot]',error); }
+      return result;
+    };
+    wrapped.__ff14AdvancedSnapshotWrapped=true;wrapped.__ff14AdvancedSnapshotOriginal=original;window.addToRecentList=wrapped;
+  }
+
+  const timeObserverRoots = new WeakSet();
+  function enhanceTimeLabels(root) {
+    if(!root)return;
+    if(root.id==='manualResultBox') {
+      const items=$$('.res-item',root);
+      const defs=[
+        ['绝对进闸时间（本地预计）','预计该目标开始进入可刷新窗口的本地时间；受输入时长和天气前置约束影响。'],
+        ['绝对强制时间（本地预计）','按进闸时间与当前存活窗口估算的强制消失时间；为模型结果，不是服务器保证时间。']
+      ];
+      items.slice(0,2).forEach((item,i)=>{
+        const label=$('.res-label',item);if(!label)return;
+        if(label.textContent!==defs[i][0])label.textContent=defs[i][0];label.title=defs[i][1];
+        let hint=$('.ff14-time-definition',item);if(!hint){hint=document.createElement('span');hint.className='ff14-time-definition';label.insertAdjacentElement('afterend',hint);}if(hint.textContent!==defs[i][1])hint.textContent=defs[i][1];
+      });
+    }
+    if(root.id==='recentListContainer') {
+      $$('.recent-time-block .res-label',root).forEach(label=>{
+        const v=label.textContent.trim();
+        if(v==='进闸时间'){label.textContent='预计进闸（本地）';label.title='加入计算列表时保存的本地估算进闸时间。';}
+        else if(v==='强制时间'){label.textContent='预计强制消失（本地）';label.title='根据进闸时间和存活窗口估算。';}
+      });
+    }
+    if(root.id==='recentDetailBody') {
+      $$('.detail-row',root).forEach(row=>{
+        const label=$('.detail-label',row);if(!label)return;
+        if(label.textContent.trim()==='进闸时间'){label.textContent='预计进闸时间（本地）';label.title='历史记录当时保存的本地估算时间。';}
+        if(label.textContent.trim()==='强制时间'){label.textContent='预计强制消失时间（本地）';label.title='历史记录当时保存的本地估算时间。';}
+      });
+    }
+  }
+  function setupEnhancementObservers() {
+    ['manualResultBox','recentListContainer','recentDetailBody'].forEach(id=>{
+      const root=$('#'+id);if(!root||timeObserverRoots.has(root))return;timeObserverRoots.add(root);
+      enhanceTimeLabels(root);
+      const observer=new MutationObserver(()=>enhanceTimeLabels(root));observer.observe(root,{childList:true,subtree:true});
+    });
+  }
+  function addUpdateNote() {
+    const list=$('#updateContentList');if(!list||$('#ff14AdvancedGlassUpdateNote'))return;
+    const li=document.createElement('li');li.id='ff14AdvancedGlassUpdateNote';
+    li.innerHTML='<strong>高级计算与全局液态玻璃：</strong>优化进闸/强制时间的本地预计描述；为 w6168 主控与 kfz6168 开发者权限增加计算快照、公式、天气约束、进度及历史预测器统计详情；新增全局纯色液态玻璃工坊，覆盖主界面、输入框、弹窗和专注排车页面。';list.appendChild(li);
+  }
+  function init() {
+    if(!document.body)return false;
+    makeWorkshop();readSettings();applyGlass();wrapThemeSwitcher();wrapCalcManual();wrapRecentDetail();wrapAddRecent();setupEnhancementObservers();addUpdateNote();
+    return true;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{init();}, {once:true});else init();
+  const initObserver=new MutationObserver(()=>{if(!$('#ff14GlassLauncher'))makeWorkshop();wrapThemeSwitcher();wrapCalcManual();wrapRecentDetail();wrapAddRecent();setupEnhancementObservers();addUpdateNote();});
+  if(document.body)initObserver.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+</body>
+</html>
