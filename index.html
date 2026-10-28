@@ -1868,7 +1868,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
 
     <div class="modal-overlay glass" id="updatePreviewModal">
         <div class="modal-content update-modal-content">
-            <div class="update-title">🚀 版本更新预览</div>
+            <div class="update-title">🚀 版本更新 · v1.7.0.5</div>
             <ul class="update-list" id="updateContentList"></ul>
             <div style="text-align: center;">
                 <button class="btn btn-accent" onclick="closeUpdateModal()" style="padding: 12px 40px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 255, 127, 0.4);">我知道了，开始使用！</button>
@@ -2050,7 +2050,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
         `;
 
         function checkUpdateModal() {
-            const isViewed = localStorage.getItem('ff14_update_169_viewed');
+            const isViewed = localStorage.getItem('ff14_update_v1705_viewed');
             let content = localStorage.getItem('ff14_custom_update_text') || DEFAULT_UPDATE_CONTENT;
             if (!content.includes('<li>')) {
                 const lines = content.split('\n').filter(l => l.trim());
@@ -2063,7 +2063,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
         }
         function closeUpdateModal() {
             document.getElementById('updatePreviewModal').style.display = 'none';
-            localStorage.setItem('ff14_update_169_viewed', 'true');
+            localStorage.setItem('ff14_update_v1705_viewed', 'true');
         }
 
         function openEditUpdateModal() {
@@ -2095,7 +2095,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
                 localStorage.setItem('ff14_custom_update_raw', text);
                 showToast('✅ 更新公告已保存');
             }
-            localStorage.removeItem('ff14_update_169_viewed');
+            localStorage.removeItem('ff14_update_v1705_viewed');
             document.getElementById('editUpdateModal').style.display = 'none';
             checkUpdateModal();
         }
@@ -4647,7 +4647,7 @@ th { background: var(--input-bg); color: var(--accent); white-space: nowrap; }
         }
     }
     window.checkUpdateModal = function checkUpdateModal() {
-const isViewed = localStorage.getItem('ff14_update_169_viewed'); let content = localStorage.getItem('ff14_custom_update_text') || DEFAULT_UPDATE_CONTENT;
+const isViewed = localStorage.getItem('ff14_update_v1705_viewed'); let content = localStorage.getItem('ff14_custom_update_text') || DEFAULT_UPDATE_CONTENT;
 if (!content.includes('<li>')) { const lines = content.split('\n').filter(l => l.trim()); content = lines.map(line => `<li><strong>更新内容</strong>：${line}</li>`).join(''); }
 document.getElementById('updateContentList').innerHTML = content;
 if (!isViewed) document.getElementById('updatePreviewModal').style.display = 'flex';
@@ -4663,7 +4663,7 @@ document.getElementById('updateEditTextarea').value = currentText; document.getE
 let text = document.getElementById('updateEditTextarea').value.trim();
 if (!text) { localStorage.removeItem('ff14_custom_update_text'); localStorage.removeItem('ff14_custom_update_raw'); showToast('已恢复默认公告'); } 
 else { const lines = text.split('\n').filter(l => l.trim()); const htmlContent = lines.map(line => `<li>${line}</li>`).join(''); localStorage.setItem('ff14_custom_update_text', htmlContent); localStorage.setItem('ff14_custom_update_raw', text); showToast('更新公告已保存'); }
-localStorage.removeItem('ff14_update_169_viewed'); document.getElementById('editUpdateModal').style.display = 'none'; checkUpdateModal();
+localStorage.removeItem('ff14_update_v1705_viewed'); document.getElementById('editUpdateModal').style.display = 'none'; checkUpdateModal();
 };
 
     window.matchTriggerSearch = function matchTriggerSearch(t, search) { if (t.toLowerCase().includes(search)) return true; for (let alias in TRIGGER_ALIASES) { if (TRIGGER_ALIASES[alias] === t && alias.toLowerCase().includes(search)) return true; } return false; };
@@ -7093,7 +7093,7 @@ window.closeRecentDetail = function closeRecentDetail() {
 
   const ALIAS_STORAGE_KEY = 'ff14_alias_project_library_v1';
   const BACKGROUND_STORAGE_KEY = 'ff14_background_settings_v1';
-  const CHANGELOG_VIEWED_KEY = 'ff14_update_20261027_viewed';
+  const CHANGELOG_VIEWED_KEY = 'ff14_update_v1705_viewed';
   const PROJECT_SCHEMA = 'ff14-alias-project-library';
 
   const normalizeKey = value => String(value == null ? '' : value)
@@ -7674,7 +7674,7 @@ window.closeRecentDetail = function closeRecentDetail() {
     }
     list.innerHTML = `${prior}${UX_CHANGELOG_ITEMS.join('')}`;
     const title = document.querySelector('#updatePreviewModal .update-title');
-    if (title) title.textContent = '✨ 版本更新说明 · 2026.10.27';
+    if (title) title.textContent = '✨ 版本更新说明 · v1.7.0.5';
   }
 
   window.showUXChangeLog = function showUXChangeLog() {
@@ -7684,7 +7684,7 @@ window.closeRecentDetail = function closeRecentDetail() {
   };
   window.closeUpdateModal = function closeUpdateModal() {
     const modal = document.getElementById('updatePreviewModal'); if (modal) modal.style.display = 'none';
-    try { localStorage.setItem('ff14_update_169_viewed', 'true'); localStorage.setItem(CHANGELOG_VIEWED_KEY, 'true'); } catch (_) {}
+    try { localStorage.setItem('ff14_update_v1705_viewed', 'true'); localStorage.setItem(CHANGELOG_VIEWED_KEY, 'true'); } catch (_) {}
   };
   window.checkUpdateModal = function checkUpdateModal() {
     mergeChangeLogContent();
@@ -8381,7 +8381,7 @@ window.closeRecentDetail = function closeRecentDetail() {
   function appendV2Changelog(){
     const list=$('updateContentList');if(!list)return;
     V2_CHANGELOG.forEach((text,index)=>{if(list.querySelector(`[${CHANGELOG_V2_FLAG}="${index}"]`))return;const li=document.createElement('li');li.setAttribute(CHANGELOG_V2_FLAG,String(index));const strong=document.createElement('strong');strong.textContent=['图片查看器','可拖动工具箱','浅绿液态玻璃','本地黑话导入','S怪历史档案','三位小数预测算法','本地记录迁移'][index]+'：';li.append(strong,document.createTextNode(text));list.appendChild(li);});
-    const title=document.querySelector('#updatePreviewModal .update-title');if(title)title.textContent='✨ 版本更新说明 · 2026.10.27 · 增强补丁 2';
+    const title=document.querySelector('#updatePreviewModal .update-title');if(title)title.textContent='✨ 版本更新说明 · v1.7.0.5';
   }
   const originalShowChangelog=window.showUXChangeLog;
   if(typeof originalShowChangelog==='function'){window.showUXChangeLog=function(...args){const result=originalShowChangelog.apply(this,args);appendV2Changelog();return result;};}
@@ -11200,11 +11200,6 @@ window.closeRecentDetail = function closeRecentDetail() {
   // The older preset-list privacy dialog accepts legacy e6168. Capture its input first and map only the new actual tiers.
   function normalizePresetPrivacyCode(input,event){
     if(!input)return;
-    if(safe(()=>sessionStorage.getItem('ff14_pending_relogin_mixed_code_v1'),'')){
-      if(event){event.preventDefault();event.stopImmediatePropagation();}
-      const status=$('#ff14TriggerPrivacyStatus');if(status)status.textContent='当前已退出身份，请先完成邀请码与16位混淆验证码验证。';
-      const modal=$('#inviteModal');if(modal)modal.style.display='flex';return;
-    }
     const code=String(input.value||'').trim().toLowerCase();
     if(code==='w6168'){setRole('special',{toast:false});input.value='e6168';}
     else if(code==='kfz6168'){setRole('developer',{toast:false});input.value='kfz6168';}
@@ -11234,21 +11229,23 @@ window.closeRecentDetail = function closeRecentDetail() {
         const countdown=win.querySelector('.fc-countdown');if(!countdown)return;
         let row=win.querySelector('.ff14-gate-weekday-row');
         if(!row){row=document.createElement('div');row.className='fc-row ff14-gate-weekday-row';row.innerHTML='<span class="fc-label">本地星期</span><span class="fc-val" data-ff14-gate-weekday>未计算</span>';}
-        if(countdown.nextElementSibling!==row)countdown.insertAdjacentElement('afterend',row);
+        // Only attach when missing or when a real rebuild detached it; never move it on timer-only text updates.
+        if(!row.isConnected || row.parentElement!==countdown.parentElement || (countdown.nextElementSibling!==row && !row.isConnected)) countdown.insertAdjacentElement('afterend',row);
         const key=String(win.dataset.ff14RecordKey||win.id.replace(/^win_/,''));const meta=metaMap[key]||{};
         let ms=Number(meta.gateTimeMs);if(!Number.isFinite(ms)||ms<=0){ms=meta.isGreen?Date.now():NaN;}
         const value=Number.isFinite(ms)?weekdayForTimestamp(ms):'未计算';
+        const timezone=getLocalTimezone();const signature=`${value}|${timezone}`;
         const span=row.querySelector('[data-ff14-gate-weekday]')||row.querySelector('.fc-val');
-        if(span&&span.textContent!==value)span.textContent=value;
-        row.title=`按当前设备本地时区计算（${getLocalTimezone()}）；不使用固定北京时间。`;
-        row.setAttribute('aria-label',`进闸时间对应${value}，按本地时区${getLocalTimezone()}计算`);
+        if(span&&row.dataset.weekdaySignature!==signature){if(span.textContent!==value)span.textContent=value;row.dataset.weekdaySignature=signature;}
+        const title=`按当前设备本地时区计算（${timezone}）；不使用固定北京时间。`;
+        const aria=`进闸时间对应${value}，按本地时区${timezone}计算`;
+        if(row.title!==title)row.title=title;if(row.getAttribute('aria-label')!==aria)row.setAttribute('aria-label',aria);
       });
     }finally{syncingWeekday=false;}
   }
-  // If the legacy updater rewrites the row each second, restore the stable content/position immediately.
+  // Observe structural rebuilds only. Character-by-character countdown updates do not trigger weekday layout work.
   const weekdayObserver=new MutationObserver(()=>stableWeekdayRows());
-  safe(()=>weekdayObserver.observe(document.body,{childList:true,subtree:true,characterData:true}));
-  setInterval(stableWeekdayRows,250);
+  safe(()=>weekdayObserver.observe(document.body,{childList:true,subtree:true}));
 
   function init(){
     // Legacy initialization reads these same flags after load; make the current invite session the source of truth.
@@ -11348,7 +11345,7 @@ window.closeRecentDetail = function closeRecentDetail() {
           else toast('请输入邀请码验证身份。');
           return;
         }
-        const confirmed=safe(()=>window.confirm('确定退出当前身份？退出后需要重新输入身份邀请码，并填写本次生成的16位混淆验证码。'),true);
+        const confirmed=safe(()=>window.confirm('确定退出当前身份？退出后如需重新登录，只需输入你已有的身份邀请码，不需要额外的16位混淆验证码。'),true);
         if(confirmed)logoutCurrentIdentity();
       });
       second.appendChild(button);
@@ -11364,7 +11361,7 @@ window.closeRecentDetail = function closeRecentDetail() {
     // Keep both time values legible with stable-width numerals.
     const beijing=$('#ff14-beijing-clock');if(beijing){const value=formatBeijingTime(now);if(beijing.textContent!==value)beijing.textContent=value;}
   }
-  function getPendingChallenge(){return safe(()=>sessionStorage.getItem(AUTH_CHALLENGE_KEY)||'','')||'';}
+  function getPendingChallenge(){return '';}
   function randomChallenge(){
     const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let output='';
     try{
@@ -11377,7 +11374,7 @@ window.closeRecentDetail = function closeRecentDetail() {
     const content=$('#inviteModal .modal-content');if(!content)return null;
     let panel=$('#ff14-relogin-challenge-panel',content);if(panel)return panel;
     panel=document.createElement('section');panel.id='ff14-relogin-challenge-panel';panel.hidden=true;
-    panel.innerHTML='<div class="ff14-relogin-title">退出后重新验证</div><div class="ff14-relogin-help">请同时输入你的身份邀请码和下方的 16 位混淆验证码。点击“一键复制”可复制本次验证码，再粘贴到下方输入框完成确认。此码只用于当前网页会话的二次确认。</div><label for="ff14-relogin-challenge-display">本次 16 位混淆验证码</label><div class="ff14-relogin-code-row"><input id="ff14-relogin-challenge-display" type="text" readonly autocomplete="off" spellcheck="false" aria-label="本次16位混淆验证码"><button type="button" id="ff14-copy-relogin-challenge">一键复制</button></div><label for="ff14-relogin-challenge-entry">再次输入 16 位混淆验证码</label><input id="ff14-relogin-challenge-entry" type="text" maxlength="16" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="粘贴或输入刚才复制的 16 位码"><div class="ff14-relogin-status" id="ff14-relogin-challenge-status">尚未验证。请输入邀请码和混淆验证码。</div>';
+    panel.innerHTML='<div class="ff14-relogin-title">旧版混淆验证码面板（已停用）</div><div class="ff14-relogin-help">当前版本退出身份后不需要额外混淆验证码。需要重新登录时，使用原有身份邀请码即可。</div><label for="ff14-relogin-challenge-display">本次 16 位混淆验证码</label><div class="ff14-relogin-code-row"><input id="ff14-relogin-challenge-display" type="text" readonly autocomplete="off" spellcheck="false" aria-label="本次16位混淆验证码"><button type="button" id="ff14-copy-relogin-challenge">一键复制</button></div><label for="ff14-relogin-challenge-entry">再次输入 16 位混淆验证码</label><input id="ff14-relogin-challenge-entry" type="text" maxlength="16" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="按上方图像的字符顺序手动输入（不含空格）"><div class="ff14-relogin-status" id="ff14-relogin-challenge-status">尚未验证。请输入邀请码和混淆验证码。</div>';
     content.appendChild(panel);
     $('#ff14-copy-relogin-challenge',panel).addEventListener('click',copyChallenge);
     $('#ff14-relogin-challenge-entry',panel).addEventListener('keydown',event=>{
@@ -11414,14 +11411,14 @@ window.closeRecentDetail = function closeRecentDetail() {
     const button=$('#ff14-identity-session-button');if(!button)return;
     const current=role(),pending=!!getPendingChallenge();
     const label=current==='visitor'?(pending?'继续身份验证':'输入邀请码'):'退出当前身份';
-    const title=current==='visitor'?(pending?'继续完成邀请码和16位混淆验证码验证':'打开身份邀请码验证'):'退出后需要重新输入邀请码与16位混淆验证码';
+    const title=current==='visitor'?'打开身份邀请码验证':'退出身份；重新登录只需输入邀请码';
     if(button.textContent!==label)button.textContent=label;
     if(button.title!==title)button.title=title;
     if(button.dataset.role!==current)button.dataset.role=current;
   }
   function logoutCurrentIdentity(){
-    const code=randomChallenge();
-    safe(()=>sessionStorage.setItem(AUTH_CHALLENGE_KEY,code));
+    // v1.7.0.5: clear session identity only; do not create or require a mixed-code challenge.
+    safe(()=>sessionStorage.removeItem(AUTH_CHALLENGE_KEY));
     const bridge=ROLE_BRIDGE();
     if(bridge&&typeof bridge.setRole==='function')bridge.setRole('visitor',{toast:false});
     else {
@@ -11433,13 +11430,14 @@ window.closeRecentDetail = function closeRecentDetail() {
     const inviteInput=$('#inviteCodeInput');if(inviteInput)inviteInput.value='';
     const masterInput=$('#masterCodeInput');if(masterInput)masterInput.value='';
     const challengeEntry=$('#ff14-relogin-challenge-entry');if(challengeEntry)challengeEntry.value='';
+    const challengePanel=$('#ff14-relogin-challenge-panel');if(challengePanel)challengePanel.hidden=true;
     syncChallengePanel();updateSessionButton();openLoginModal();
-    toast('已退出当前身份。重新登录必须填写邀请码及本次16位混淆验证码。');
+    toast('已退出当前身份。重新登录时只需输入身份邀请码，不需要额外混淆验证码。');
   }
   function challengeMatches(){
     const expected=getPendingChallenge();if(!expected)return true;
     const entry=$('#ff14-relogin-challenge-entry');const value=String(entry?.value||'').trim().toUpperCase();
-    if(value!==expected){const status=$('#ff14-relogin-challenge-status');if(status)status.textContent='混淆验证码不匹配，请复制上方验证码并完整粘贴（16位）。';toast('请先正确输入本次16位混淆验证码。');entry?.focus();return false;}
+    if(value!==expected){const status=$('#ff14-relogin-challenge-status');if(status)status.textContent='混淆验证码不匹配，请复制上方验证码并完整粘贴（16位）。';toast('请先按图像顺序正确输入本次16位混淆验证码。');entry?.focus();return false;}
     return true;
   }
   function consumeChallengeIfAuthenticated(beforeRole){
@@ -11665,6 +11663,720 @@ window.closeRecentDetail = function closeRecentDetail() {
   const poll=setInterval(()=>{ensureETColorControl();pinTopExit();},500);
   // Stop retrying after the ET editor and top bar are both ready; MutationObservers handle later updates.
   let attempts=0;const readyTimer=setInterval(()=>{attempts++;ensureETColorControl();pinTopExit();if((($('#etDigitColorMode')&&$('#ff14-identity-session-button'))||attempts>60)){clearInterval(readyTimer);clearInterval(poll);}},250);
+})();
+</script>
+
+
+
+<!-- 2026-10-28 追加修复：重新验证确认按钮/剪贴板兼容/FF14原生倒数宏/奥山公告统一格式/排车独立ET/SS车序保护 -->
+<style id="ff14-native-macro-et-v2-patch-css">
+  #ff14-relogin-confirm { display:block; width:100%; margin-top:12px; padding:11px 16px; border:1px solid var(--accent); border-radius:9px; background:linear-gradient(135deg,rgba(0,255,127,.88),rgba(0,191,255,.72)); color:#0a1b20; font-weight:900; cursor:pointer; }
+  #ff14-relogin-confirm:hover { filter:brightness(1.06); transform:translateY(-1px); }
+  .ff14-macro-generator { margin:12px 0 15px; padding:14px; border:1px solid var(--border); border-radius:12px; background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(var(--panel-rgb,26,26,46),.45)); backdrop-filter:blur(var(--ff14-glass-blur,14px)); -webkit-backdrop-filter:blur(var(--ff14-glass-blur,14px)); box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 8px 22px rgba(0,0,0,.12); }
+  .ff14-macro-generator summary { cursor:pointer; color:var(--accent); font-weight:900; padding:3px 0; }
+  .ff14-macro-generator .ff14-macro-controls { display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-top:12px; }
+  .ff14-macro-generator input[type=number] { max-width:110px; background:var(--input-bg)!important; color:var(--text)!important; }
+  .ff14-macro-generator textarea { display:block; width:100%; min-height:260px; margin-top:10px; resize:vertical; background:var(--input-bg)!important; color:var(--text)!important; border:1px solid var(--border); border-radius:8px; padding:12px; font:13px/1.7 ui-monospace,Consolas,monospace; white-space:pre; }
+  .ff14-macro-generator .ff14-macro-note { margin-top:8px; color:var(--text-muted); font-size:12px; line-height:1.65; }
+  .ff14-route-et-panel { flex:1 0 100%; order:3; width:100%; min-width:0; display:flex; flex-direction:column; gap:7px; margin-top:8px; padding:10px 12px; border:1px solid var(--border); border-radius:9px; background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(var(--panel-rgb,26,26,46),.38)); backdrop-filter:blur(var(--ff14-glass-blur,12px)); -webkit-backdrop-filter:blur(var(--ff14-glass-blur,12px)); box-shadow:inset 0 1px 0 rgba(255,255,255,.12); }
+  .ff14-route-et-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; font-weight:900; color:var(--accent); }
+  .ff14-route-et-status { font-size:12px; line-height:1.55; color:var(--text-muted); font-family:ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; min-height:18px; }
+  .ff14-route-et-controls { display:flex; flex-wrap:wrap; align-items:center; gap:7px; width:100%; }
+  .ff14-route-et-controls input { flex:1 1 180px; min-width:130px; max-width:none!important; background:var(--input-bg)!important; color:var(--text)!important; border-color:var(--input-border)!important; }
+  .ff14-route-et-controls input::placeholder { color:var(--text-muted)!important; opacity:.92; }
+  .ff14-route-et-controls button { flex:0 0 auto; }
+  .ff14-local-et-panel input[data-local-et-input] { pointer-events:auto!important; user-select:text!important; position:relative; z-index:10002; }
+  .ff14-local-et-panel button[data-local-et-set], .ff14-local-et-panel button[data-local-et-clear] { pointer-events:auto!important; position:relative; z-index:10002; }
+  @media(max-width:700px){ .ff14-route-et-controls input{flex-basis:100%;} .ff14-route-et-controls button{flex:1 1 auto;} }
+</style>
+<script id="ff14-native-macro-et-v2-patch">
+(() => {
+  'use strict';
+  if (window.__ff14NativeMacroETV2Patch) return;
+  window.__ff14NativeMacroETV2Patch = true;
+  const $ = (selector, root=document) => root.querySelector(selector);
+  const $$ = (selector, root=document) => Array.from(root.querySelectorAll(selector));
+  const toast = message => { try { if (typeof window.showToast === 'function') window.showToast(message); else console.info(message); } catch (_) {} };
+  const safeStore = (fn, fallback=null) => { try { return fn(); } catch (_) { return fallback; } };
+
+  // Cross-browser clipboard path: Clipboard API -> selected input -> temporary textarea -> explicit manual fallback.
+  async function copyTextRobust(text, preferredElement=null) {
+    text = String(text ?? '');
+    if (!text) { toast('没有可复制的内容。'); return false; }
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) {}
+    const copySelected = element => {
+      if (!element) return false;
+      try {
+        element.focus({preventScroll:true});
+        if (typeof element.select === 'function') element.select();
+        if (typeof element.setSelectionRange === 'function') element.setSelectionRange(0, String(element.value ?? '').length);
+        return !!document.execCommand('copy');
+      } catch (_) { return false; }
+    };
+    if (copySelected(preferredElement)) return true;
+    let temp = null;
+    try {
+      temp = document.createElement('textarea');
+      temp.value = text; temp.readOnly = true; temp.setAttribute('aria-hidden','true');
+      temp.style.cssText = 'position:fixed;left:-10000px;top:0;width:2px;height:2px;opacity:.01;z-index:2147483647;';
+      document.body.appendChild(temp); temp.focus({preventScroll:true}); temp.select(); temp.setSelectionRange(0,temp.value.length);
+      if (document.execCommand('copy')) { temp.remove(); return true; }
+    } catch (_) {} finally { if (temp && temp.isConnected) temp.remove(); }
+    if (preferredElement) {
+      try { preferredElement.focus({preventScroll:true}); preferredElement.select?.(); preferredElement.setSelectionRange?.(0,String(preferredElement.value??'').length); } catch (_) {}
+    }
+    try { if (typeof window.prompt === 'function') window.prompt('浏览器阻止了自动复制，请手动复制下面的内容：', text); } catch (_) {}
+    return false;
+  }
+  window.__ff14CopyTextRobust = copyTextRobust;
+
+  // Re-login: add an explicit confirmation step and replace the old Clipboard API-only listener.
+  function pendingChallenge() { return ''; }
+  function installReloginConfirmAndCopy() {
+    const panel = $('#ff14-relogin-challenge-panel');
+    if (!panel) return false;
+    const oldCopy = $('#ff14-copy-relogin-challenge', panel);
+    if (oldCopy && oldCopy.dataset.ff14RobustCopy !== '1') {
+      const copyButton = oldCopy.cloneNode(true);
+      copyButton.dataset.ff14RobustCopy = '1';
+      oldCopy.replaceWith(copyButton);
+      copyButton.addEventListener('click', async event => {
+        event.preventDefault(); event.stopPropagation();
+        const code = pendingChallenge();
+        if (!code) { toast('当前没有待复制的混淆验证码。'); return; }
+        const display = $('#ff14-relogin-challenge-display', panel);
+        const ok = await copyTextRobust(code, display);
+        const status = $('#ff14-relogin-challenge-status', panel);
+        if (ok) {
+          if (status) status.textContent = '已复制。请把验证码粘贴到下方输入框，再输入身份邀请码并点击确认。';
+          toast('混淆验证码已复制。');
+        } else {
+          if (status) status.textContent = '浏览器未允许自动复制，验证码已选中；请按 Ctrl+C（Mac 使用 ⌘C）手动复制。';
+          toast('自动复制被浏览器阻止，请按 Ctrl+C 手动复制。');
+        }
+      });
+    }
+    let confirm = $('#ff14-relogin-confirm', panel);
+    if (!confirm) {
+      confirm = document.createElement('button');
+      confirm.type = 'button'; confirm.id = 'ff14-relogin-confirm'; confirm.textContent = '确认并重新登录';
+      const status = $('#ff14-relogin-challenge-status', panel);
+      if (status) status.insertAdjacentElement('afterend', confirm); else panel.appendChild(confirm);
+    }
+    if (confirm.dataset.ff14Bound !== '1') {
+      confirm.dataset.ff14Bound = '1';
+      confirm.addEventListener('click', () => {
+        const pending = pendingChallenge();
+        const invite = $('#inviteCodeInput');
+        const entry = $('#ff14-relogin-challenge-entry', panel);
+        const status = $('#ff14-relogin-challenge-status', panel);
+        if (!pending) { if (status) status.textContent = '当前没有待完成的退出后验证，请先退出身份再重新验证。'; toast('没有待完成的二次验证。'); return; }
+        if (!String(invite?.value || '').trim()) { if (status) status.textContent = '请先输入身份邀请码。'; invite?.focus(); toast('请先输入身份邀请码。'); return; }
+        const entered = String(entry?.value || '').trim().toUpperCase();
+        if (entered !== pending) { if (status) status.textContent = '16 位混淆验证码不匹配，请按图像顺序重新输入。'; entry?.focus(); entry?.select?.(); toast('混淆验证码不匹配。'); return; }
+        if (typeof window.validateInviteCode === 'function') window.validateInviteCode();
+        else { toast('验证入口尚未就绪，请重新打开身份验证窗口。'); }
+      });
+    }
+    const entry = $('#ff14-relogin-challenge-entry', panel);
+    if (entry && entry.dataset.ff14ConfirmEnter !== '1') {
+      entry.dataset.ff14ConfirmEnter = '1';
+      entry.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); confirm.click(); } });
+    }
+    return true;
+  }
+  // The original challenge panel is created by the preceding patch; retry briefly if this script runs before it.
+  installReloginConfirmAndCopy();
+
+  // Native FF14 macro generators: no HTML/Markdown wrappers in copied content. 14 seconds + final notice = max 15 macro lines.
+  function getRouteMonsters() {
+    try { if (typeof parsedMonsters !== 'undefined' && Array.isArray(parsedMonsters)) return parsedMonsters; } catch (_) {}
+    return Array.isArray(window.parsedMonsters) ? window.parsedMonsters : [];
+  }
+  function routeKey(monster) { return `${String(monster?.server || '未知')}\u241f${String(monster?.originalName || monster?.name || '')}`; }
+  function makeCountdownMacro(seconds, options = {}) {
+    const n = Math.max(1, Math.min(14, Math.trunc(Number(seconds) || 10)));
+    const soundTag = /^<se\.(?:[1-9]|1[0-6])>$/.test(String(options.soundTag || '')) ? String(options.soundTag) : '';
+    const includeFlag = !!options.includeFlag;
+    const lines = [];
+    for (let value = n; value >= 1; value--) {
+      const index = n - value;
+      const channel = index % 2 === 0 ? '/sh' : '/y';
+      const tokens = [];
+      if (soundTag) tokens.push(soundTag);
+      if (includeFlag && index === 0) tokens.push('<flag>');
+      lines.push(`${channel} ${value}${tokens.length ? ' ' + tokens.join(' ') : ''}${value > 1 ? ' <wait.1>' : ''}`);
+    }
+    return lines.join('\n');
+  }
+  function mountCountdownMacroOption() {
+    if ($('#ff14-countdown-macro-option')) return true;
+    const list = $('#tacticMacroList');
+    const anchor = list?.closest('details');
+    if (!anchor || !anchor.parentNode) return false;
+    const option = document.createElement('details');
+    option.id = 'ff14-countdown-macro-option';
+    option.className = 'collapse-box ff14-macro-generator';
+    option.innerHTML = `<summary>数字计时宏生成器（FF14 原生宏）</summary>
+      <div style="padding-top:9px;">
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.65;">输入秒数，生成只显示数字的游戏原生宏。消息在 /sh（喊话）与 /y（大喊）之间交替；可选游戏音效符号 &lt;se.1&gt;–&lt;se.16&gt;，或首条附加地图标记 &lt;flag&gt;。</div>
+        <div class="ff14-macro-controls"><label for="ff14-countdown-seconds" style="font-size:13px;font-weight:bold;">秒数</label><input id="ff14-countdown-seconds" type="number" min="1" max="14" step="1" value="10"><label for="ff14-countdown-sound" style="font-size:12px;font-weight:bold;">原生音效</label><select id="ff14-countdown-sound" class="ff14-macro-symbol-select"><option value="">关闭</option><option value="&lt;se.1&gt;">音效 1</option><option value="&lt;se.2&gt;">音效 2</option><option value="&lt;se.3&gt;">音效 3</option><option value="&lt;se.4&gt;">音效 4</option><option value="&lt;se.5&gt;">音效 5</option><option value="&lt;se.6&gt;">音效 6</option><option value="&lt;se.7&gt;">音效 7</option><option value="&lt;se.8&gt;">音效 8</option><option value="&lt;se.9&gt;">音效 9</option><option value="&lt;se.10&gt;">音效 10</option><option value="&lt;se.11&gt;">音效 11</option><option value="&lt;se.12&gt;">音效 12</option><option value="&lt;se.13&gt;">音效 13</option><option value="&lt;se.14&gt;">音效 14</option><option value="&lt;se.15&gt;">音效 15</option><option value="&lt;se.16&gt;">音效 16</option></select><label class="ff14-macro-flag-label"><input id="ff14-countdown-flag" type="checkbox"> 首条添加 &lt;flag&gt;</label><button id="ff14-countdown-generate" type="button" class="btn btn-accent">生成宏</button><button id="ff14-countdown-copy" type="button" class="btn btn-outline">一键复制宏</button><span id="ff14-countdown-lines" style="font-size:12px;color:var(--text-muted);">0 / 14 行</span></div>
+        <textarea id="ff14-countdown-output" readonly spellcheck="false" aria-label="FF14 原生倒数宏文本"></textarea>
+        <div class="ff14-macro-note">输出行只包含数字及你选择的原生符号；秒数范围为 1–14 秒。频道会在喊话与大喊之间交替。每行对应一秒，使用前请确认当前场景适合向频道发送消息。</div>
+      </div>`;
+    anchor.insertAdjacentElement('afterend', option);
+    const input = $('#ff14-countdown-seconds', option), output = $('#ff14-countdown-output', option), lines = $('#ff14-countdown-lines', option), sound = $('#ff14-countdown-sound', option), flag = $('#ff14-countdown-flag', option);
+    const generate = () => {
+      let n = Number(input.value);
+      if (!Number.isFinite(n)) n = 10;
+      const original = Math.trunc(n); n = Math.max(1, Math.min(14, original)); input.value = String(n);
+      output.value = makeCountdownMacro(n, { soundTag: sound?.value || '', includeFlag: !!flag?.checked });
+      lines.textContent = `${output.value.split('\n').length} / 15 行`;
+      lines.style.color = output.value.split('\n').length <= 15 ? 'var(--accent)' : 'var(--red)';
+    };
+    $('#ff14-countdown-generate', option).addEventListener('click', generate);
+    sound?.addEventListener('change', generate);
+    flag?.addEventListener('change', generate);
+    input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); generate(); } });
+    $('#ff14-countdown-copy', option).addEventListener('click', async () => {
+      if (!output.value) generate();
+      const ok = await copyTextRobust(output.value, output);
+      toast(ok ? '倒数宏已复制，可粘贴到 FF14 用户宏编辑器。' : '自动复制未成功，宏文本已选中，请手动复制。');
+    });
+    generate();
+    return true;
+  }
+  mountCountdownMacroOption();
+
+  // Override legacy clipboard-only actions so macros/coordinates/announcements work on file:// pages too.
+  window.copyTacticMacro = async function copyTacticMacroNative(idx, isCrossServer) {
+    const list = getRouteMonsters();
+    const m = list.find(item => Number(item?._globalIdx) === Number(idx)) || list[Number(idx)];
+    if (!m) { toast('找不到对应的 S 怪记录。'); return false; }
+    const server = String(m.server || '未知'), name = String(m.name || m.originalName || 'S怪');
+    const macro = isCrossServer
+      ? `/sh 不出SS跨服解散下一站【${server}】<flag>\n/y 不出SS跨服解散下一站【${server}】<flag> <wait.2>\n/sh 车头会在最后传送，抵达后请耐心等待，烦请不要抢开\n/y 车头会在最后传送，抵达后请耐心等待，烦请不要抢开。`
+      : `/sh 不要解散下一站【本地】<flag>\n/y 不要解散下一站【本地】<flag>`;
+    const ok = await copyTextRobust(macro);
+    toast(ok ? `已复制 ${name} 的原生战术宏，可粘贴到 FF14 用户宏编辑器。` : '自动复制失败，已尝试打开手动复制框。');
+    return ok;
+  };
+  window.copyMonsterCoord = async function copyMonsterCoordNative(idx) {
+    const list = getRouteMonsters();
+    const m = list.find(item => Number(item?._globalIdx) === Number(idx)) || list[Number(idx)];
+    if (!m) { toast('找不到对应的 S 怪记录。'); return false; }
+    const ok = await copyTextRobust(`${m.server || '未知'} ${m.name || m.originalName || 'S怪'} ${m.coord || '(坐标未知)'}`);
+    toast(ok ? '坐标信息已复制。' : '自动复制失败，请手动复制。'); return ok;
+  };
+  window.copyAnnouncement = async function copyAnnouncementCompat() {
+    const output = $('#announcementOutput');
+    if (!output || !output.value.trim()) { toast('请先生成公告。'); return false; }
+    const ok = await copyTextRobust(output.value, output);
+    toast(ok ? '公告已复制。' : '自动复制失败，公告文本已选中，请手动复制。'); return ok;
+  };
+  window.copyGeneratedCode = async function copyGeneratedCodeCompat() {
+    const el = $('#generatedCodeText'); const text = String(el?.textContent || '').trim();
+    if (!text) { toast('当前没有可复制的邀请码。'); return false; }
+    const ok = await copyTextRobust(text);
+    toast(ok ? '邀请码已复制。' : '自动复制失败，请手动复制。'); return ok;
+  };
+
+  // Normalize Ao Shan announcements to the same date/time/station/driver/count fields as regular departures.
+  const previousGenerateAnnouncement = window.generateAnnouncement;
+  if (typeof previousGenerateAnnouncement === 'function' && !previousGenerateAnnouncement.__ff14AomFormatUnified) {
+    const unifiedGenerateAnnouncement = function(...args) {
+      const result = previousGenerateAnnouncement.apply(this, args);
+      if (result === false) return result;
+      const aomButton = $('#btnAnnAom');
+      if (!aomButton || !aomButton.classList.contains('btn-accent')) return result;
+      const out = $('#announcementOutput'); if (!out || !out.value.trim()) return result;
+      const monsters = getRouteMonsters().filter(m => !m.isDead);
+      if (!monsters.length) return result;
+      const previousLines = out.value.split(/\r?\n/);
+      const dateMatch = previousLines[0]?.match(/^(\d{2}\.\d{2})/);
+      const dateStr = dateMatch?.[1] || `${String(new Date().getMonth()+1).padStart(2,'0')}.${String(new Date().getDate()).padStart(2,'0')}`;
+      const time = String($('#annAomTime')?.value || '21:00').trim();
+      const station = String($('#annStartStation')?.value || '').trim() || '【白金幻象】奥阔帕恰山';
+      const header = String($('#annHeader')?.value || '').trim() || '未知';
+      const counts = {'7.0':0,'6.0':0,'5.0':0,other:0};
+      monsters.forEach(m => { if (m.version === '7.0') counts['7.0']++; else if (m.version === '6.0') counts['6.0']++; else if (m.version === '5.0') counts['5.0']++; else counts.other++; });
+      const baseName = m => String(m.originalName || m.name || '');
+      const isPureAom = monsters.every(m => baseName(m) === '厌忌之人 奇里格');
+      const hasAom = monsters.some(m => baseName(m) === '厌忌之人 奇里格');
+      const countLine = `100S*${counts['7.0']} 90S*${counts['6.0']} 80S*${counts['5.0']} 70S*${counts.other}`;
+      const note = isPureAom ? '备注：纯奥山车，全服清空！' : (hasAom ? '备注：奥山混合车，已包含奥山预设目标。' : '备注：奥山模式公告，请以当前排车列表为准。');
+      out.value = `${dateStr} 奥山车S车资讯\n开车时间:${time}\n始发站：${station}\n车头：${header}\n${countLine}\n${note}`;
+      return result;
+    };
+    unifiedGenerateAnnouncement.__ff14AomFormatUnified = true;
+    unifiedGenerateAnnouncement.__ff14AomFormatOriginal = previousGenerateAnnouncement;
+    window.generateAnnouncement = unifiedGenerateAnnouncement;
+  }
+
+  // Per-S queue ET schedule: each route card gets independent, editable time, keyed by server + original monster name.
+  const ROUTE_ET_KEY = 'ff14_route_s_manual_et_v1';
+  let routeETMap = safeStore(() => JSON.parse(localStorage.getItem(ROUTE_ET_KEY) || '{}'), {});
+  if (!routeETMap || typeof routeETMap !== 'object' || Array.isArray(routeETMap)) routeETMap = {};
+  function saveRouteET() { safeStore(() => localStorage.setItem(ROUTE_ET_KEY, JSON.stringify(routeETMap))); }
+  function parseRouteET(raw, nowMs=Date.now()) {
+    let input = String(raw || '').trim().toUpperCase().replace(/[：]/g, ':').replace(/[OＯ]/g,'0').replace(/[Iil丨]/g,'1').replace(/，/g, ',');
+    if (!input) return { error:'请输入 +3ET、ET2130、2100 或 21:30。' };
+    const relative = input.match(/^\+\s*(\d+(?:[.,]\d+)?)\s*(?:E\.?T\.?)?$/i);
+    if (relative) { const hours=Number(relative[1].replace(',','.')); if (!Number.isFinite(hours)||hours<0||hours>10000) return {error:'ET 小时范围为 0–10000。'}; return {targetMs:nowMs+hours*175000,label:`+${hours} ET`}; }
+    input = input.replace(/E\.?T\.?/gi,'').replace(/\s+/g,'').replace(/点/g,':').replace(/分$/,'');
+    let hour=NaN, minute=0, match;
+    if ((match=input.match(/^(\d{1,2}):(\d{1,2})$/))) { hour=Number(match[1]); minute=Number(match[2]); }
+    else if ((match=input.match(/^(\d{3,4})$/))) { hour=Number(match[1].slice(0,-2)); minute=Number(match[1].slice(-2)); }
+    else if ((match=input.match(/^(\d{1,2})$/))) { hour=Number(match[1]); minute=0; }
+    if (!Number.isInteger(hour)||hour<0||hour>23||!Number.isInteger(minute)||minute<0||minute>59) return {error:'ET 格式无法识别，请使用 +3ET、ET2130、2100 或 21:30。'};
+    const nowEtMinute=Math.floor(nowMs*60/175000), dayIndex=Math.floor(nowEtMinute/1440), currentDayMinute=nowEtMinute%1440;
+    let targetEtMinute=dayIndex*1440+hour*60+minute; if (targetEtMinute<=nowEtMinute) targetEtMinute+=1440;
+    const delta=targetEtMinute-nowEtMinute;
+    return {targetMs:nowMs+delta*175000/60,label:`ET ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`};
+  }
+  function routeETKey(monster) { return `route::${routeKey(monster)}`; }
+  function routeIndexFromRow(row) {
+    const edit = row.querySelector('[onclick*="editParsedMonster("]');
+    const match = edit?.getAttribute('onclick')?.match(/editParsedMonster\(\s*(\d+)/);
+    if (match) return Number(match[1]);
+    const ss = row.querySelector('[onclick*="toggleSS("]');
+    const ssMatch = ss?.getAttribute('onclick')?.match(/toggleSS\(\s*(\d+)/);
+    return ssMatch ? Number(ssMatch[1]) : -1;
+  }
+  function timeRemaining(ms) {
+    let sec = Math.max(0,Math.floor(ms/1000));
+    const d=Math.floor(sec/86400);sec%=86400;const h=Math.floor(sec/3600);sec%=3600;const m=Math.floor(sec/60);sec%=60;
+    return `${d?`${d}天 `:''}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  }
+  function updateRouteETCountdowns() {
+    const now=Date.now();
+    $$('.ff14-route-et-panel').forEach(panel=>{
+      const item=routeETMap[panel.dataset.etKey]; const status=$('[data-route-et-status]',panel), input=$('[data-route-et-input]',panel), set=$('[data-route-et-set]',panel);
+      if (!item || !Number.isFinite(Number(item.targetMs))) {
+        if(status) status.textContent='本怪尚未设置 ET 时间。可以单独设置或手动修正，不会覆盖其他 S 怪。';
+        if(set&&set.textContent!=='设置 ET')set.textContent='设置 ET';
+        if(input&&item?.raw&&input.value!==item.raw)input.value=item.raw;
+        return;
+      }
+      const remain=Number(item.targetMs)-now;const date=new Date(Number(item.targetMs));
+      const dateStr=Number.isFinite(date.getTime())?date.toLocaleString('zh-CN',{hour12:false}):'时间无效';
+      if(status)status.textContent=`目标：${dateStr}（${item.label||'ET'}） · ${remain>=0?'剩余':'已过'} ${timeRemaining(Math.abs(remain))}`;
+      if(set&&set.textContent!=='修正 ET')set.textContent='修正 ET';
+      if(input&&item.raw&&document.activeElement!==input&&input.value!==item.raw)input.value=item.raw;
+    });
+  }
+  function mountRouteETPanels() {
+    const routeRows=$$('#routeResultBox .monster-list-item'); if (!routeRows.length) return false;
+    const monsters=getRouteMonsters();
+    routeRows.forEach(row=>{
+      const idx=routeIndexFromRow(row);if(idx<0)return;
+      let monster=monsters.find(m=>Number(m?._globalIdx)===idx)||monsters[idx];if(!monster)return;
+      const key=routeETKey(monster);
+      let panel=$('.ff14-route-et-panel',row);
+      if(panel && panel.dataset.etKey!==key){panel.remove();panel=null;}
+      if(!panel){
+        panel=document.createElement('div');panel.className='ff14-route-et-panel';panel.dataset.etKey=key;
+        panel.innerHTML=`<div class="ff14-route-et-heading"><span>本怪独立 ET 时间</span><span data-route-et-status>尚未设置</span></div><div class="ff14-route-et-controls"><input type="text" data-route-et-input autocomplete="off" spellcheck="false" placeholder="单独设置本怪 ET：+3ET / ET2130 / 21:30"><button class="btn btn-accent" type="button" data-route-et-set>设置 ET</button><button class="btn btn-outline" type="button" data-route-et-clear>清除</button></div>`;
+        row.appendChild(panel);
+        const input=$('[data-route-et-input]',panel),set=$('[data-route-et-set]',panel),clear=$('[data-route-et-clear]',panel);
+        ['pointerdown','mousedown','touchstart'].forEach(type=>panel.addEventListener(type,event=>event.stopPropagation(),{passive:true}));
+        input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();set.click();}});
+        set.addEventListener('click',()=>{
+          const parsed=parseRouteET(input.value);
+          if(parsed.error){toast(parsed.error);input.focus();return;}
+          routeETMap[key]={targetMs:parsed.targetMs,label:parsed.label,raw:input.value.trim(),updatedAt:Date.now(),server:String(monster.server||''),name:String(monster.originalName||monster.name||'')};
+          saveRouteET();updateRouteETCountdowns();toast(`已设置/修正 ${monster.server||''} ${monster.originalName||monster.name||'本怪'} 的独立 ET 时间。`);
+        });
+        clear.addEventListener('click',()=>{delete routeETMap[key];saveRouteET();input.value='';updateRouteETCountdowns();toast('已清除本怪独立 ET 时间；其他 S 怪不受影响。');});
+      }
+      panel.dataset.etKey=key;
+      const saved=routeETMap[key],input=$('[data-route-et-input]',panel);
+      if(saved&&input&&document.activeElement!==input&&input.value!==String(saved.raw||''))input.value=String(saved.raw||'');
+    });
+    updateRouteETCountdowns();return true;
+  }
+  const originalRouteRender=window.renderRouteResult;
+  if (typeof originalRouteRender==='function' && !originalRouteRender.__ff14RouteETCardWrapped) {
+    const wrappedRender=function(...args){const result=originalRouteRender.apply(this,args);requestAnimationFrame(()=>{mountRouteETPanels();updateRouteETCountdowns();});return result;};
+    wrappedRender.__ff14RouteETCardWrapped=true;wrappedRender.__ff14RouteETCardOriginal=originalRouteRender;window.renderRouteResult=wrappedRender;
+  }
+  const routeResult=$('#routeResultBox');
+  if(routeResult&&typeof MutationObserver!=='undefined'){
+    let scheduled=false;
+    const observer=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;mountRouteETPanels();});});
+    observer.observe(routeResult,{childList:true,subtree:true});
+  }
+  mountRouteETPanels();
+  setInterval(updateRouteETCountdowns,1000);
+
+  // SS changes update the visible monster name but restore the exact object order afterwards.
+  const originalToggleSS=window.toggleSS;
+  if(typeof originalToggleSS==='function'&&!originalToggleSS.__ff14PreserveSSOrderAndName){
+    const wrappedToggleSS=function(idx,...args){
+      const before=getRouteMonsters().slice();
+      const targetBefore=before.find(m=>Number(m?._globalIdx)===Number(idx))||before[Number(idx)];
+      const result=originalToggleSS.call(this,idx,...args);
+      if(result===false)return result;
+      let current=getRouteMonsters();
+      if(before.length&&current.length){
+        const map=new Map(current.map(m=>[routeKey(m),m]));
+        const ordered=[];const seen=new Set();
+        before.forEach(m=>{const key=routeKey(m);const next=map.get(key)||m;if(!seen.has(next)){ordered.push(next);seen.add(next);}});
+        current.forEach(m=>{if(!seen.has(m)){ordered.push(m);seen.add(m);}});
+        try{current.splice(0,current.length,...ordered);}catch(_){}
+        const order=ordered.map(routeKey);safeStore(()=>localStorage.setItem('ff14_manual_route_order_v2',JSON.stringify(order)));
+      }
+      const active=getRouteMonsters();const changed=active.find(m=>targetBefore&&routeKey(m)===routeKey(targetBefore))||targetBefore;
+      if(changed){
+        const meta=window.__ff14FloatMeta||{};
+        Object.values(meta).forEach(item=>{if(item&&String(item.server||'')===String(changed.server||'')&&String(item.name||'')===String(changed.originalName||''))item.name=String(changed.name||'');});
+        $$('.floating-window').forEach(win=>{
+          const metaItem=meta[String(win.dataset.ff14RecordKey||win.id.replace(/^win_/,''))];
+          if(metaItem&&String(metaItem.server||'')===String(changed.server||'')&&String(metaItem.name||'')===String(changed.name||'')){
+            const title=$('.fc-title',win);if(title)title.textContent=`${changed.server} - ${changed.name}`;
+          }
+        });
+      }
+      if(typeof window.renderRouteResult==='function')window.renderRouteResult();
+      if(typeof window.renderTacticMacros==='function')window.renderTacticMacros();
+      mountRouteETPanels();
+      return result;
+    };
+    wrappedToggleSS.__ff14PreserveSSOrderAndName=true;wrappedToggleSS.__ff14ToggleSSOriginal=originalToggleSS;window.toggleSS=wrappedToggleSS;
+  }
+
+  function installFixes(){
+    installReloginConfirmAndCopy();mountCountdownMacroOption();mountRouteETPanels();
+    // Ensure each existing floating ET control remains editable and visibly indicates that existing targets can be corrected.
+    $$('.floating-window .ff14-local-et-panel').forEach(panel=>{
+      const input=$('[data-local-et-input]',panel),set=$('[data-local-et-set]',panel),clear=$('[data-local-et-clear]',panel);
+      if(input){input.disabled=false;input.readOnly=false;input.style.pointerEvents='auto';input.title='可修改此 S 怪自己的 ET 时间';}
+      if(set){set.disabled=false;set.textContent='设置 / 修正 ET';set.style.pointerEvents='auto';}
+      if(clear){clear.disabled=false;clear.style.pointerEvents='auto';}
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installFixes,{once:true});else installFixes();
+  const initTimer=setInterval(()=>{installReloginConfirmAndCopy();mountCountdownMacroOption();mountRouteETPanels();},500);
+  setTimeout(()=>clearInterval(initTimer),20000);
+  setInterval(()=>{
+    $$('.floating-window .ff14-local-et-panel').forEach(panel=>{const input=$('[data-local-et-input]',panel),set=$('[data-local-et-set]',panel);if(input){input.disabled=false;input.readOnly=false;}if(set){set.disabled=false;set.textContent='设置 / 修正 ET';}});
+  },1500);
+})();
+</script>
+
+<!-- 2026-10-28 追加体验层：身份验证中心、无复制验证码、玻璃质感恢复、列表按钮整理与本地黑话编译 -->
+<style id="ff14-verification-liquid-glass-v3-css">
+  :root { --ff14-global-glass-blur:24px; --ff14-glass-edge:rgba(255,255,255,.78); }
+  /* Restore the layered liquid-glass look across both main and route pages without clipping dropdowns. */
+  .manual-card,.input-section,.manual-result-box,.recent-item,.recent-list,.recent-list-header,
+  .server-card,.server-card-header,.monster-list-item:not(.target-highlight),.focus-col-left,.focus-col-right,
+  .advanced-route-panel,.stat-box,.announcement-box,.route-monitor-box,.floating-window,.toolbox-menu,
+  .custom-dropdown-panel,.modal-content,.update-modal-content,.detail-modal-content,.marquee-container,
+  .et-float-panel,.ff14-route-et-panel,.ff14-local-et-panel,.ff14-macro-generator,
+  #ff14-runtime-status-bar,.ff14-verification-identity-panel,.ff14-slang-compiler-card {
+    border-color:color-mix(in srgb,var(--ff14-glass-edge,rgba(255,255,255,.72)) 52%,var(--border)) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.42),inset 0 -1px 0 rgba(255,255,255,.08),0 14px 36px rgba(0,0,0,.14) !important;
+    backdrop-filter:blur(max(var(--ff14-global-glass-blur,16px),18px)) saturate(1.42) contrast(1.02);
+    -webkit-backdrop-filter:blur(max(var(--ff14-global-glass-blur,16px),18px)) saturate(1.42) contrast(1.02);
+  }
+  .manual-card,.focus-col-left,.focus-col-right,.server-card,.recent-item,.ff14-macro-generator,
+  .ff14-verification-identity-panel,.ff14-slang-compiler-card {
+    background:linear-gradient(138deg,rgba(255,255,255,.24) 0%,rgba(255,255,255,.09) 24%,rgba(var(--panel-rgb,26,26,46),.48) 58%,rgba(255,255,255,.10) 100%) !important;
+  }
+  .input-section,.manual-result-box,.server-card-header,.advanced-route-panel,.stat-box,
+  .announcement-box,.route-monitor-box,.et-float-panel,.ff14-route-et-panel,.ff14-local-et-panel {
+    background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(var(--panel-rgb,26,26,46),.44) 56%,rgba(255,255,255,.08)) !important;
+  }
+  #focusRoutePage {
+    background-image:radial-gradient(ellipse at 12% 8%,rgba(150,255,220,.20),transparent 38%),radial-gradient(ellipse at 86% 86%,rgba(90,170,255,.17),transparent 42%),linear-gradient(135deg,rgba(var(--panel-rgb,26,26,46),.78),rgba(var(--panel-rgb,26,26,46),.48)) !important;
+    backdrop-filter:saturate(1.45); -webkit-backdrop-filter:saturate(1.45);
+  }
+  #focusRoutePage .focus-col-left,#focusRoutePage .focus-col-right {
+    border-radius:18px !important; background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(var(--panel-rgb,26,26,46),.58) 52%,rgba(255,255,255,.08)) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.46),inset 0 0 30px rgba(255,255,255,.035),0 18px 44px rgba(0,0,0,.16) !important;
+  }
+  .btn,.btn-modal,.btn-fix,.route-add-btn,.quick-add-tag,.ff14-ux-btn,
+  #ff14-countdown-generate,#ff14-countdown-copy {
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 4px 13px rgba(0,0,0,.10);
+  }
+  input,select,textarea,.route-textarea,.announcement-textarea,.dropdown-search,.history-search {
+    background-color:color-mix(in srgb,var(--input-bg) 83%,transparent) !important;
+    color:var(--text) !important; border-color:color-mix(in srgb,var(--input-border) 68%,var(--ff14-glass-edge)) !important;
+    box-shadow:inset 0 1px 4px rgba(0,0,0,.08),0 1px 0 rgba(255,255,255,.08);
+  }
+  input::placeholder,textarea::placeholder { color:var(--text-muted) !important; opacity:.92; }
+  #ff14-runtime-status-bar .ff14-identity-badge, #ff14-runtime-status-bar #ff14-runtime-access-note { display:none !important; }
+  #ff14-runtime-status-bar #ff14-identity-session-button { display:none !important; }
+  .top-bar .top-bar-left > button[onclick="openInviteModal()"] { display:none !important; }
+  /* Requested removal from the interface; the original manual-entry functions remain in source for compatibility. */
+  .top-bar .top-bar-left > button[onclick="openManualAddModal()"],
+  #manualAddModal { display:none !important; }
+  #ff14-runtime-status-bar #ff14-open-verification-center {
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;
+    border:1px solid var(--ff14-glass-edge);border-radius:999px;padding:7px 12px;
+    color:var(--text);background:linear-gradient(135deg,rgba(255,255,255,.28),rgba(var(--panel-rgb,26,26,46),.54));
+    font-weight:900;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 5px 16px rgba(0,0,0,.12);
+  }
+  #ff14-runtime-status-bar #ff14-open-verification-center:hover { border-color:var(--accent);color:var(--accent);transform:translateY(-1px); }
+  #ff14-runtime-status-bar .ff14-status-group:empty { display:none !important; }
+  #inviteModal .modal-content {
+    max-width:680px !important; border-radius:22px !important;
+    background:linear-gradient(143deg,rgba(255,255,255,.24),rgba(var(--panel-rgb,26,26,46),.78) 52%,rgba(130,200,255,.13)) !important;
+    border:1px solid var(--ff14-glass-edge) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 38px rgba(255,255,255,.045),0 24px 70px rgba(0,0,0,.30) !important;
+    backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);
+  }
+  .ff14-verification-identity-panel,.ff14-slang-compiler-card { padding:13px 14px;margin:12px 0;border:1px solid var(--border);border-radius:14px; }
+  .ff14-verification-identity-head { display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:9px; }
+  .ff14-verification-identity-title { font-size:14px;font-weight:950;color:var(--accent); }
+  .ff14-verification-identity-data { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+  .ff14-verification-identity-data #ff14-runtime-identity { display:inline-flex !important; }
+  .ff14-verification-identity-data #ff14-runtime-access-note { display:inline-flex !important;white-space:normal;max-width:100%; }
+  .ff14-verification-identity-data #ff14-runtime-identity[data-role="developer"] { color:#8f55d9;border-color:rgba(143,85,217,.42); }
+  .ff14-verification-identity-data #ff14-runtime-identity[data-role="special"] { color:var(--gold);border-color:rgba(210,150,30,.45); }
+  .ff14-verification-identity-data #ff14-runtime-identity[data-role="temporary"] { color:var(--blue);border-color:rgba(40,145,200,.42); }
+  .ff14-verification-identity-data #ff14-runtime-identity[data-role="visitor"] { color:var(--text-muted); }
+  #ff14-verification-logout { border:1px solid var(--gold);border-radius:9px;padding:8px 12px;background:rgba(255,180,70,.13);color:var(--gold);font-weight:900;cursor:pointer; }
+  #ff14-verification-logout:hover { background:rgba(255,180,70,.24); }
+  #ff14-local-slang-compiler[hidden] { display:none !important; }
+  .ff14-slang-compiler-title { font-size:13px;font-weight:950;color:var(--gold);margin-bottom:7px; }
+  .ff14-slang-compiler-copy { font-size:12px;line-height:1.6;color:var(--text-muted);margin-bottom:10px; }
+  .ff14-slang-compiler-actions { display:flex;gap:8px;flex-wrap:wrap;align-items:center; }
+  .ff14-slang-compiler-actions button { flex:1 1 160px;min-height:36px;border:1px solid var(--border);border-radius:9px;background:rgba(var(--panel-rgb,26,26,46),.45);color:var(--text);font-weight:850;cursor:pointer;padding:8px 10px; }
+  .ff14-slang-compiler-actions button:hover { border-color:var(--accent);color:var(--accent); }
+  /* Captcha is drawn to canvas to prevent ordinary text selection/copy UI. Source/client storage still cannot be server-secured in a single HTML file. */
+  #ff14-relogin-challenge-panel .ff14-relogin-code-row { display:block !important; }
+  #ff14-relogin-challenge-display { display:none !important; }
+  #ff14-copy-relogin-challenge { display:none !important; }
+  #ff14-relogin-captcha-canvas { display:block;width:100%;max-width:440px;height:64px;margin:6px auto 2px;border:1px solid var(--ff14-glass-edge);border-radius:10px;background:linear-gradient(135deg,rgba(255,255,255,.2),rgba(var(--panel-rgb,26,26,46),.6));user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;pointer-events:none; }
+  #ff14-relogin-challenge-entry { letter-spacing:2px;text-transform:uppercase; }
+  #ff14-relogin-challenge-panel .ff14-relogin-status { min-height:34px; }
+  .ff14-macro-generator .ff14-macro-controls { align-items:center;flex-direction:row;flex-wrap:wrap; }
+  .ff14-macro-generator .ff14-macro-symbol-select { width:auto;min-width:105px;max-width:130px; }
+  .ff14-macro-generator .ff14-macro-flag-label { display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;font-weight:800; }
+  .ff14-macro-generator .ff14-macro-flag-label input { width:auto;min-width:0; }
+  .recent-list-header { display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;flex-wrap:wrap !important; }
+  .recent-list-actions { display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:flex-end;flex-wrap:nowrap !important;gap:8px !important;min-width:0; }
+  .recent-list-actions button { white-space:nowrap;flex:0 0 auto;min-height:32px;padding:6px 10px !important;border-radius:9px !important; }
+  .recent-list-title { display:flex;align-items:center;gap:6px;min-width:0; }
+  @media(max-width:640px) {
+    .recent-list-header { align-items:flex-start !important; }
+    .recent-list-actions { width:100%;justify-content:flex-start;overflow-x:auto;padding-bottom:3px; }
+    .recent-list-actions button { font-size:11px !important; }
+    #inviteModal .modal-content { padding:18px !important;width:calc(100vw - 20px) !important; }
+  }
+  @media(prefers-reduced-motion:reduce) {
+    .btn,.btn-modal,#ff14-runtime-status-bar #ff14-open-verification-center { transition:none !important;transform:none !important; }
+  }
+</style>
+<script id="ff14-verification-glass-slang-bundle-v3">
+(() => {
+  'use strict';
+  if (window.__ff14VerificationGlassSlangV3) return;
+  window.__ff14VerificationGlassSlangV3 = true;
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const safe = fn => { try { return fn(); } catch (_) { return undefined; } };
+  const toast = msg => safe(() => (window.showToast || console.info)(msg));
+  const ALIAS_KEY = 'ff14_alias_project_library_v1';
+  const TRIGGER_KEY = 'ff14_custom_triggers';
+  const roleFromStorage = () => {
+    if (safe(() => localStorage.getItem('ff14_developer_mode') === 'true')) return 'developer';
+    if (safe(() => localStorage.getItem('ff14_master_verified') === 'true')) return 'special';
+    if (safe(() => sessionStorage.getItem('ff14_user_role_session_v1') === 'temporary')) return 'temporary';
+    return 'visitor';
+  };
+  const roleLabel = role => ({developer:'开发者',special:'特殊邀请用户',temporary:'临时用户',visitor:'普通访客'})[role] || '普通访客';
+  function ensureVerificationModule() {
+    const modal = $('#inviteModal'), content = modal?.querySelector('.modal-content');
+    if (!content) return false;
+    const title = content.querySelector('.modal-title');
+    if (title && title.dataset.ff14VerificationTitle !== '1') { title.textContent = '身份验证中心'; title.dataset.ff14VerificationTitle = '1'; }
+    let identity = $('#ff14-verification-identity-panel', content);
+    if (!identity) {
+      identity = document.createElement('section'); identity.id = 'ff14-verification-identity-panel'; identity.className = 'ff14-verification-identity-panel';
+      identity.innerHTML = '<div class="ff14-verification-identity-head"><div class="ff14-verification-identity-title">当前会话与权限</div><button type="button" id="ff14-verification-logout">退出当前身份</button></div><div class="ff14-verification-identity-data" id="ff14-verification-identity-data"></div>';
+      if (title) title.insertAdjacentElement('afterend', identity); else content.prepend(identity);
+    }
+    const data = $('#ff14-verification-identity-data', identity);
+    const badge = $('#ff14-runtime-identity'); const note = $('#ff14-runtime-access-note');
+    if (data) { if (badge && badge.parentElement !== data) data.appendChild(badge); if (note && note.parentElement !== data) data.appendChild(note); }
+    // Reuse the original identity action (and its existing logout/reauth behavior) via an in-module button.
+    const exit = $('#ff14-verification-logout', identity), oldExit = $('#ff14-identity-session-button');
+    if (exit && exit.dataset.ff14Bound !== '1') { exit.dataset.ff14Bound = '1'; exit.addEventListener('click', () => oldExit ? oldExit.click() : (window.openInviteModal ? window.openInviteModal() : (modal.style.display='flex'))); }
+    if (exit && oldExit) { const label = roleFromStorage()==='visitor' ? '进入身份验证' : '退出当前身份'; if(exit.textContent!==label)exit.textContent=label; }
+
+    const statusbar = $('#ff14-runtime-status-bar');
+    if (statusbar && !$('#ff14-open-verification-center', statusbar)) {
+      const open = document.createElement('button'); open.type='button';open.id='ff14-open-verification-center';open.textContent='身份验证中心';open.title='查看当前会话、输入邀请码与管理本地黑话项目';
+      open.addEventListener('click', () => { if(typeof window.openInviteModal==='function') window.openInviteModal(); else modal.style.display='flex'; setTimeout(ensureVerificationModule,0); });
+      const group = statusbar.querySelector('.ff14-status-group'); (group || statusbar).appendChild(open);
+    }
+    // Hide the legacy bottom trigger but preserve all original handlers for compatibility.
+    document.querySelectorAll('.top-bar .top-bar-left > button[onclick="openInviteModal()"],.top-bar .top-bar-left > button[onclick="openManualAddModal()"]')
+      .forEach(button => button.style.display='none');
+
+    let compiler = $('#ff14-local-slang-compiler', content);
+    if (!compiler) {
+      compiler = document.createElement('section'); compiler.id='ff14-local-slang-compiler'; compiler.className='ff14-slang-compiler-card';
+      compiler.innerHTML = '<div class="ff14-slang-compiler-title">本地黑话列表编译</div><div class="ff14-slang-compiler-copy">特殊邀请与开发者身份可将本机自定义 S怪、服务器、触发者黑话和自定义触发者编译为项目包，供另一份本地工具导入。只导出自定义内容，不包含预设触发者名单。</div><div class="ff14-slang-compiler-actions"><button type="button" id="ff14-slang-open-library">打开词库项目库</button><button type="button" id="ff14-slang-export-bundle">编译并导出本地项目包</button><button type="button" id="ff14-slang-import-bundle">导入项目包</button><input type="file" id="ff14-slang-import-file" accept=".json,application/json" hidden></div><div id="ff14-slang-compiler-status" class="ff14-relogin-status" aria-live="polite"></div>';
+      identity.insertAdjacentElement('afterend', compiler);
+      $('#ff14-slang-open-library', compiler).addEventListener('click', () => { if (typeof window.openAliasProjectLibrary==='function') window.openAliasProjectLibrary(); else toast('词库项目库尚未初始化，请刷新网页后重试。'); });
+      $('#ff14-slang-export-bundle', compiler).addEventListener('click', exportSlangBundle);
+      $('#ff14-slang-import-bundle', compiler).addEventListener('click', () => $('#ff14-slang-import-file', compiler).click());
+      $('#ff14-slang-import-file', compiler).addEventListener('change', importSlangBundle);
+    }
+    const high = ['special','developer'].includes(roleFromStorage());
+    compiler.hidden = !high;
+    if (!high) {
+      const status = $('#ff14-slang-compiler-status', compiler);
+      if (status && status.textContent!=='该功能需要高级身份。') status.textContent='该功能需要高级身份。';
+    } else {
+      const status = $('#ff14-slang-compiler-status', compiler);
+      if (status && !status.textContent) status.textContent='项目包保存在本地；导入后需要刷新页面以重新应用绑定。';
+    }
+    // Move the reauth challenge into the identity center, then replace copyable text with an image-only challenge.
+    const challenge = $('#ff14-relogin-challenge-panel', content);
+    if (challenge && challenge.parentElement===content && challenge.previousElementSibling!==identity) identity.insertAdjacentElement('afterend', challenge);
+    installVisualChallenge();
+    return true;
+  }
+  function readJsonStorage(key, fallback) { return safe(() => { const raw=localStorage.getItem(key); if(!raw)return fallback; const v=JSON.parse(raw); return v ?? fallback; }) ?? fallback; }
+  function saveDownload(filename, value) {
+    try { const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);return true; } catch (_) { return false; }
+  }
+  function isHighRole() { return ['special','developer'].includes(roleFromStorage()); }
+  function exportSlangBundle() {
+    if(!isHighRole()){toast('本地黑话编译需要高级身份。');return;}
+    const aliases=readJsonStorage(ALIAS_KEY,[]);const triggers=readJsonStorage(TRIGGER_KEY,[]);
+    const validAliases=Array.isArray(aliases)?aliases.filter(item=>item&&['monster','server','trigger'].includes(item.type)&&typeof item.alias==='string'&&typeof item.target==='string'&&item.alias.trim()&&item.target.trim()).map(item=>({type:item.type,alias:item.alias.trim(),target:item.target.trim(),createdAt:Number(item.createdAt)||Date.now()})):[];
+    const validTriggers=Array.isArray(triggers)?[...new Set(triggers.map(v=>String(v||'').trim()).filter(Boolean))]:[];
+    const bundle={schema:'ff14-local-slang-bundle',version:1,exportedAt:new Date().toISOString(),aliases:validAliases,customTriggers:validTriggers};
+    const ok=saveDownload(`FF14_本地黑话项目包_${new Date().toISOString().slice(0,10)}.json`,bundle);
+    const status=$('#ff14-slang-compiler-status');if(status)status.textContent=`编译完成：${validAliases.length} 条别名绑定、${validTriggers.length} 条自定义触发者。${ok?'已开始下载。':'下载失败，请检查浏览器下载权限。'}`;
+    toast(ok?'本地黑话项目包已编译并下载。':'项目包下载失败，请检查浏览器权限。');
+  }
+  function importSlangBundle(event) {
+    const input=event.currentTarget,file=input.files?.[0];if(!file)return;
+    if(!isHighRole()){toast('本地黑话导入需要高级身份。');input.value='';return;}
+    const reader=new FileReader();reader.onload=()=>{
+      try{
+        const data=JSON.parse(String(reader.result||''));
+        const rows=Array.isArray(data)?data:(Array.isArray(data.aliases)?data.aliases:[]);
+        const additions=rows.filter(item=>item&&['monster','server','trigger'].includes(item.type)&&typeof item.alias==='string'&&typeof item.target==='string'&&item.alias.trim()&&item.target.trim()).slice(0,2000).map(item=>({id:String(item.id||`${item.type}|${item.alias.trim().toLocaleLowerCase()}|${item.target.trim()}`),type:item.type,alias:item.alias.trim(),target:item.target.trim(),createdAt:Number(item.createdAt)||Date.now()}));
+        const existing=readJsonStorage(ALIAS_KEY,[]);const aliasMap=new Map();
+        [...(Array.isArray(existing)?existing:[]),...additions].forEach(item=>{if(!item||!['monster','server','trigger'].includes(item.type)||!item.alias||!item.target)return;const key=`${item.type}|${String(item.alias).normalize('NFKC').toLocaleLowerCase().replace(/\s+/g,'')}|${item.target}`;if(!aliasMap.has(key))aliasMap.set(key,item);});
+        const localTriggers=readJsonStorage(TRIGGER_KEY,[]);const incoming=Array.isArray(data.customTriggers)?data.customTriggers:[];const mergedTriggers=[...new Set([...(Array.isArray(localTriggers)?localTriggers:[]),...incoming].map(v=>String(v||'').trim()).filter(Boolean))].slice(0,3000);
+        localStorage.setItem(ALIAS_KEY,JSON.stringify([...aliasMap.values()]));localStorage.setItem(TRIGGER_KEY,JSON.stringify(mergedTriggers));
+        const status=$('#ff14-slang-compiler-status');if(status)status.textContent=`导入合并完成：别名绑定 ${additions.length} 条，当前项目库共 ${aliasMap.size} 条；自定义触发者已合并。刷新页面后生效。`;
+        toast('本地黑话项目包已合并。请刷新页面应用绑定。');
+        if(window.confirm('本地黑话列表已合并。现在刷新页面以加载新绑定吗？'))window.location.reload();
+      }catch(error){toast(`项目包导入失败：${error?.message||error}`);const status=$('#ff14-slang-compiler-status');if(status)status.textContent='导入失败：请确认选择的是本工具导出的 JSON 项目包。';}
+      finally{input.value='';}
+    };reader.onerror=()=>{toast('文件读取失败，请重试。');input.value='';};reader.readAsText(file);
+  }
+  function installVisualChallenge() {
+    const panel=$('#ff14-relogin-challenge-panel');if(!panel)return;
+    const display=$('#ff14-relogin-challenge-display',panel);if(display){display.type='hidden';display.setAttribute('aria-hidden','true');display.tabIndex=-1;}
+    $('#ff14-copy-relogin-challenge',panel)?.remove();
+    const row=$('.ff14-relogin-code-row',panel);if(!row)return;
+    let canvas=$('#ff14-relogin-captcha-canvas',row);
+    if(!canvas){canvas=document.createElement('canvas');canvas.id='ff14-relogin-captcha-canvas';canvas.width=440;canvas.height=64;canvas.setAttribute('role','img');canvas.setAttribute('aria-label','图像验证码，请按字符顺序手动输入');row.prepend(canvas);}
+    const code=String(display?.value||'');
+    if(!code){if(canvas.dataset.codeKey!==''){canvas.dataset.codeKey='';drawCaptcha(canvas,'');}return;}
+    if(canvas.dataset.codeKey===code)return;
+    canvas.dataset.codeKey=code;drawCaptcha(canvas,code);
+    // Stop ordinary UI selection/copy gestures on this panel. This does not claim source-level protection.
+    if(panel.dataset.ff14NoCopy!=='1'){
+      panel.dataset.ff14NoCopy='1';
+      ['copy','cut','dragstart'].forEach(type=>panel.addEventListener(type,event=>{if(event.target?.closest?.('#ff14-relogin-captcha-canvas')){event.preventDefault();event.stopPropagation();}},true));
+      canvas.addEventListener('contextmenu',event=>event.preventDefault());
+    }
+    const help=$('.ff14-relogin-help',panel);const helpText='此为旧版混淆验证码组件；当前版本已停用。退出后如需登录，只需使用原有身份邀请码。';if(help&&help.textContent!==helpText)help.textContent=helpText;
+    const label=panel.querySelector('label[for="ff14-relogin-challenge-display"]');if(label&&label.textContent!=='本次视觉混淆验证码（16 位）')label.textContent='本次视觉混淆验证码（16 位）';
+    const entry=$('#ff14-relogin-challenge-entry',panel);const placeholder='按图像顺序手动输入 16 个字符（不含空格）';if(entry&&entry.placeholder!==placeholder)entry.placeholder=placeholder;
+    const status=$('#ff14-relogin-challenge-status',panel);if(status&&/复制上方|已复制|自动复制/.test(status.textContent))status.textContent='请按上方图像中的字符顺序输入 16 位验证码。';
+  }
+  function drawCaptcha(canvas,code) {
+    const ctx=canvas?.getContext?.('2d');if(!ctx)return;
+    const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
+    const grad=ctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,'rgba(120,210,185,.22)');grad.addColorStop(.52,'rgba(100,150,230,.18)');grad.addColorStop(1,'rgba(225,185,255,.24)');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+    for(let i=0;i<34;i++){ctx.beginPath();ctx.strokeStyle=`rgba(255,255,255,${Math.random()*.16+.03})`;ctx.lineWidth=.6+Math.random()*.7;const x=Math.random()*w,y=Math.random()*h;ctx.moveTo(x,y);ctx.lineTo(x+(Math.random()-.5)*66,y+(Math.random()-.5)*25);ctx.stroke();}
+    const chars=String(code||'').slice(0,16);const startX=15,step=24,groupGap=8;
+    for(let i=0;i<chars.length;i++){
+      const group=Math.floor(i/4);const x=startX+i*step+group*groupGap;const y=40+(Math.random()-.5)*7;ctx.save();ctx.translate(x,y);ctx.rotate((Math.random()-.5)*.18);ctx.font=`${Math.random()>.55?'900':'800'} ${22+Math.random()*4}px ui-monospace,Consolas,monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=2;ctx.strokeStyle='rgba(0,0,0,.34)';ctx.strokeText(chars[i],0,0);ctx.fillStyle=['#eafffa','#f8fbff','#fff0d1','#e5e9ff'][i%4];ctx.fillText(chars[i],0,0);ctx.restore();
+    }
+    for(let i=0;i<6;i++){ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=1;ctx.moveTo(Math.random()*w,Math.random()*h);ctx.bezierCurveTo(Math.random()*w,Math.random()*h,Math.random()*w,Math.random()*h,Math.random()*w,Math.random()*h);ctx.stroke();}
+  }
+  function install() {
+    ensureVerificationModule();
+    // Ensure challenge updates are drawn only when the code changes (never repaint every second).
+    setInterval(()=>{ensureVerificationModule();const panel=$('#ff14-relogin-challenge-panel');if(panel&&!panel.hidden)installVisualChallenge();const badge=$('#ff14-runtime-identity'),exit=$('#ff14-verification-logout');if(exit&&badge){const role=roleFromStorage();const label=role==='visitor'?'进入身份验证':'退出当前身份';if(exit.textContent!==label)exit.textContent=label;}},750);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+  const observer=new MutationObserver(()=>{ensureVerificationModule();});
+  if(document.body)observer.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+
+
+<!-- ===== v1.7.0.5 maintenance patch: standard invite-only re-login + versioned update notice ===== -->
+<style id="ff14-v1705-relogin-no-challenge-css">
+  /* Log out returns to the ordinary invite-code login. The old visual challenge is retired. */
+  #ff14-relogin-challenge-panel { display:none !important; }
+  #ff14-relogin-confirm, #ff14-copy-relogin-challenge, #ff14-relogin-captcha-canvas,
+  #ff14-relogin-challenge-display, #ff14-relogin-challenge-entry { display:none !important; }
+</style>
+<script id="ff14-v1705-relogin-no-challenge-js">
+(function FF14Version1705NoExtraChallenge(){
+  'use strict';
+  const safe = fn => { try { return fn(); } catch (_) { return undefined; } };
+  const CHANGELOG_MARK = 'data-ff14-v1705-changelog';
+  const TITLE = '✨ 版本更新说明 · v1.7.0.5';
+  function applyVersionNotice(){
+    const title = document.querySelector('#updatePreviewModal .update-title');
+    if(title && title.textContent !== TITLE) title.textContent = TITLE;
+    const list = document.getElementById('updateContentList');
+    if(list && !list.querySelector('['+CHANGELOG_MARK+']')){
+      const items = [
+        ['版本 1.7.0.5', '退出当前身份后不再要求额外的 16 位混淆验证码；需要重新登录时，使用原有身份邀请码即可。'],
+        ['身份验证流程简化', '退出会清除当前会话身份与排车页面状态，返回普通邀请码验证入口；不同身份的原有权限层级保持不变。'],
+        ['更新公告版本标识', '更新弹窗、主动查看更新说明入口统一显示 v1.7.0.5。']
+      ];
+      items.forEach(([heading, body])=>{
+        const li = document.createElement('li'); li.setAttribute(CHANGELOG_MARK,'1');
+        const strong = document.createElement('strong'); strong.textContent = heading+'：';
+        li.append(strong, document.createTextNode(body)); list.appendChild(li);
+      });
+    }
+  }
+  // Remove stale challenge state left by older copies of the page. Normal invite validation is unchanged.
+  safe(()=>sessionStorage.removeItem('ff14_pending_relogin_mixed_code_v1'));
+  const oldClose = window.closeUpdateModal;
+  window.closeUpdateModal = function(...args){
+    const result = typeof oldClose === 'function' ? oldClose.apply(this,args) : undefined;
+    safe(()=>localStorage.setItem('ff14_update_v1705_viewed','true'));
+    return result;
+  };
+  window.showUXChangeLog = (function(original){
+    return function(...args){ const result=typeof original==='function'?original.apply(this,args):undefined; applyVersionNotice(); return result; };
+  })(window.showUXChangeLog);
+  // Use a fresh version-specific seen flag so this release can show its own announcement once.
+  window.checkUpdateModal = function(){
+    applyVersionNotice();
+    const modal=document.getElementById('updatePreviewModal');
+    if(!modal)return;
+    const seen=safe(()=>localStorage.getItem('ff14_update_v1705_viewed')==='true');
+    if(!seen)modal.style.display='flex';
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyVersionNotice,{once:true});
+  else applyVersionNotice();
+  window.addEventListener('load',applyVersionNotice,{once:true});
 })();
 </script>
 
