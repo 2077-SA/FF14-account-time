@@ -12380,5 +12380,264 @@ window.closeRecentDetail = function closeRecentDetail() {
 })();
 </script>
 
+
+
+<!-- ===== v1.7.0.6: role-gated liquid glass UI and advanced utility panel ===== -->
+<style id="ff14-v1706-role-glass-css">
+  #ff14GlassAccessNote {
+    position:fixed;left:18px;bottom:60px;z-index:17999;max-width:min(430px,calc(100vw - 36px));
+    padding:8px 12px;border:1px solid var(--ff14-glass-edge,rgba(255,255,255,.65));border-radius:13px;
+    color:var(--text);font-size:12px;font-weight:800;line-height:1.45;
+    background:linear-gradient(135deg,rgba(255,255,255,.34),rgba(var(--panel-rgb,26,26,46),.72));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.58),0 8px 24px rgba(0,0,0,.18);
+    backdrop-filter:blur(16px) saturate(1.35);-webkit-backdrop-filter:blur(16px) saturate(1.35);
+  }
+  #ff14GlassWorkshop .ff14-gw-access-note {
+    margin:8px 0 10px;padding:10px 11px;border-radius:11px;
+    border:1px solid color-mix(in srgb,var(--accent) 42%,var(--ff14-glass-edge,white));
+    background:linear-gradient(135deg,rgba(255,255,255,.32),rgba(var(--panel-rgb,26,26,46),.3));
+    font-size:12px;line-height:1.55;color:var(--text);font-weight:750;
+  }
+  #ff14GlassWorkshop .ff14-gw-palette[aria-disabled="true"] { opacity:.38;filter:grayscale(.5);cursor:not-allowed;position:relative; }
+  #ff14GlassWorkshop .ff14-gw-palette[aria-disabled="true"]::after { content:'🔒';display:block;font-size:11px;margin-top:3px; }
+  #ff14GwAdvancedTools { margin-top:14px;padding:13px;border-radius:14px;border:1px solid color-mix(in srgb,var(--gold) 42%,var(--ff14-glass-edge,white));background:linear-gradient(145deg,rgba(255,255,255,.2),rgba(var(--panel-rgb,26,26,46),.5));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 22px rgba(0,0,0,.1); }
+  #ff14GwAdvancedTools[hidden] { display:none !important; }
+  #ff14GwAdvancedTools .ff14-gw-advanced-title { font-size:13px;font-weight:950;color:var(--gold);margin-bottom:5px; }
+  #ff14GwAdvancedTools .ff14-gw-advanced-desc { font-size:11px;line-height:1.5;color:var(--text-muted);margin-bottom:9px; }
+  #ff14GwAdvancedTools .ff14-gw-advanced-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px; }
+  #ff14GwAdvancedTools button { min-width:0;border:1px solid var(--ff14-glass-edge,rgba(255,255,255,.55));border-radius:10px;padding:9px 7px;font-size:11px;font-weight:850;color:var(--text);background:linear-gradient(135deg,rgba(255,255,255,.3),rgba(var(--panel-rgb,26,26,46),.45));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 3px 10px rgba(0,0,0,.09);cursor:pointer; }
+  #ff14GwAdvancedTools button:hover { border-color:var(--accent);transform:translateY(-1px); }
+  #ff14GwAdvancedStatus { min-height:18px;margin-top:8px;color:var(--text-muted);font-size:11px;line-height:1.45; }
+  html.ff14-glass-performance body .manual-card,html.ff14-glass-performance body .input-section,
+  html.ff14-glass-performance body .manual-result-box,html.ff14-glass-performance body .recent-item,
+  html.ff14-glass-performance body .server-card,html.ff14-glass-performance body .focus-col-left,
+  html.ff14-glass-performance body .focus-col-right,html.ff14-glass-performance body .modal-content,
+  html.ff14-glass-performance body #ff14GlassWorkshop,html.ff14-glass-performance body #inviteModal .modal-content {
+    backdrop-filter:blur(8px) saturate(1.18) !important;-webkit-backdrop-filter:blur(8px) saturate(1.18) !important;
+    transition:none !important;animation:none !important;
+  }
+  @media(max-width:560px){#ff14GlassAccessNote{left:10px;bottom:58px;font-size:11px;max-width:calc(100vw - 20px)}#ff14GwAdvancedTools .ff14-gw-advanced-grid{grid-template-columns:1fr 1fr}}
+</style>
+<script id="ff14-v1706-role-glass-js">
+(function FF14Version1706RoleAwareGlassAndTools(){
+  'use strict';
+  if(window.__ff14V1706RoleGlassInstalled)return;
+  window.__ff14V1706RoleGlassInstalled=true;
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const safe=(fn,fallback=null)=>{try{return fn();}catch(_){return fallback;}};
+  const GLASS_KEY='ff14_global_liquid_glass_v1';
+  const PERF_KEY='ff14_v1706_glass_performance_mode';
+  const ALLOWED_TEMP_PALETTES=new Set(['mint','ice']);
+  const PALETTE_KEYS=new Set(['mint','ice','lavender','rose','pearl','deep']);
+  let previousRole='__init__';
+  let lastNote='';
+  const role=()=>{
+    if(safe(()=>localStorage.getItem('ff14_developer_mode')==='true',false))return 'developer';
+    if(safe(()=>localStorage.getItem('ff14_master_verified')==='true',false))return 'special';
+    if(safe(()=>sessionStorage.getItem('ff14_user_role_session_v1')==='temporary',false))return 'temporary';
+    return 'visitor';
+  };
+  const high=()=>['special','developer'].includes(role());
+  const toast=message=>safe(()=>{if(typeof window.showToast==='function')window.showToast(message);else console.info(message);});
+  function lockedGlass(){
+    const root=document.documentElement,body=document.body;if(!root||!body)return;
+    root.classList.add('ff14-glass-access-locked');
+    root.dataset.ff14Glass='off';root.removeAttribute('data-ff14-glass-palette');root.removeAttribute('data-ff14-glass-solid');
+    ['--bg','--panel','--panel-rgb','--panel-light','--text','--text-muted','--accent','--gold','--blue','--red','--purple','--border','--input-bg','--input-border','--ff14-glass-canvas','--ff14-glass-fill','--ff14-glass-input-rgb','--ff14-glass-edge','--ff14-glass-shadow','--ff14-global-glass-blur'].forEach(v=>body.style.removeProperty(v));
+    const workshop=$('#ff14GlassWorkshop'),launcher=$('#ff14GlassLauncher');
+    if(workshop){workshop.classList.remove('open');workshop.setAttribute('aria-hidden','true');}
+    if(launcher)launcher.setAttribute('aria-expanded','false');
+  }
+  function restoreGlassFromControls(){
+    const root=document.documentElement;root.classList.remove('ff14-glass-access-locked');
+    const workshop=$('#ff14GlassWorkshop');if(!workshop)return;
+    // Reuse the original glass controls so their closures remain the single source of truth.
+    const enabled=$('#ff14GwEnabled',workshop);
+    if(enabled)enabled.dispatchEvent(new Event('change',{bubbles:true}));
+    else {
+      const raw=safe(()=>JSON.parse(localStorage.getItem(GLASS_KEY)||'null'),null);
+      if(raw&&raw.enabled!==false){const pal=$(`.ff14-gw-palette[data-palette="${PALETTE_KEYS.has(raw.palette)?raw.palette:'mint'}"]`,workshop);pal?.click();}
+    }
+  }
+  function ensureAccessNote(){
+    let note=$('#ff14GlassAccessNote');
+    if(!note){note=document.createElement('div');note.id='ff14GlassAccessNote';note.setAttribute('role','status');document.body?.appendChild(note);}
+    const r=role();
+    const text=r==='visitor'
+      ?'需先完成临时用户身份验证才能使用液态玻璃背景；特殊邀请与开发者身份可解锁全部效果。'
+      :r==='temporary'
+        ?'基础液态玻璃已开放：薄荷/冰川蓝；完整配色与高级效果仅对高级身份开放。'
+        :'高级玻璃权限已解锁：全部材质、精细调节与高级工具均可使用。';
+    if(note&&note.textContent!==text)note.textContent=text;
+    const launcher=$('#ff14GlassLauncher');
+    if(launcher){
+      const label=r==='visitor'?'液态玻璃 · 需验证':r==='temporary'?'基础液态玻璃':'液态玻璃工坊';
+      if(launcher.textContent!==label)launcher.textContent=label;
+      launcher.title=text;
+    }
+    return note;
+  }
+  function ensureWorkshopExtras(){
+    const workshop=$('#ff14GlassWorkshop');if(!workshop)return;
+    let note=$('.ff14-gw-access-note',workshop);
+    if(!note){note=document.createElement('div');note.className='ff14-gw-access-note';const sub=$('.ff14-gw-sub',workshop);if(sub)sub.insertAdjacentElement('afterend',note);else workshop.prepend(note);}
+    const message=role()==='visitor'?'需要先完成临时身份验证后才能使用玻璃背景。临时用户可用基础效果；特殊邀请与开发者可解锁全部效果。':role()==='temporary'?'临时用户可使用基础玻璃。完整配色、增强反光、极致模糊及高级工具需要特殊邀请或开发者权限。':'当前已解锁全部液态玻璃效果与高级工具。';
+    if(note.textContent!==message)note.textContent=message;
+    let tools=$('#ff14GwAdvancedTools',workshop);
+    if(!tools){
+      tools=document.createElement('section');tools.id='ff14GwAdvancedTools';tools.hidden=true;
+      tools.innerHTML='<div class="ff14-gw-advanced-title">高级玻璃工具 · 特殊邀请 / 开发者</div><div class="ff14-gw-advanced-desc">快捷切换玻璃方案、低功耗显示，以及本地玻璃配置备份。此区域仅对高级身份开放。</div><div class="ff14-gw-advanced-grid"><button type="button" id="ff14GwPresetRich">极致液态玻璃</button><button type="button" id="ff14GwPresetClear">轻盈通透</button><button type="button" id="ff14GwPerfToggle">启用低功耗模式</button><button type="button" id="ff14GwExportProfile">导出玻璃方案</button><button type="button" id="ff14GwImportProfile">导入玻璃方案</button></div><input type="file" id="ff14GwProfileFile" accept=".json,application/json" hidden><div id="ff14GwAdvancedStatus" aria-live="polite"></div>';
+      const foot=$('.ff14-gw-foot',workshop);if(foot)foot.insertAdjacentElement('beforebegin',tools);else workshop.appendChild(tools);
+      $('#ff14GwPresetRich',tools).addEventListener('click',()=>applyGlassPreset('rich'));
+      $('#ff14GwPresetClear',tools).addEventListener('click',()=>applyGlassPreset('clear'));
+      $('#ff14GwPerfToggle',tools).addEventListener('click',togglePerformanceMode);
+      $('#ff14GwExportProfile',tools).addEventListener('click',exportGlassProfile);
+      $('#ff14GwImportProfile',tools).addEventListener('click',()=>{if(!high()){toast('该工具仅对高级身份开放。');return;}$('#ff14GwProfileFile',tools)?.click();});
+      $('#ff14GwProfileFile',tools).addEventListener('change',importGlassProfile);
+    }
+    tools.hidden=!high();
+    const perf=$('#ff14GwPerfToggle',tools);if(perf)perf.textContent=document.documentElement.classList.contains('ff14-glass-performance')?'关闭低功耗模式':'启用低功耗模式';
+    const status=$('#ff14GwAdvancedStatus',tools);if(status&&!status.textContent)status.textContent='仅保存玻璃主题配置，不包含计算记录或触发者 ID。';
+    // Keep the access note inside the workshop. Moving it next to the launcher made the 650ms sync fail to find it and append a duplicate on every tick.
+  }
+  function enforceTemporaryControls(){
+    const workshop=$('#ff14GlassWorkshop');if(!workshop||role()!=='temporary')return;
+    const paletteButtons=$$('.ff14-gw-palette',workshop);
+    const active=paletteButtons.find(b=>b.classList.contains('active'))?.dataset.palette;
+    if(active&&!ALLOWED_TEMP_PALETTES.has(active)){
+      const base=$('.ff14-gw-palette[data-palette="mint"]',workshop);if(base)base.click();
+    }
+    paletteButtons.forEach(button=>{
+      const allowed=ALLOWED_TEMP_PALETTES.has(button.dataset.palette);
+      button.setAttribute('aria-disabled',String(!allowed));button.title=allowed?'基础玻璃预设':'该配色仅对高级身份开放';
+    });
+    const opacity=$('#ff14GwOpacity',workshop),blur=$('#ff14GwBlur',workshop);
+    const stored=safe(()=>JSON.parse(localStorage.getItem(GLASS_KEY)||'null'),null)||{};
+    if(opacity){opacity.min='32';opacity.max='58';if(Number(stored.opacity)>58||Number(opacity.value)>58){opacity.value='58';opacity.dispatchEvent(new Event('input',{bubbles:true}));}}
+    if(blur){blur.min='8';blur.max='14';if(Number(stored.blur)>14||Number(blur.value)>14){blur.value='14';blur.dispatchEvent(new Event('input',{bubbles:true}));}}
+  }
+  function restoreAdvancedControls(){
+    const workshop=$('#ff14GlassWorkshop');if(!workshop)return;
+    $$('.ff14-gw-palette',workshop).forEach(b=>{b.removeAttribute('aria-disabled');b.title='';});
+    const opacity=$('#ff14GwOpacity',workshop),blur=$('#ff14GwBlur',workshop);
+    if(opacity){opacity.min='32';opacity.max='82';}if(blur){blur.min='8';blur.max='28';}
+  }
+  function requestTemporaryLogin(){
+    toast('请先通过身份验证中心完成临时用户或更高权限验证。');
+    if(typeof window.openInviteModal==='function')safe(()=>window.openInviteModal());
+    else {const modal=$('#inviteModal');if(modal)modal.style.display='flex';}
+  }
+  function applyGlassPreset(mode){
+    if(!high()){toast('高级玻璃方案仅对特殊邀请与开发者开放。');return;}
+    const workshop=$('#ff14GlassWorkshop');if(!workshop)return;
+    const enabled=$('#ff14GwEnabled',workshop),solid=$('#ff14GwSolid',workshop),opacity=$('#ff14GwOpacity',workshop),blur=$('#ff14GwBlur',workshop);
+    if(enabled&&!enabled.checked){enabled.checked=true;enabled.dispatchEvent(new Event('change',{bubbles:true}));}
+    if(solid&&!solid.checked){solid.checked=true;solid.dispatchEvent(new Event('change',{bubbles:true}));}
+    if(opacity){opacity.value=mode==='rich'?'76':'48';opacity.dispatchEvent(new Event('input',{bubbles:true}));}
+    if(blur){blur.value=mode==='rich'?'25':'12';blur.dispatchEvent(new Event('input',{bubbles:true}));}
+    const status=$('#ff14GwAdvancedStatus');if(status)status.textContent=mode==='rich'?'已应用极致玻璃方案：强化反光与模糊。':'已应用轻盈通透方案：减轻遮罩并保持玻璃层次。';
+  }
+  function togglePerformanceMode(){
+    if(!high()){toast('低功耗模式仅对高级身份开放。');return;}
+    const root=document.documentElement;root.classList.toggle('ff14-glass-performance');
+    const enabled=root.classList.contains('ff14-glass-performance');safe(()=>localStorage.setItem(PERF_KEY,enabled?'true':'false'));
+    const btn=$('#ff14GwPerfToggle');if(btn)btn.textContent=enabled?'关闭低功耗模式':'启用低功耗模式';
+    const status=$('#ff14GwAdvancedStatus');if(status)status.textContent=enabled?'低功耗显示已启用：降低模糊与动画开销。':'已恢复完整玻璃模糊与动画效果。';
+  }
+  function exportGlassProfile(){
+    if(!high()){toast('玻璃方案备份仅对高级身份开放。');return;}
+    const config=safe(()=>JSON.parse(localStorage.getItem(GLASS_KEY)||'null'),null);
+    if(!config||typeof config!=='object'){toast('当前没有可导出的玻璃配置。');return;}
+    const bundle={schema:'ff14-liquid-glass-profile',version:1,exportedAt:new Date().toISOString(),settings:{enabled:config.enabled!==false,solidCanvas:config.solidCanvas!==false,palette:PALETTE_KEYS.has(config.palette)?config.palette:'mint',opacity:Math.max(32,Math.min(82,Number(config.opacity)||62)),blur:Math.max(8,Math.min(28,Number(config.blur)||18))},performanceMode:document.documentElement.classList.contains('ff14-glass-performance')};
+    try{const blob=new Blob([JSON.stringify(bundle,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`FF14_液态玻璃方案_${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);const status=$('#ff14GwAdvancedStatus');if(status)status.textContent='玻璃方案已导出；备份不包含计算记录或触发者 ID。';}catch(_){toast('导出失败，请检查浏览器下载权限。');}
+  }
+  function importGlassProfile(event){
+    const input=event.currentTarget,file=input.files?.[0];if(!file)return;
+    if(!high()){toast('玻璃方案导入仅对高级身份开放。');input.value='';return;}
+    const reader=new FileReader();reader.onload=()=>{try{
+      const data=JSON.parse(String(reader.result||''));if(data.schema!=='ff14-liquid-glass-profile'||data.version!==1||!data.settings||typeof data.settings!=='object')throw new Error('文件格式不匹配');
+      const s=data.settings;if(!PALETTE_KEYS.has(s.palette))throw new Error('未知玻璃配色');
+      const normalized={enabled:s.enabled!==false,solidCanvas:s.solidCanvas!==false,palette:s.palette,opacity:Math.max(32,Math.min(82,Number(s.opacity)||62)),blur:Math.max(8,Math.min(28,Number(s.blur)||18))};
+      localStorage.setItem(GLASS_KEY,JSON.stringify(normalized));localStorage.setItem(PERF_KEY,data.performanceMode?'true':'false');
+      const status=$('#ff14GwAdvancedStatus');if(status)status.textContent='方案已导入。刷新页面即可完整应用新配置。';
+      if(window.confirm('玻璃方案导入成功，是否立即刷新页面应用？'))window.location.reload();
+    }catch(error){toast('导入失败：'+(error?.message||'无效配置文件'));}finally{input.value='';}};reader.onerror=()=>{toast('无法读取方案文件。');input.value='';};reader.readAsText(file);
+  }
+  function sync(){
+    const r=role();ensureAccessNote();ensureWorkshopExtras();
+    if(r==='visitor'){
+      if(previousRole!=='visitor'||!document.documentElement.classList.contains('ff14-glass-access-locked'))lockedGlass();
+    }else{
+      if(previousRole==='visitor'||document.documentElement.classList.contains('ff14-glass-access-locked'))restoreGlassFromControls();
+      if(r==='temporary')enforceTemporaryControls();else restoreAdvancedControls();
+    }
+    document.documentElement.classList.toggle('ff14-glass-performance',high()&&safe(()=>localStorage.getItem(PERF_KEY)==='true',false));
+    previousRole=r;
+  }
+  // Intercept access before the glass workbench's own click/change handlers run.
+  document.addEventListener('click',event=>{
+    const launcher=event.target?.closest?.('#ff14GlassLauncher');
+    if(launcher&&role()==='visitor'){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();requestTemporaryLogin();return;}
+    const palette=event.target?.closest?.('#ff14GlassWorkshop .ff14-gw-palette');
+    if(palette&&role()==='temporary'&&!ALLOWED_TEMP_PALETTES.has(palette.dataset.palette)){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();toast('此液态玻璃配色仅对特殊邀请与开发者开放。');return;}
+    const advanced=event.target?.closest?.('#ff14GwAdvancedTools button');
+    if(advanced&&!high()){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();toast('高级玻璃工具仅对特殊邀请与开发者开放。');}
+  },true);
+  document.addEventListener('input',event=>{
+    if(role()!=='temporary')return;
+    if(event.target?.id==='ff14GwOpacity'&&Number(event.target.value)>58)event.target.value='58';
+    if(event.target?.id==='ff14GwBlur'&&Number(event.target.value)>14)event.target.value='14';
+  },true);
+  document.addEventListener('change',event=>{
+    if(role()==='visitor'&&event.target?.closest?.('#ff14GlassWorkshop')){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();requestTemporaryLogin();}
+    else if(!high()&&event.target?.closest?.('#ff14GwAdvancedTools')){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();toast('高级玻璃工具仅对特殊邀请与开发者开放。');}
+  },true);
+  // The legacy theme wrapper can re-enable glass after changing a theme. Lock it immediately again for visitors.
+  const themeFn=window.changeTheme;
+  if(typeof themeFn==='function'&&!themeFn.__ff14V1706RoleWrapped){
+    const wrapped=function(...args){const result=themeFn.apply(this,args);if(role()==='visitor')queueMicrotask(lockedGlass);return result;};
+    wrapped.__ff14V1706RoleWrapped=true;window.changeTheme=wrapped;
+  }
+  const rootObserver=new MutationObserver(()=>{if(role()==='visitor'&&document.documentElement.dataset.ff14Glass==='on')lockedGlass();});
+  rootObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-ff14-glass','data-ff14-glass-solid','data-ff14-glass-palette']});
+  safe(()=>{if(localStorage.getItem(PERF_KEY)==='true'&&high())document.documentElement.classList.add('ff14-glass-performance');});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});
+  sync();
+  setInterval(sync,650);
+  window.addEventListener('storage',sync);
+  window.addEventListener('pageshow',sync);
+})();
+</script>
+<script id="ff14-v1706-version-notice-js">
+(function FF14Version1706Notice(){
+  'use strict';
+  if(window.__ff14V1706NoticeInstalled)return;window.__ff14V1706NoticeInstalled=true;
+  const $=s=>document.querySelector(s);const SEEN='ff14_update_v1706_viewed';
+  const safe=fn=>{try{return fn();}catch(_){return undefined;}};
+  function updateNotice(){
+    const title=$('#updatePreviewModal .update-title');
+    if(title&&title.textContent!=='✨ 版本更新说明 · v1.7.0.6')title.textContent='✨ 版本更新说明 · v1.7.0.6';
+    const list=$('#updateContentList');
+    if(list&&!$('#ff14V1706Changelog')){
+      const items=[
+        ['版本 1.7.0.6','本次为小版本更新，继续使用 1.7.0.x 版本号。'],
+        ['液态玻璃权限分层','需完成临时身份或更高身份验证才能启用液态玻璃；临时用户开放基础配色和有限调节，特殊邀请与开发者可使用全部效果。'],
+        ['高级玻璃工具','特殊邀请与开发者新增玻璃方案快捷切换、低功耗模式和本地配置导入/导出。配置备份不包含计算记录或触发者 ID。']
+      ];
+      items.forEach(([h,b])=>{const li=document.createElement('li');li.id=h==='版本 1.7.0.6'?'ff14V1706Changelog':`ff14V1706Changelog${Math.random().toString(36).slice(2,7)}`;const strong=document.createElement('strong');strong.textContent=h+'：';li.append(strong,document.createTextNode(b));list.appendChild(li);});
+    }
+  }
+  const oldClose=window.closeUpdateModal;
+  if(typeof oldClose==='function'&&!oldClose.__ff14V1706Wrapped){const wrapped=function(...args){const out=oldClose.apply(this,args);safe(()=>localStorage.setItem(SEEN,'true'));return out;};wrapped.__ff14V1706Wrapped=true;window.closeUpdateModal=wrapped;}
+  window.checkUpdateModal=function(){updateNotice();const modal=$('#updatePreviewModal');if(!modal)return;const seen=safe(()=>localStorage.getItem(SEEN)==='true',false);if(!seen)modal.style.display='flex';};
+  const oldShow=window.showUXChangeLog;
+  if(typeof oldShow==='function'&&!oldShow.__ff14V1706Wrapped){const wrapped=function(...args){const out=oldShow.apply(this,args);updateNotice();return out;};wrapped.__ff14V1706Wrapped=true;window.showUXChangeLog=wrapped;}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',updateNotice,{once:true});else updateNotice();
+  window.addEventListener('load',updateNotice,{once:true});
+  const ob=new MutationObserver(()=>updateNotice());if(document.body)ob.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
 </body>
 </html>
